@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/layout/AuthLayout";
 import GoogleAuthButton from "../../components/layout/GoogleAuthButton";
+import api from "../../services/api";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -53,7 +54,7 @@ export default function Register() {
         return;
       }
 
-      await axios.post("http://localhost:5001/auth/register", {
+      await api.post("auth/register", {
         role: form.role,
         name: form.name,
         email: form.email,
