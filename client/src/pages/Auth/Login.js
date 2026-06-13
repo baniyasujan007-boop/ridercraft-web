@@ -12,7 +12,7 @@ export default function Login() {
   const submit = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5001/auth/login",
+        "https://ridercraft-api.onrender.com/auth/login",
         form
       );
 

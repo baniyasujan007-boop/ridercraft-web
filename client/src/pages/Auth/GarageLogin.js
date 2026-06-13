@@ -11,7 +11,7 @@ export default function GarageLogin() {
   const submit = async () => {
     setError("");
     try {
-      const res = await axios.post("http://localhost:5001/auth/garage/login", form);
+      const res = await axios.post("https://ridercraft-api.onrender.com/auth/garage/login", form);
       localStorage.setItem("token", res.data.token);
       navigate("/garage");
     } catch (err) {

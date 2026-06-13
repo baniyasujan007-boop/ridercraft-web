@@ -64,7 +64,7 @@ export default function GarageSignup() {
     }
     try {
       setLoading(true);
-      await axios.post("http://localhost:5001/auth/garage/signup", {
+      await axios.post("https://ridercraft-api.onrender.com/auth/garage/signup", {
         ...form,
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),

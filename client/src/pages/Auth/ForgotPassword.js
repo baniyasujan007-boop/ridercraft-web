@@ -40,7 +40,7 @@ export default function ForgotPassword() {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:5001/auth/forgot-password",
+        "https://ridercraft-api.onrender.com/auth/forgot-password",
         {
           email: form.email,
           newPassword: form.newPassword,

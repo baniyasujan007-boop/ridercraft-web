@@ -60,8 +60,8 @@ export default function ProductDetails() {
         setError("");
 
         const [productResult, productsResult] = await Promise.allSettled([
-          axios.get(`http://localhost:5001/products/${id}`),
-          axios.get("http://localhost:5001/products")
+          axios.get(`https://ridercraft-api.onrender.com/products/${id}`),
+          axios.get("https://ridercraft-api.onrender.com/products")
         ]);
 
         if (productResult.status === "fulfilled") {

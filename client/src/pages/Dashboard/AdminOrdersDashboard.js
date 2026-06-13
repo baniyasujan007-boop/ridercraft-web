@@ -76,7 +76,7 @@ export default function AdminOrdersDashboard() {
     try {
       if (!token) return;
       setLoading(true);
-      const res = await axios.get("http://localhost:5001/orders", {
+      const res = await axios.get("https://ridercraft-api.onrender.com/orders", {
         headers: { Authorization: `Bearer ${token}` }
       });
       const next = Array.isArray(res.data)
@@ -141,7 +141,7 @@ export default function AdminOrdersDashboard() {
     try {
       setActionLoading(true);
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/status`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -158,7 +158,7 @@ export default function AdminOrdersDashboard() {
     try {
       setActionLoading(true);
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/payment-status`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/payment-status`,
         { paymentStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -186,7 +186,7 @@ export default function AdminOrdersDashboard() {
     try {
       setActionLoading(true);
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/return-review`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/return-review`,
         { action, adminNote: returnAdminNote.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -203,7 +203,7 @@ export default function AdminOrdersDashboard() {
     try {
       setActionLoading(true);
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/return-tracking`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/return-tracking`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );

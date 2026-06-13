@@ -35,8 +35,8 @@ export default function GarageDashboard() {
       setLoading(true);
       const headers = { Authorization: `Bearer ${token}` };
       const [profileRes, bookingsRes] = await Promise.all([
-        axios.get("http://localhost:5001/auth/profile", { headers }),
-        axios.get("http://localhost:5001/service-requests/garage", { headers })
+        axios.get("https://ridercraft-api.onrender.com/auth/profile", { headers }),
+        axios.get("https://ridercraft-api.onrender.com/service-requests/garage", { headers })
       ]);
       setProfile(profileRes.data);
       const nextBookings = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
@@ -72,7 +72,7 @@ export default function GarageDashboard() {
     try {
       setSaving(true);
       await axios.put(
-        `http://localhost:5001/service-requests/${selectedBooking._id}/garage-response`,
+        `https://ridercraft-api.onrender.com/service-requests/${selectedBooking._id}/garage-response`,
         { status, garageNote: garageNote.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );

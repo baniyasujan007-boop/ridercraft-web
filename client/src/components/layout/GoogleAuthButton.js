@@ -10,7 +10,7 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
 
     const handleGoogleResponse = async (response) => {
       try {
-        const res = await axios.post("http://localhost:5001/auth/google", {
+        const res = await axios.post("https://ridercraft-api.onrender.com/auth/google", {
           credential: response.credential
         });
         onSuccess(res.data);

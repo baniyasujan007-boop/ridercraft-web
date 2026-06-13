@@ -131,7 +131,7 @@ export default function Admin() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5001/products");
+      const res = await axios.get("https://ridercraft-api.onrender.com/products");
       setProducts(res.data);
     } catch {
       setError("Failed to load products");
@@ -140,7 +140,7 @@ export default function Admin() {
   const fetchPromos = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("http://localhost:5001/promos", { headers });
+      const res = await axios.get("https://ridercraft-api.onrender.com/promos", { headers });
       setPromos(res.data);
     } catch {
       setError("Failed to load promo codes");
@@ -149,7 +149,7 @@ export default function Admin() {
   const fetchOrders = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("http://localhost:5001/orders", { headers });
+      const res = await axios.get("https://ridercraft-api.onrender.com/orders", { headers });
       setOrders(res.data);
     } catch {
       setError("Failed to load orders");
@@ -158,7 +158,7 @@ export default function Admin() {
   const fetchServiceRequests = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("http://localhost:5001/service-requests/admin", { headers });
+      const res = await axios.get("https://ridercraft-api.onrender.com/service-requests/admin", { headers });
       setServiceRequests(Array.isArray(res.data) ? res.data : []);
     } catch {
       setError("Failed to load service requests");
@@ -167,7 +167,7 @@ export default function Admin() {
   const fetchHeroOffers = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("http://localhost:5001/hero-offers/admin", { headers });
+      const res = await axios.get("https://ridercraft-api.onrender.com/hero-offers/admin", { headers });
       setHeroOffers(res.data);
     } catch {
       setError("Failed to load hero offers");
@@ -176,7 +176,7 @@ export default function Admin() {
   const fetchFeaturedSections = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("http://localhost:5001/featured-sections/admin", { headers });
+      const res = await axios.get("https://ridercraft-api.onrender.com/featured-sections/admin", { headers });
       setFeaturedSections(res.data);
     } catch {
       setError("Failed to load featured sections");
@@ -354,7 +354,7 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/status`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/status`,
         { status },
         { headers }
       );
@@ -370,7 +370,7 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/payment-status`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/payment-status`,
         { paymentStatus },
         { headers }
       );
@@ -404,7 +404,7 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/return-review`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/return-review`,
         { action, adminNote: returnReviewNote.trim() },
         { headers }
       );
@@ -421,7 +421,7 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(
-        `http://localhost:5001/orders/${orderId}/return-tracking`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/return-tracking`,
         { status },
         { headers }
       );
@@ -484,7 +484,7 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(
-        `http://localhost:5001/service-requests/${serviceRequestId}/status`,
+        `https://ridercraft-api.onrender.com/service-requests/${serviceRequestId}/status`,
         { status, adminNote },
         { headers }
       );
@@ -658,13 +658,13 @@ export default function Admin() {
 
       if (editingId) {
         await axios.put(
-          `http://localhost:5001/products/${editingId}`,
+          `https://ridercraft-api.onrender.com/products/${editingId}`,
           payload,
           { headers }
         );
         setMessage("Product updated");
       } else {
-        await axios.post("http://localhost:5001/products", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/products", payload, { headers });
         setMessage("Product added");
       }
 
@@ -692,7 +692,7 @@ export default function Admin() {
     setError("");
     setMessage("");
     try {
-      await axios.delete(`http://localhost:5001/products/${id}`, {
+      await axios.delete(`https://ridercraft-api.onrender.com/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage("Product deleted");
@@ -721,10 +721,10 @@ export default function Admin() {
         isActive: Boolean(promoForm.isActive)
       };
       if (editingPromoId) {
-        await axios.put(`http://localhost:5001/promos/${editingPromoId}`, payload, { headers });
+        await axios.put(`https://ridercraft-api.onrender.com/promos/${editingPromoId}`, payload, { headers });
         setMessage("Promo code updated");
       } else {
-        await axios.post("http://localhost:5001/promos", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/promos", payload, { headers });
         setMessage("Promo code created");
       }
       resetPromoForm();
@@ -769,13 +769,13 @@ export default function Admin() {
       };
       if (editingHeroOfferId) {
         await axios.put(
-          `http://localhost:5001/hero-offers/admin/${editingHeroOfferId}`,
+          `https://ridercraft-api.onrender.com/hero-offers/admin/${editingHeroOfferId}`,
           payload,
           { headers }
         );
         setMessage("Hero offer updated");
       } else {
-        await axios.post("http://localhost:5001/hero-offers/admin", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/hero-offers/admin", payload, { headers });
         setMessage("Hero offer created");
       }
       resetHeroOfferForm();
@@ -801,7 +801,7 @@ export default function Admin() {
     setMessage("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`http://localhost:5001/hero-offers/admin/${id}`, { headers });
+      await axios.delete(`https://ridercraft-api.onrender.com/hero-offers/admin/${id}`, { headers });
       setMessage("Hero offer deleted");
       if (editingHeroOfferId === id) resetHeroOfferForm();
       fetchHeroOffers();
@@ -831,13 +831,13 @@ export default function Admin() {
       };
       if (editingFeaturedSectionId) {
         await axios.put(
-          `http://localhost:5001/featured-sections/admin/${editingFeaturedSectionId}`,
+          `https://ridercraft-api.onrender.com/featured-sections/admin/${editingFeaturedSectionId}`,
           payload,
           { headers }
         );
         setMessage("Featured section updated");
       } else {
-        await axios.post("http://localhost:5001/featured-sections/admin", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
         setMessage("Featured section created");
       }
       resetFeaturedSectionForm();
@@ -863,7 +863,7 @@ export default function Admin() {
     setMessage("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`http://localhost:5001/featured-sections/admin/${id}`, { headers });
+      await axios.delete(`https://ridercraft-api.onrender.com/featured-sections/admin/${id}`, { headers });
       setMessage("Featured section deleted");
       if (editingFeaturedSectionId === id) resetFeaturedSectionForm();
       fetchFeaturedSections();
@@ -889,12 +889,12 @@ export default function Admin() {
       };
       if (dealsSection?._id) {
         await axios.put(
-          `http://localhost:5001/featured-sections/admin/${dealsSection._id}`,
+          `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
           payload,
           { headers }
         );
       } else {
-        await axios.post("http://localhost:5001/featured-sections/admin", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
       }
       setMessage("Flash sale products updated");
       fetchFeaturedSections();
@@ -922,12 +922,12 @@ export default function Admin() {
       };
       if (dealsSection?._id) {
         await axios.put(
-          `http://localhost:5001/featured-sections/admin/${dealsSection._id}`,
+          `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
           payload,
           { headers }
         );
       } else {
-        await axios.post("http://localhost:5001/featured-sections/admin", payload, { headers });
+        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
       }
       setMessage(isSelected ? "Removed from flash sale" : "Added to flash sale");
       fetchFeaturedSections();

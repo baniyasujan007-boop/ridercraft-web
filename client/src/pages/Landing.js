@@ -269,7 +269,7 @@ export default function Landing() {
     try {
       setRatingLoadingId(productId);
       const res = await axios.post(
-        `http://localhost:5001/products/${productId}/rate`,
+        `https://ridercraft-api.onrender.com/products/${productId}/rate`,
         { rating: selected, comment: String(comment || "").trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -299,7 +299,7 @@ export default function Landing() {
       return;
     }
     try {
-      const res = await axios.post("http://localhost:5001/promos/validate", {
+      const res = await axios.post("https://ridercraft-api.onrender.com/promos/validate", {
         code: normalized,
         subtotal: totalPrice,
         shipping
@@ -354,7 +354,7 @@ export default function Landing() {
       }
 
       if (appliedPromoCode) {
-        const res = await axios.post("http://localhost:5001/promos/redeem", {
+        const res = await axios.post("https://ridercraft-api.onrender.com/promos/redeem", {
           code: appliedPromoCode,
           subtotal: totalPrice,
           shipping
@@ -365,7 +365,7 @@ export default function Landing() {
       }
 
       await axios.post(
-        "http://localhost:5001/orders",
+        "https://ridercraft-api.onrender.com/orders",
         {
           items: cart.map((item) => ({
             productId: item._id,
@@ -503,7 +503,7 @@ export default function Landing() {
       const token = localStorage.getItem("token");
       if (!token) return;
       setOrdersLoading(true);
-      const res = await axios.get("http://localhost:5001/orders/my", {
+      const res = await axios.get("https://ridercraft-api.onrender.com/orders/my", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setOrderHistory(Array.isArray(res.data) ? res.data : []);
@@ -519,7 +519,7 @@ export default function Landing() {
       const token = localStorage.getItem("token");
       if (!token) return;
       setServiceRequestsLoading(true);
-      const res = await axios.get("http://localhost:5001/service-requests/my", {
+      const res = await axios.get("https://ridercraft-api.onrender.com/service-requests/my", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setServiceRequests(Array.isArray(res.data) ? res.data : []);
@@ -600,7 +600,7 @@ export default function Landing() {
       }
       setServiceSubmitting(true);
       await axios.post(
-        "http://localhost:5001/service-requests",
+        "https://ridercraft-api.onrender.com/service-requests",
         {
           packageType: serviceForm.packageType,
           bikeModel,
@@ -710,7 +710,7 @@ export default function Landing() {
       }
       setReturnActionLoadingId(orderId);
       await axios.post(
-        `http://localhost:5001/orders/${orderId}/return-request`,
+        `https://ridercraft-api.onrender.com/orders/${orderId}/return-request`,
         { reason, evidence },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -795,7 +795,7 @@ export default function Landing() {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await axios.get("http://localhost:5001/auth/profile", {
+        const res = await axios.get("https://ridercraft-api.onrender.com/auth/profile", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProfile({
@@ -821,7 +821,7 @@ export default function Landing() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/products");
+        const res = await axios.get("https://ridercraft-api.onrender.com/products");
         setProducts(res.data);
       } catch {
         setProductsError("Could not load products");
@@ -833,7 +833,7 @@ export default function Landing() {
   useEffect(() => {
     const loadHeroOffers = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/hero-offers");
+        const res = await axios.get("https://ridercraft-api.onrender.com/hero-offers");
         setHeroOffers(Array.isArray(res.data) ? res.data : []);
       } catch {
         setHeroOffers([]);
@@ -845,7 +845,7 @@ export default function Landing() {
   useEffect(() => {
     const loadFeaturedSections = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/featured-sections");
+        const res = await axios.get("https://ridercraft-api.onrender.com/featured-sections");
         setFeaturedSectionsData(Array.isArray(res.data) ? res.data : []);
       } catch {
         setFeaturedSectionsData([]);
@@ -953,7 +953,7 @@ export default function Landing() {
         return;
       }
       const res = await axios.put(
-        "http://localhost:5001/auth/profile",
+        "https://ridercraft-api.onrender.com/auth/profile",
         {
           name: profileForm.name,
           avatar: profileForm.avatar,
