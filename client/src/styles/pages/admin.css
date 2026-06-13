@@ -1022,3 +1022,97 @@
     flex-direction: column;
   }
 }
+/* MOBILE ADMIN FIX */
+@media (max-width: 768px) {
+
+  .admin-wrapper {
+    display: block;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .admin-sidebar ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-side-btn {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .admin-main {
+    width: 100%;
+    padding: 12px;
+    overflow-x: hidden;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-form-grid input,
+  .admin-form-grid select,
+  .admin-form-grid textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 900px;
+  }
+
+  .admin-order-table-modern {
+    min-width: 900px;
+  }
+
+  .admin-order-details-pane,
+  .admin-customer-details {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-order-total-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .admin-order-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-order-item-row img {
+    width: 100%;
+    height: auto;
+    max-height: 180px;
+  }
+}
+@media (max-width: 768px) {
+
+  .admin-sidebar ul {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 8px;
+  }
+
+  .admin-sidebar li {
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  .admin-side-btn {
+    white-space: nowrap;
+  }
+}
