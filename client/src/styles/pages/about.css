@@ -1,0 +1,147 @@
+.about-live-page {
+  width: min(1220px, calc(100% - 24px));
+  margin: 16px auto 32px;
+  color: #0f172a;
+}
+
+.about-live-hero {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: clamp(20px, 4vw, 38px);
+  margin-bottom: 16px;
+}
+
+.about-live-hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 4.5vw, 42px);
+}
+
+.about-live-hero p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.about-live-message,
+.about-live-error {
+  margin: 8px 0 0;
+}
+
+.about-live-error {
+  color: #b91c1c;
+}
+
+.about-live-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.about-live-stat {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.about-live-stat h3 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.about-live-stat p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.about-live-section {
+  margin-top: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.about-live-section h2 {
+  margin: 0 0 12px;
+}
+
+.about-live-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.about-live-card p {
+  margin: 0 0 6px;
+}
+
+.about-live-card p:last-child {
+  margin-bottom: 0;
+}
+
+.about-live-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.about-live-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.about-live-product-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+}
+
+.about-live-product-card img,
+.about-live-image-placeholder {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #dbe2ea;
+}
+
+.about-live-image-placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.about-live-product-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.about-live-product-meta {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .about-live-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-live-product-card {
+    grid-template-columns: 1fr;
+  }
+
+  .about-live-product-card img,
+  .about-live-image-placeholder {
+    width: 100%;
+    height: 180px;
+  }
+}

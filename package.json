@@ -1,0 +1,11 @@
+{
+  "name": "quickgpt-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "client": "npm --prefix client start",
+    "server": "npm --prefix server run dev",
+    "client:build": "npm --prefix client run build",
+    "server:start": "npm --prefix server start"
+  }
+}

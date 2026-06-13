@@ -1,0 +1,45 @@
+.shop-wrapper {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(34, 211, 238, 0.15), transparent 44%),
+    radial-gradient(circle at 88% 4%, rgba(56, 189, 248, 0.14), transparent 36%),
+    radial-gradient(circle at 82% 82%, rgba(14, 165, 233, 0.08), transparent 40%),
+    linear-gradient(160deg, #071225, #111a2d 55%, #151a2b);
+  color: #e9f0fb;
+  --surface-1: rgba(11, 24, 45, 0.78);
+  --surface-2: rgba(16, 29, 50, 0.95);
+  --line: rgba(148, 163, 184, 0.2);
+  --line-strong: rgba(148, 163, 184, 0.34);
+  --text-soft: #b7c6db;
+  --accent: #22d3ee;
+  --accent-strong: #0ea5e9;
+  --ok: #34d399;
+  --danger: #fb7185;
+}
+
+.primary {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(14, 165, 233, 0.34);
+}
+
+.success-text {
+  color: var(--ok);
+  margin: 12px 0 0;
+}
+
+.error-text {
+  color: var(--danger);
+  margin: 12px 0 0;
+}

@@ -1,0 +1,147 @@
+.garage-dashboard-page {
+  min-height: calc(100dvh - 132px);
+  background: linear-gradient(135deg, #e9eef7, #f8fafd);
+  padding: 16px;
+}
+
+.garage-dashboard-shell {
+  width: min(1220px, 100%);
+  margin: 0 auto;
+}
+
+.garage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.garage-head h1 {
+  margin: 0;
+}
+
+.garage-head p {
+  margin: 6px 0 0;
+  color: #475569;
+}
+
+.garage-logout-btn {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.garage-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 12px;
+}
+
+.garage-booking-list,
+.garage-booking-detail {
+  background: #fff;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.garage-booking-list h2,
+.garage-booking-detail h2 {
+  margin: 0 0 10px;
+}
+
+.garage-list-item {
+  width: 100%;
+  border: 1px solid #dbe1ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.garage-list-item.active {
+  border-color: #0ea5e9;
+  background: #e0f2fe;
+}
+
+.garage-list-item span {
+  color: #475569;
+  font-size: 13px;
+}
+
+.garage-booking-detail p {
+  margin: 0 0 8px;
+  color: #1e293b;
+}
+
+.garage-response-box {
+  margin-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.garage-response-box label {
+  font-size: 13px;
+  color: #475569;
+}
+
+.garage-response-box select,
+.garage-response-box textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+}
+
+.garage-response-box button {
+  border: none;
+  border-radius: 10px;
+  background: #0ea5e9;
+  color: #fff;
+  height: 42px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.garage-success {
+  color: #166534;
+  margin: 0 0 8px;
+}
+
+.garage-error {
+  color: #b91c1c;
+  margin: 0 0 8px;
+}
+
+@media (max-width: 900px) {
+  .garage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .garage-dashboard-page {
+    padding: 10px;
+    min-height: calc(100dvh - 106px);
+  }
+
+  .garage-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .garage-logout-btn {
+    width: 100%;
+  }
+}

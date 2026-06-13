@@ -1,0 +1,32 @@
+import { applyImageFallback } from "../../utils/fallbackImage";
+
+export default function RelatedProducts({ products, fallbackImage, onOpenProduct }) {
+  return (
+    <section className="pdp-related">
+      <div className="pdp-related-head">
+        <h2>Related Products</h2>
+      </div>
+
+      <div className="pdp-related-grid">
+        {products.map((item) => (
+          <article
+            className="pdp-related-card"
+            key={item.id}
+            onClick={() => onOpenProduct(item.id)}
+          >
+            <div className="pdp-related-image-wrap">
+              <img
+                src={item.images[0] || fallbackImage}
+                alt={item.title}
+                className="pdp-related-image"
+                onError={(e) => applyImageFallback(e, fallbackImage)}
+              />
+            </div>
+            <p className="pdp-related-name">{item.title}</p>
+            <p className="pdp-related-price">${item.price}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}

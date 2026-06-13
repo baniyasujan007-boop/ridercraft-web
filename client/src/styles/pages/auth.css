@@ -1,0 +1,165 @@
+.auth-container {
+  display: flex;
+  min-height: calc(100dvh - 132px);
+  font-family: Arial, sans-serif;
+}
+
+.auth-left {
+  flex: 1;
+  background: linear-gradient(135deg, #b6c431, #a2b315);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(18px, 3.6vw, 36px);
+  text-align: center;
+}
+
+.auth-right {
+  flex: 1;
+  background: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(20px, 5vw, 60px);
+}
+
+.auth-right h2 {
+  margin: 0 0 14px;
+}
+
+.auth-right input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: none;
+  background: #e8e8c8;
+}
+
+.auth-right select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: none;
+  background: #e8e8c8;
+}
+
+.primary-btn {
+  background: #a2b315;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.white-btn {
+  background: white;
+  color: #a2b315;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.success {
+  color: green;
+  margin-bottom: 10px;
+}
+
+.input-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  background: #e8e8c8;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.oauth-divider {
+  text-align: center;
+  margin: 10px 0;
+  color: #666;
+}
+
+.google-signin-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.google-missing {
+  text-align: center;
+  font-size: 12px;
+  color: #7a7a7a;
+  margin-bottom: 12px;
+}
+
+.link {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .auth-container {
+    min-height: calc(100dvh - 116px);
+    flex-direction: column;
+  }
+
+  .auth-left {
+    min-height: 230px;
+  }
+
+  .auth-right {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-container {
+    min-height: calc(100dvh - 106px);
+  }
+
+  .auth-left {
+    min-height: auto;
+    padding: 18px 14px;
+  }
+
+  .auth-left h1 {
+    font-size: 1.5rem;
+    margin: 0 0 8px;
+  }
+
+  .auth-left p {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+  }
+
+  .auth-right {
+    padding: 16px 12px 22px;
+  }
+
+  .white-btn {
+    padding: 8px 14px;
+  }
+}
