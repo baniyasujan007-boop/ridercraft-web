@@ -26,6 +26,8 @@ app.use("/hero-offers", heroOfferRoutes);
 app.use("/featured-sections", featuredSectionRoutes);
 app.use("/service-requests", serviceRequestRoutes);
 
-app.listen(5001, () => {
-  console.log("Server running on port 5001");
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
