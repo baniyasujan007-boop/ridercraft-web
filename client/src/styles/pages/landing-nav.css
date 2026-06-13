@@ -213,10 +213,11 @@
     display: none;
   }
 
-  .nav-logout-mobile {
+  /*.nav-logout-mobile {
     display: inline-flex;
     justify-content: center;
-  }
+  }*/
+
 }
 
 @media (max-width: 760px) {
@@ -260,6 +261,61 @@
   }
 }
 
+/* Default desktop */
 .nav-logout-mobile {
   display: none;
+}
+
+.nav-logout-desktop {
+  display: inline-flex;
+}
+
+@media (max-width: 960px) {
+  .nav-frame {
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .nav-mobile-head {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-hamburger {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .nav-actions {
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .nav-actions.open {
+    display: flex;
+  }
+
+  .nav-btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Hide desktop logout on mobile */
+  .nav-logout-desktop {
+    display: none;
+  }
+
+  /* Show mobile logout on mobile */
+  .nav-logout-mobile {
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
+  }
 }
