@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+
+
 
 export default function Navbar({
   view,
@@ -6,11 +8,34 @@ export default function Navbar({
   totalItems,
   totalOrders,
   notificationCount,
+  notifications,
   profile,
   isAdmin,
   logout
 }) {
+  
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+const notificationRef = useRef(null);
+
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      notificationRef.current &&
+      !notificationRef.current.contains(event.target)
+    ) {
+      setShowNotifications(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () =>
+    document.removeEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+}, []);
 
   const goToView = (nextView) => {
     setView(nextView);
@@ -74,18 +99,7 @@ export default function Navbar({
             <span className="nav-chip chip-sky" />
             <span>Bike Servicing</span>
           </button>
-          <button
-  className={view === "notifications" ? "nav-btn active notification-btn" : "nav-btn notification-btn"}
-  onClick={() => goToView("notifications")}
->
-  <span>🔔</span>
-
-  {notificationCount > 0 && (
-    <span className="notification-badge">
-      {notificationCount}
-    </span>
-  )}
-</button>
+        
           <button
             className="nav-btn"
             onClick={() => goToPath("/about")}
@@ -113,6 +127,58 @@ export default function Navbar({
               <span>Admin Panel</span>
             </button>
           )}
+          <div ref={notificationRef} className="notification-wrapper">
+  <button
+    className="nav-btn notification-btn"
+    onClick={() => setShowNotifications(!showNotifications)}
+  >
+    <span>🔔</span>
+
+    {notificationCount > 0 && (
+      <span className="notification-badge">
+        {notificationCount}
+      </span>
+    )}
+  </button>
+
+  {showNotifications && (
+    <div className="notification-dropdown">
+      <div className="notification-header">
+        Notifications
+      </div>
+
+      {notifications?.length > 0 ? (
+        notifications.slice(0, 5).map((item, index) => (
+          <div
+            key={index}
+            className="notification-item"
+          >
+            <div>
+              <strong>{item.title}</strong>
+              <p>{item.body}</p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="notification-item">
+          <p>No notifications yet.</p>
+        </div>
+      )}
+
+      <button
+        className="view-all-btn"
+        onClick={() => {
+          setShowNotifications(false);
+          goToView("notifications");
+        }}
+      >
+        View All Notifications
+      </button>
+    </div>
+  )}
+</div>
+
+
           <button onClick={handleLogout} className="logout-btn nav-logout-mobile">
             Logout
           </button>

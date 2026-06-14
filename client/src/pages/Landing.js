@@ -1259,15 +1259,16 @@ export default function Landing() {
   return (
     <div className="shop-wrapper">
       <Navbar
-        view={view}
-        setView={setView}
-        totalItems={totalItems}
-        totalOrders={orderHistory.length}
-        notificationCount={notificationCount}
-        profile={profile}
-        isAdmin={isAdmin}
-        logout={logout}
-      />
+  view={view}
+  setView={setView}
+  totalItems={totalItems}
+  totalOrders={orderHistory.length}
+  notificationCount={notificationCount}
+  notifications={notifications}
+  profile={profile}
+  isAdmin={isAdmin}
+  logout={logout}
+/>
 
       {view === "home" && (
         <section className="hero">
