@@ -129,7 +129,7 @@ useEffect(() => {
           )}
           <div ref={notificationRef} className="notification-wrapper">
   <button
-    className="nav-btn notification-btn"
+    className="notification-btn"
     onClick={() => setShowNotifications(!showNotifications)}
   >
     <span>🔔</span>
@@ -153,10 +153,15 @@ useEffect(() => {
             key={index}
             className="notification-item"
           >
-            <div>
-              <strong>{item.title}</strong>
-              <p>{item.body}</p>
-            </div>
+           <div>
+ <div className="notification-content">
+  <strong>📦 {item.title}</strong>
+  <p>{item.body}</p>
+  <small>2 mins ago</small>
+</div>
+
+<div className="notification-unread"></div>
+</div>
           </div>
         ))
       ) : (
