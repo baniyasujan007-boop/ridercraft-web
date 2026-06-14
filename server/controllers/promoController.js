@@ -40,6 +40,33 @@ export const listPromos = async (_req, res) => {
   }
 };
 
+export const listPublicActivePromos = async (_req, res) => {
+  try {
+    const now = new Date();
+    const promos = await Promo.find({
+      isActive: true,
+      startsAt: { $lte: now },
+      endsAt: { $gte: now },
+      $expr: { $lt: ["$usedCount", "$maxUses"] }
+    })
+      .sort({ endsAt: 1, createdAt: -1 })
+      .limit(6);
+
+    res.json(
+      promos.map((promo) => ({
+        _id: promo._id,
+        code: promo.code,
+        discountType: promo.discountType,
+        discountValue: promo.discountValue,
+        endsAt: promo.endsAt,
+        status: getPromoStatus(promo)
+      }))
+    );
+  } catch {
+    res.status(500).json({ error: "Failed to load active promo codes" });
+  }
+};
+
 export const createPromo = async (req, res) => {
   try {
     const { code, discountType, discountValue, maxUses, startsAt, endsAt } = req.body;

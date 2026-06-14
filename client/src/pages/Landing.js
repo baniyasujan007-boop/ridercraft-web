@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import Navbar from "../components/layout/Navbar";
 import { useCart } from "../context";
 import "../styles/pages/landing-base.css";
@@ -41,12 +42,15 @@ const DUMMY_EWALLET = {
   walletId: "dummy.wallet@quickgpt.test"
 };
 
+const CUSTOMER_NOTIFICATION_STORAGE_KEY = "ridercraft_customer_notifications";
+
 export default function Landing() {
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("shop");
   const [products, setProducts] = useState([]);
   const [heroOffers, setHeroOffers] = useState([]);
+  const [activePromos, setActivePromos] = useState([]);
   const [featuredSectionsData, setFeaturedSectionsData] = useState([]);
   const [productsError, setProductsError] = useState("");
   const [shopQuery, setShopQuery] = useState("");
@@ -127,7 +131,15 @@ export default function Landing() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
   const [offerNow, setOfferNow] = useState(Date.now());
+  const [customerNotifications, setCustomerNotifications] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOMER_NOTIFICATION_STORAGE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
   const prevTotalsRef = useRef({ totalPrice: 0, shipping: 0 });
+  const orderStatusSnapshotRef = useRef(null);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -488,31 +500,258 @@ export default function Landing() {
     const index = trackingSteps.indexOf(String(status || "").toLowerCase());
     return index === -1 ? 0 : index;
   };
-  const getStatusLabel = (status) => {
+  const getStatusLabel = useCallback((status) => {
     const normalized = String(status || "").toLowerCase();
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-  };
+  }, []);
   const getReturnStatusIndex = (status) => {
     const index = returnTrackingSteps.indexOf(String(status || "").toLowerCase());
     return index === -1 ? 0 : index;
   };
+  const addCustomerNotification = useCallback((notification) => {
+    setCustomerNotifications((prev) => {
+      const next = [
+        {
+          createdAt: new Date().toISOString(),
+          ...notification
+        },
+        ...prev.filter((item) => item.id !== notification.id)
+      ].slice(0, 20);
+      localStorage.setItem(CUSTOMER_NOTIFICATION_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+  const createOrderStatusSnapshot = useCallback((orders) =>
+    orders.reduce((acc, order) => {
+      acc[order._id] = String(order.status || "placed").toLowerCase();
+      return acc;
+    }, {}), []);
+  const notifications = useMemo(() => {
+    const items = [];
+    const latestOrder = [...orderHistory].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    )[0];
+    const activeReturns = orderHistory.filter(
+      (order) => String(order.returnRequest?.status || "none").toLowerCase() !== "none"
+    );
+    const latestServiceRequest = [...serviceRequests].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    )[0];
+
+    customerNotifications.forEach((notification) => {
+      items.push(notification);
+    });
+
+    activeHeroOffers.slice(0, 4).forEach((offer) => {
+      items.push({
+        id: `sale-${offer._id}`,
+        type: offer.offerType === "flash" ? "danger" : "success",
+        title: offer.offerType === "flash" ? "Flash sale is live" : "Sale available",
+        body: offer.title,
+        meta: offer.endsAt ? `Ends ${formatOrderDate(offer.endsAt)}` : "Limited time",
+        action: "Shop sale",
+        view: "shop"
+      });
+    });
+
+    activePromos.slice(0, 4).forEach((promo) => {
+      const promoDescription =
+        promo.discountType === "shipping"
+          ? "Free shipping available"
+          : promo.discountType === "flat"
+            ? `${formatCurrency(promo.discountValue)} off available`
+            : `${Number(promo.discountValue || 0)}% off available`;
+      items.push({
+        id: `promo-available-${promo._id || promo.code}`,
+        type: "success",
+        title: `Discount code ${promo.code}`,
+        body: `${promoDescription}. Apply this code at checkout.`,
+        meta: promo.endsAt ? `Ends ${formatOrderDate(promo.endsAt)}` : "Active",
+        action: "Use code",
+        view: "cart"
+      });
+    });
+
+    if (paymentSuccessMessage) {
+      items.push({
+        id: "payment-success",
+        type: "success",
+        title: "Payment confirmed",
+        body: paymentSuccessMessage,
+        meta: "Just now",
+        action: "View orders",
+        view: "orders"
+      });
+    }
+
+    if (promoMessage) {
+      items.push({
+        id: "promo-message",
+        type: appliedPromoCode ? "success" : "info",
+        title: appliedPromoCode ? `Promo ${appliedPromoCode} applied` : "Promo update",
+        body: promoMessage,
+        meta: "Cart",
+        action: "Open cart",
+        view: "cart"
+      });
+    }
+
+    if (cart.length > 0) {
+      items.push({
+        id: "cart-items",
+        type: freeShippingGap > 0 ? "warning" : "success",
+        title: `${totalItems} item${totalItems === 1 ? "" : "s"} in your cart`,
+        body:
+          freeShippingGap > 0
+            ? `Add ${formatCurrency(freeShippingGap)} more to unlock free shipping.`
+            : "You unlocked free shipping for this order.",
+        meta: formatCurrency(totalPrice),
+        action: "Checkout",
+        view: "cart"
+      });
+    }
+
+    if (latestOrder) {
+      items.push({
+        id: `order-${latestOrder._id}`,
+        type: "info",
+        title: `Order ${getStatusLabel(latestOrder.status || "placed")}`,
+        body: `#${String(latestOrder._id).slice(-8).toUpperCase()} total ${formatCurrency(latestOrder.total)}.`,
+        meta: latestOrder.createdAt ? formatOrderDate(latestOrder.createdAt) : "Recent",
+        action: "Track order",
+        view: "orders"
+      });
+    }
+
+    activeReturns.slice(0, 2).forEach((order) => {
+      items.push({
+        id: `return-${order._id}`,
+        type: "warning",
+        title: `Return ${getStatusLabel(order.returnRequest?.status || "requested")}`,
+        body: `Return request for order #${String(order._id).slice(-8).toUpperCase()} is being reviewed.`,
+        meta: order.returnRequest?.requestedAt
+          ? formatOrderDate(order.returnRequest.requestedAt)
+          : "Return",
+        action: "View return",
+        view: "orders"
+      });
+    });
+
+    if (latestServiceRequest) {
+      items.push({
+        id: `service-${latestServiceRequest._id}`,
+        type:
+          String(latestServiceRequest.priority || "normal").toLowerCase() === "emergency"
+            ? "danger"
+            : "info",
+        title: `Service ${getStatusLabel(latestServiceRequest.status || "requested")}`,
+        body: `${latestServiceRequest.bikeModel || "Bike"} booking for ${
+          latestServiceRequest.preferredDate || "your selected date"
+        } at ${latestServiceRequest.preferredTime || "your selected time"}.`,
+        meta: servicePackageLabels[latestServiceRequest.packageType] || "Service",
+        action: "View service",
+        view: "servicing"
+      });
+    }
+
+    if (!profile.contactNumber || !profile.deliveryAddress) {
+      items.push({
+        id: "profile-missing",
+        type: "warning",
+        title: "Complete your delivery profile",
+        body: "Add contact number and delivery address to make checkout and service booking faster.",
+        meta: "Profile",
+        action: "Update profile",
+        view: "profile"
+      });
+    }
+
+    if (items.length === 0) {
+      items.push({
+        id: "all-clear",
+        type: "success",
+        title: "All caught up",
+        body: "No urgent account, order, cart, or service updates right now.",
+        meta: "RiderCraft",
+        action: "Browse shop",
+        view: "shop"
+      });
+    }
+
+    return items;
+  }, [
+    appliedPromoCode,
+    activeHeroOffers,
+    activePromos,
+    cart.length,
+    customerNotifications,
+    freeShippingGap,
+    getStatusLabel,
+    orderHistory,
+    paymentSuccessMessage,
+    profile.contactNumber,
+    profile.deliveryAddress,
+    promoMessage,
+    servicePackageLabels,
+    serviceRequests,
+    totalItems,
+    totalPrice
+  ]);
+  const notificationCount =
+    notifications.length === 1 && notifications[0].id === "all-clear" ? 0 : notifications.length;
   const normalizeProductKey = (id) => String(id?._id || id || "");
-  const loadMyOrders = async () => {
+  const loadMyOrders = useCallback(async ({ notifyChanges = false, silent = false } = {}) => {
     setOrdersError("");
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      setOrdersLoading(true);
+      if (!silent) setOrdersLoading(true);
       const res = await axios.get("https://ridercraft-api.onrender.com/orders/my", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setOrderHistory(Array.isArray(res.data) ? res.data : []);
+      const nextOrders = Array.isArray(res.data) ? res.data : [];
+      const nextSnapshot = createOrderStatusSnapshot(nextOrders);
+      const previousSnapshot = orderStatusSnapshotRef.current;
+
+      if (notifyChanges && previousSnapshot) {
+        nextOrders.forEach((order) => {
+          const orderId = String(order._id || "");
+          const previousStatus = previousSnapshot[orderId];
+          const nextStatus = nextSnapshot[orderId];
+          if (!previousStatus || previousStatus === nextStatus) return;
+
+          const notification = {
+            id: `order-status-${orderId}-${nextStatus}`,
+            type: nextStatus === "delivered" ? "success" : "info",
+            title: `Order ${getStatusLabel(nextStatus)}`,
+            body: `Your order #${orderId.slice(-8).toUpperCase()} changed from ${getStatusLabel(
+              previousStatus
+            )} to ${getStatusLabel(nextStatus)}.`,
+            meta: "Order update",
+            action: "Track order",
+            view: "orders"
+          };
+          addCustomerNotification(notification);
+          toast.info(notification.body);
+        });
+      }
+
+      orderStatusSnapshotRef.current = nextSnapshot;
+      setOrderHistory(nextOrders);
     } catch (err) {
       setOrdersError(err.response?.data?.error || "Could not load order history");
     } finally {
-      setOrdersLoading(false);
+      if (!silent) setOrdersLoading(false);
     }
-  };
+  }, [addCustomerNotification, createOrderStatusSnapshot, getStatusLabel]);
+  const loadActivePromos = useCallback(async () => {
+    try {
+      const res = await axios.get("https://ridercraft-api.onrender.com/promos/active");
+      setActivePromos(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setActivePromos([]);
+    }
+  }, []);
   const loadMyServiceRequests = async () => {
     setServiceError("");
     try {
@@ -843,6 +1082,10 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    loadActivePromos();
+  }, [loadActivePromos]);
+
+  useEffect(() => {
     const loadFeaturedSections = async () => {
       try {
         const res = await axios.get("https://ridercraft-api.onrender.com/featured-sections");
@@ -861,12 +1104,35 @@ export default function Landing() {
 
   useEffect(() => {
     loadMyOrders();
-  }, []);
+  }, [loadMyOrders]);
 
   useEffect(() => {
     if (view !== "orders") return;
-    loadMyOrders();
-  }, [view]);
+    loadMyOrders({ notifyChanges: true });
+  }, [loadMyOrders, view]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      loadMyOrders({ notifyChanges: true, silent: true });
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [loadMyOrders]);
+
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      try {
+        const [offersRes, promosRes] = await Promise.all([
+          axios.get("https://ridercraft-api.onrender.com/hero-offers"),
+          axios.get("https://ridercraft-api.onrender.com/promos/active")
+        ]);
+        setHeroOffers(Array.isArray(offersRes.data) ? offersRes.data : []);
+        setActivePromos(Array.isArray(promosRes.data) ? promosRes.data : []);
+      } catch {
+        setActivePromos([]);
+      }
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     loadMyServiceRequests();
@@ -982,6 +1248,7 @@ export default function Landing() {
         setView={setView}
         totalItems={totalItems}
         totalOrders={orderHistory.length}
+        notificationCount={notificationCount}
         profile={profile}
         isAdmin={isAdmin}
         logout={logout}
@@ -1880,6 +2147,74 @@ export default function Landing() {
                   {request.garageNote && <p>Garage Response: {request.garageNote}</p>}
                 </article>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {view === "notifications" && (
+        <section className="profile-shell">
+          <div className="profile-board">
+            <div className="profile-main-area">
+              <header className="profile-topbar">
+                <div>
+                  <h2>Notifications</h2>
+                  <p>Account, order, cart, and service updates in one place</p>
+                </div>
+                <span className="notification-total">
+                  {notificationCount} new
+                </span>
+              </header>
+
+              <div className="profile-content-card notification-card">
+                <div className="notification-summary">
+                  <div>
+                    <span>Orders</span>
+                    <strong>{orderHistory.length}</strong>
+                  </div>
+                  <div>
+                    <span>Cart Items</span>
+                    <strong>{totalItems}</strong>
+                  </div>
+                  <div>
+                    <span>Service Requests</span>
+                    <strong>{serviceRequests.length}</strong>
+                  </div>
+                </div>
+
+                <div className="notification-list">
+                  {notifications.map((item) => (
+                    <article
+                      className={`notification-item notification-${item.type}`}
+                      key={item.id}
+                    >
+                      <div className="notification-icon" aria-hidden>
+                        {item.type === "success"
+                          ? "OK"
+                          : item.type === "warning"
+                            ? "!"
+                            : item.type === "danger"
+                              ? "!!"
+                              : "i"}
+                      </div>
+                      <div className="notification-copy">
+                        <div className="notification-row">
+                          <h3>{item.title}</h3>
+                          <span>{item.meta}</span>
+                        </div>
+                        <p>{item.body}</p>
+                        <button
+                          type="button"
+                          className="notification-action"
+                          onClick={() => setView(item.view)}
+                        >
+                          {item.action}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>

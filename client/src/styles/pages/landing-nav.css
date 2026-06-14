@@ -152,6 +152,10 @@
   background: #38bdf8;
 }
 
+.chip-rose {
+  background: #fb7185;
+}
+
 .logout-btn {
   border: 1px solid #22d3ee;
   background: linear-gradient(90deg, #22d3ee, #38bdf8);

@@ -2,6 +2,7 @@ import express from "express";
 import authMiddleware, { requireAdmin } from "../middleware/authMiddleware.js";
 import {
   createPromo,
+  listPublicActivePromos,
   listPromos,
   redeemPromo,
   updatePromo,
@@ -10,6 +11,7 @@ import {
 
 const router = express.Router();
 
+router.get("/active", listPublicActivePromos);
 router.get("/", authMiddleware, requireAdmin, listPromos);
 router.post("/", authMiddleware, requireAdmin, createPromo);
 router.put("/:id", authMiddleware, requireAdmin, updatePromo);
