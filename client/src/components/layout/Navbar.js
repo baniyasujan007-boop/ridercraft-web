@@ -75,12 +75,17 @@ export default function Navbar({
             <span>Bike Servicing</span>
           </button>
           <button
-            className={view === "notifications" ? "nav-btn active" : "nav-btn"}
-            onClick={() => goToView("notifications")}
-          >
-            <span className="nav-chip chip-rose" />
-            <span>Notifications ({notificationCount})</span>
-          </button>
+  className={view === "notifications" ? "nav-btn active notification-btn" : "nav-btn notification-btn"}
+  onClick={() => goToView("notifications")}
+>
+  <span>🔔</span>
+
+  {notificationCount > 0 && (
+    <span className="notification-badge">
+      {notificationCount}
+    </span>
+  )}
+</button>
           <button
             className="nav-btn"
             onClick={() => goToPath("/about")}
