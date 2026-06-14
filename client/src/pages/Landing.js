@@ -1301,8 +1301,10 @@ useEffect(() => {
   setView={setView}
   totalItems={totalItems}
   totalOrders={orderHistory.length}
-  notificationCount={notificationCount}
-  notifications={notifications}
+  notifications={dbNotifications}
+  notificationCount={dbNotifications.filter(
+    (item) => !item.isRead
+  ).length}
   profile={profile}
   isAdmin={isAdmin}
   logout={logout}
