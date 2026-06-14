@@ -30,7 +30,7 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
         theme: "outline",
         size: "large",
         width: 300,
-        text: label
+       text: "continue_with"
       });
     };
 
