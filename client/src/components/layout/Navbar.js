@@ -63,6 +63,25 @@ const getNotificationIcon = (title = "") => {
 
   return "🔔";
 };
+const markNotificationRead = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.put(
+      `https://ridercraft-api.onrender.com/notifications/${id}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+  }
+};
   return (
     <nav className="landing-nav">
       <div className="nav-frame">
@@ -185,10 +204,11 @@ const getNotificationIcon = (title = "") => {
 
       {notifications?.length > 0 ? (
         notifications.slice(0, 5).map((item, index) => (
-          <div
-            key={index}
-            className="notification-item"
-          >
+         <div
+  key={item._id}
+  className="notification-item"
+  onClick={() => markNotificationRead(item._id)}
+>
            <div>
 <div className="notification-content">
   <strong>
@@ -200,7 +220,7 @@ const getNotificationIcon = (title = "") => {
   <small>{item.time || "Just now"}</small>
 </div>
 
-{!readNotifications.includes(index) && (
+{!item.isRead && (
   <div className="notification-unread"></div>
 )}
 </div>
