@@ -196,6 +196,8 @@
 .pdp-meta-row {
   margin-top: 8px;
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   color: #505050;
   font-size: 14px;
@@ -204,6 +206,44 @@
 .pdp-rating {
   color: #f4b400;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdp-display-star-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pdp-display-star {
+  color: #d6dae1;
+  font-size: 20px;
+  line-height: 1;
+  position: relative;
+}
+
+.pdp-display-star-full {
+  color: #f4b400;
+}
+
+.pdp-display-star-half {
+  color: #d6dae1;
+}
+
+.pdp-display-star-half::before {
+  content: "★";
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  overflow: hidden;
+  color: #f4b400;
+}
+
+.pdp-rating strong {
+  color: #1f2937;
+  font-size: 14px;
 }
 
 .pdp-description {

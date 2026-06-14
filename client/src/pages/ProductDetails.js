@@ -174,7 +174,7 @@ export default function ProductDetails() {
 
               {product.reviews.length === 0 && (
                 <p className="pdp-reviews-empty">
-                  No reviews yet. Be the first to rate this product.
+                  No reviews yet. Purchase this product to leave a rating from your orders.
                 </p>
               )}
 

@@ -500,6 +500,42 @@
   color: #475569;
 }
 
+.product-rating-display {
+  display: grid;
+  gap: 5px;
+}
+
+.display-star-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+}
+
+.display-star {
+  color: #d6dae1;
+  font-size: 18px;
+  line-height: 1;
+  position: relative;
+}
+
+.display-star-full {
+  color: #f4b400;
+}
+
+.display-star-half {
+  color: #d6dae1;
+}
+
+.display-star-half::before {
+  content: "★";
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  overflow: hidden;
+  color: #f4b400;
+}
+
 .product-rating-controls {
   display: flex;
   flex-direction: column;

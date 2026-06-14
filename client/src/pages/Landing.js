@@ -449,6 +449,21 @@ export default function Landing() {
     setPromoMessage("Dummy e-wallet details filled.");
   };
   const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
+  const renderRatingStars = (value) => {
+    const rounded = Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
+    return [1, 2, 3, 4, 5].map((star) => {
+      const isFull = star <= rounded;
+      const isHalf = !isFull && star - 0.5 === rounded;
+      return (
+        <span
+          key={star}
+          className={`display-star${isFull ? " display-star-full" : ""}${isHalf ? " display-star-half" : ""}`}
+        >
+          ★
+        </span>
+      );
+    });
+  };
   const formatCountdown = (targetDate) => {
     if (!targetDate) return "";
     const remaining = Math.max(0, new Date(targetDate).getTime() - offerNow);
@@ -1579,54 +1594,21 @@ export default function Landing() {
                     <p className="product-brand">{product.tag}</p>
                     <h3>{product.name}</h3>
                     <p className="price">${product.price}</p>
-                    <p className="product-rating-text">
-                      Rating: {(product.ratingAverage || 0).toFixed(1)} / 5 (
-                      {product.ratingCount || 0})
-                    </p>
-                    <div className="product-rating-controls">
-                      <div className="star-rating-row">
-                        {[1, 2, 3, 4, 5].map((star) => {
-                          const preview =
-                            ratingHover[product._id] || ratingInputs[product._id] || 0;
-                          const isFull = star <= preview;
-                          const isHalf = !isFull && star - 0.5 === preview;
-                          return (
-                            <button
-                              key={star}
-                              className={`star-btn${isFull ? " star-btn-active" : ""}${isHalf ? " star-btn-half" : ""}`}
-                              onMouseMove={(e) => {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const isLeftHalf = e.clientX - rect.left < rect.width / 2;
-                                const nextValue = isLeftHalf ? star - 0.5 : star;
-                                setRatingHover((prev) => ({
-                                  ...prev,
-                                  [product._id]: nextValue
-                                }));
-                              }}
-                              onMouseLeave={() =>
-                                setRatingHover((prev) => ({ ...prev, [product._id]: 0 }))
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const isLeftHalf = e.clientX - rect.left < rect.width / 2;
-                                const nextValue = isLeftHalf ? star - 0.5 : star;
-                                submitRating(product._id, nextValue);
-                              }}
-                              disabled={ratingLoadingId === product._id}
-                              aria-label={`Rate ${product.name} ${star - 0.5} to ${star} stars`}
-                              type="button"
-                            >
-                              ★
-                            </button>
-                          );
-                        })}
+                    <div className="product-rating-display">
+                      <div
+                        className="display-star-row"
+                        aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}
+                      >
+                        {renderRatingStars(product.ratingAverage)}
                       </div>
-                      <p className="your-rating-text">
-                        Your rating: {ratingInputs[product._id] || "not rated"}
-                        {ratingLoadingId === product._id ? " (saving...)" : ""}
+                      <p className="product-rating-text">
+                        {(product.ratingAverage || 0).toFixed(1)} / 5 from{" "}
+                        {product.ratingCount || 0} ratings
                       </p>
                     </div>
+                    <p className="your-rating-text">
+                      Buy this product to leave a rating from your orders.
+                    </p>
                     <button
                       className="primary"
                       onClick={(e) => {

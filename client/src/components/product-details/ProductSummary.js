@@ -3,6 +3,22 @@ function formatSoldCount(count) {
   return `${count} sold`;
 }
 
+function renderRatingStars(value) {
+  const rounded = Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
+  return [1, 2, 3, 4, 5].map((star) => {
+    const isFull = star <= rounded;
+    const isHalf = !isFull && star - 0.5 === rounded;
+    return (
+      <span
+        key={star}
+        className={`pdp-display-star${isFull ? " pdp-display-star-full" : ""}${isHalf ? " pdp-display-star-half" : ""}`}
+      >
+        ★
+      </span>
+    );
+  });
+}
+
 export default function ProductSummary({
   product,
   expanded,
@@ -31,8 +47,14 @@ export default function ProductSummary({
       </div>
 
       <div className="pdp-meta-row">
-        <span className="pdp-rating">★ {product.rating.toFixed(1)}</span>
-        <span>{formatSoldCount(product.soldCount)}</span>
+        <span
+          className="pdp-rating"
+          aria-label={`Rating ${product.rating.toFixed(1)} out of 5`}
+        >
+          <span className="pdp-display-star-row">{renderRatingStars(product.rating)}</span>
+          <strong>{product.rating.toFixed(1)} / 5</strong>
+        </span>
+        <span>{formatSoldCount(product.soldCount)} ratings</span>
       </div>
 
       <div className="pdp-description">

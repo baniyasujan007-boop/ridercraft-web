@@ -1,4 +1,5 @@
 import Product from "../models/Product.js";
+import Order from "../models/Order.js";
 
 export const listProducts = async (_req, res) => {
   try {
@@ -143,6 +144,14 @@ export const rateProduct = async (req, res) => {
     }
 
     const userId = String(req.user.id);
+    const purchasedOrder = await Order.findOne({
+      user: req.user.id,
+      "items.productId": id
+    }).select("_id");
+    if (!purchasedOrder) {
+      return res.status(403).json({ error: "You can rate this product after purchase" });
+    }
+
     const existing = product.ratings.find((entry) => String(entry.user) === userId);
 
     if (existing) {
