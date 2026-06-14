@@ -9,8 +9,10 @@ router.get("/", authMiddleware, async (req, res) => {
     console.log("Logged in user:", req.user.id);
 
     const notifications = await Notification
-      .find({ userId: req.user.id })
-      .sort({ createdAt: -1 });
+  .find()
+  .sort({ createdAt: -1 });
+
+console.log("All notifications:", notifications.length);
 
     console.log(
       "Notifications found:",
