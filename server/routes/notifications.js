@@ -1,6 +1,7 @@
 import express from "express";
 import Notification from "../models/Notification.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import mongoose from "mongoose"; 
 
 const router = express.Router();
 
@@ -8,8 +9,10 @@ router.get("/", authMiddleware, async (req, res) => {
   try {
     console.log("Logged in user:", req.user.id);
 
-    const notifications = await Notification
-  .find()
+  const notifications = await Notification
+  .find({
+    userId: new mongoose.Types.ObjectId(req.user.id)
+  })
   .sort({ createdAt: -1 });
 
 console.log("All notifications:", notifications.length);
