@@ -5,10 +5,17 @@ import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/", authMiddleware, async (req, res) => {
-  try { 
+  try {
+    console.log("Logged in user:", req.user.id);
+
     const notifications = await Notification
       .find({ userId: req.user.id })
       .sort({ createdAt: -1 });
+
+    console.log(
+      "Notifications found:",
+      notifications.length
+    );
 
     res.json(notifications);
   } catch (err) {
@@ -60,15 +67,6 @@ router.put("/:id/read", authMiddleware, async (req, res) => {
     });
   }
 });
-router.post("/test", async (req, res) => {
-  const notification = await Notification.create({
-    userId: "YOUR_USER_ID",
-    title: "Order Created",
-    body: "Your order was placed successfully",
-    type: "order"
-  });
 
-  res.json(notification);
-});
 
 export default router;

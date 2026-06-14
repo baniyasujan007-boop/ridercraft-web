@@ -45,6 +45,44 @@ const DUMMY_EWALLET = {
 const CUSTOMER_NOTIFICATION_STORAGE_KEY = "ridercraft_customer_notifications";
 
 export default function Landing() {
+const [dbNotifications, setDbNotifications] = useState([]);
+
+const loadDbNotifications = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    console.log("Token exists:", !!token);
+
+    const res = await axios.get(
+      "https://ridercraft-api.onrender.com/notifications",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log("API Response:", res.data);
+
+    setDbNotifications(res.data || []);
+  } catch (err) {
+    console.error(
+      "Notification error:",
+      err.response?.data || err
+    );
+  }
+};
+
+useEffect(() => {
+  loadDbNotifications();
+}, []);
+
+useEffect(() => {
+  console.log(
+    "DB Notifications:",
+    dbNotifications
+  );
+}, [dbNotifications]);
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("shop");

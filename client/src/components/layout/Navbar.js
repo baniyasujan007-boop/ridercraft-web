@@ -16,6 +16,7 @@ export default function Navbar({
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [readNotifications, setReadNotifications] = useState([]);
 const notificationRef = useRef(null);
 
 useEffect(() => {
@@ -51,7 +52,17 @@ useEffect(() => {
     setMenuOpen(false);
     logout();
   };
+const getNotificationIcon = (title = "") => {
+  const text = title.toLowerCase();
 
+  if (text.includes("order")) return "📦";
+  if (text.includes("service")) return "🔧";
+  if (text.includes("coupon")) return "🎟️";
+  if (text.includes("payment")) return "💳";
+  if (text.includes("profile")) return "👤";
+
+  return "🔔";
+};
   return (
     <nav className="landing-nav">
       <div className="nav-frame">
@@ -143,9 +154,20 @@ useEffect(() => {
 
   {showNotifications && (
     <div className="notification-dropdown">
-      <div className="notification-header">
-        Notifications
-      </div>
+     <div className="notification-header">
+  <span>Notifications</span>
+
+ <button
+  className="mark-read-btn"
+  onClick={() =>
+    setReadNotifications(
+      notifications.map((_, index) => index)
+    )
+  }
+>
+  Mark all read
+</button>
+</div>
 
       {notifications?.length > 0 ? (
         notifications.slice(0, 5).map((item, index) => (
@@ -154,13 +176,19 @@ useEffect(() => {
             className="notification-item"
           >
            <div>
- <div className="notification-content">
-  <strong>📦 {item.title}</strong>
+<div className="notification-content">
+  <strong>
+    {getNotificationIcon(item.title)} {item.title}
+  </strong>
+
   <p>{item.body}</p>
-  <small>2 mins ago</small>
+
+  <small>{item.time || "Just now"}</small>
 </div>
 
-<div className="notification-unread"></div>
+{!readNotifications.includes(index) && (
+  <div className="notification-unread"></div>
+)}
 </div>
           </div>
         ))

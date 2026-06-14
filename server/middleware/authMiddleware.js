@@ -14,9 +14,16 @@ export default function authMiddleware(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-  } catch {
-    return res.status(401).json({ error: "Invalid token" });
-  }
+  }catch (err) {
+  console.log("JWT Error:", err.message);
+
+  return res.status(401).json({
+    error: "Invalid token"
+  });
+}
+  // } catch {
+  //   return res.status(401).json({ error: "Invalid token" });
+  // }
 }
 
 export function requireAdmin(req, res, next) {

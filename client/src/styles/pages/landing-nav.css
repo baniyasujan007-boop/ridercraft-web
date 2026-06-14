@@ -433,3 +433,25 @@
   margin-left: auto;
   margin-top: 6px;
 }
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  color: white;
+  font-weight: 700;
+  border-bottom: 1px solid #2b364b;
+}
+
+.mark-read-btn {
+  background: transparent;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mark-read-btn:hover {
+  text-decoration: underline;
+}
