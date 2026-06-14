@@ -9,6 +9,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import heroOfferRoutes from "./routes/heroOfferRoutes.js";
 import featuredSectionRoutes from "./routes/featuredSectionRoutes.js";
 import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
+import notificationRoutes from "./routes/notifications.js";
 
 dotenv.config();
 
@@ -25,6 +26,10 @@ app.use("/orders", orderRoutes);
 app.use("/hero-offers", heroOfferRoutes);
 app.use("/featured-sections", featuredSectionRoutes);
 app.use("/service-requests", serviceRequestRoutes);
+app.use(
+  "/notifications",
+  notificationRoutes
+);
 
 const PORT = process.env.PORT || 5001;
 

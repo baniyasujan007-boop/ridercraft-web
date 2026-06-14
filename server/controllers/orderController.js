@@ -1,4 +1,5 @@
 import Order from "../models/Order.js";
+import Notification from "../models/Notification.js";
 
 const RETURN_STATUSES = [
   "none",
@@ -127,22 +128,31 @@ export const createOrder = async (req, res) => {
       paymentReference = "COD";
     }
 
-    const order = await Order.create({
-      user: req.user.id,
-      items: normalizedItems,
-      subtotal: Number(subtotal || 0),
-      tax: Number(tax || 0),
-      shipping: Number(shipping || 0),
-      discount: Number(discount || 0),
-      total: Number(total || 0),
-      promoCode: String(promoCode || ""),
-      paymentMethod: method,
-      paymentStatus,
-      paymentReference,
-      paymentMeta
-    });
+  const order = await Order.create({
+  user: req.user.id,
+  items: normalizedItems,
+  subtotal: Number(subtotal || 0),
+  tax: Number(tax || 0),
+  shipping: Number(shipping || 0),
+  discount: Number(discount || 0),
+  total: Number(total || 0),
+  promoCode: String(promoCode || ""),
+  paymentMethod: method,
+  paymentStatus,
+  paymentReference,
+  paymentMeta
+});
 
-    res.status(201).json(order);
+await Notification.create({
+  userId: req.user.id,
+  title: "Order Created",
+  body: `Your order #${order._id
+    .toString()
+    .slice(-6)} has been placed successfully.`,
+  type: "order"
+});
+
+res.status(201).json(order);
   } catch {
     res.status(500).json({ error: "Failed to create order" });
   }
