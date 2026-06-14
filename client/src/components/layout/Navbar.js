@@ -159,11 +159,25 @@ const getNotificationIcon = (title = "") => {
 
  <button
   className="mark-read-btn"
-  onClick={() =>
-    setReadNotifications(
-      notifications.map((_, index) => index)
-    )
+ onClick={async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.put(
+      "https://ridercraft-api.onrender.com/notifications/read-all",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
   }
+}}
 >
   Mark all read
 </button>
