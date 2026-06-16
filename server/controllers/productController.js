@@ -210,7 +210,14 @@ export const fetchProductFromUrl = async (req, res) => {
   try {
     console.log("URL RECEIVED:", req.body.url);
     const { url } = req.body;
-
+if (
+  url.includes("/cdn/") ||
+  /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
+) {
+  return res.status(400).json({
+    error: "Please enter a product page URL, not an image URL"
+  });
+}
    const response = await axios.get(url);
 const $ = cheerio.load(response.data);
 let price = "";

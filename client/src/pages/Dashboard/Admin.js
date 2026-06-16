@@ -802,7 +802,7 @@ console.log("Sending URL:", productUrl);
     : "",
 
   stock: String(product.stock ?? "25"),
-  image: product.image || "",
+  image: productUrl|| "",
 });
   };
 
