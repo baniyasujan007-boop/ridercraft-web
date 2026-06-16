@@ -232,6 +232,14 @@ export const updateOrderPaymentStatus = async (req, res) => {
 
     order.paymentStatus = nextStatus;
     await order.save();
+    await Notification.create({
+  userId: order.user,
+  title: "Payment Status Updated",
+  body: `Payment for order #${order._id
+    .toString()
+    .slice(-6)} is now ${nextStatus}.`,
+  type: "payment"
+});
     res.json({ message: "Payment status updated", order });
   } catch {
     res.status(500).json({ error: "Failed to update payment status" });
