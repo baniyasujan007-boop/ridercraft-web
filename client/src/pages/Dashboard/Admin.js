@@ -701,7 +701,7 @@ export default function Admin() {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-
+console.log("Sending URL:", productUrl);
       const res = await axios.post(
         "https://ridercraft-api.onrender.com/products/fetch-url",
         { url: productUrl },
