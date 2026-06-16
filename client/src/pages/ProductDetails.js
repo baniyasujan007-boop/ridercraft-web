@@ -12,7 +12,7 @@ function mapApiProductToUi(product) {
   const image = product.image || "";
   return {
     id: product._id,
-    brand: (product.tag || "General").toUpperCase(),
+    brand: product.brand || "Generic",
     title: product.name || "Product",
     oldPrice: null,
     price: Number(product.price || 0),
@@ -35,7 +35,7 @@ function mapApiProductToUi(product) {
   ? [
       {
         name: product.colorFamily,
-        value: "#1f1f1f"
+        value: product.colorHex || "#1f1f1f"
       }
     ]
   : [],
