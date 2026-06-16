@@ -193,13 +193,23 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    order.status = nextStatus;
-    await order.save();
-    res.json({ message: "Order status updated", order });
-  } catch {
-    res.status(500).json({ error: "Failed to update order status" });
-  }
-};
+ order.status = nextStatus;
+
+await order.save();
+
+await Notification.create({
+  userId: order.user,
+  title: "Order Status Updated",
+  body: `Your order #${order._id
+    .toString()
+    .slice(-6)} is now ${nextStatus}.`,
+  type: "order"
+});
+
+res.json({
+  message: "Order status updated",
+  order
+});
 
 export const updateOrderPaymentStatus = async (req, res) => {
   try {
