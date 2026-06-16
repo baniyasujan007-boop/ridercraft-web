@@ -202,7 +202,7 @@ const image =
       name,
       brand,
       image,
-      price: ""
+      price: price ? Number(price.replace(/[^0-9.]/g, "")) : 0
     });
   } catch (error) {
     console.error(error);
