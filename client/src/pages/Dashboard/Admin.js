@@ -702,19 +702,21 @@ export default function Admin() {
         Authorization: `Bearer ${token}`,
       };
 console.log("Sending URL:", productUrl);
-      const res = await axios.post(
-        "https://ridercraft-api.onrender.com/products/fetch-url",
-        { url: productUrl },
-        { headers },
-      );
+    const res = await axios.post(
+  "https://ridercraft-api.onrender.com/products/fetch-url",
+  { url: productUrl },
+  { headers }
+);
 
-      setForm((prev) => ({
-        ...prev,
-        name: res.data.name || "",
-        price: String(res.data.price || ""),
-        brand: res.data.brand || "",
-        image: res.data.image || "",
-      }));
+console.log("FETCH RESPONSE:", res.data);
+
+setForm((prev) => ({
+  ...prev,
+  name: res.data.name || "",
+  price: String(res.data.price || ""),
+  brand: res.data.brand || "",
+  image: res.data.image || "",
+}));
     } catch (err) {
       setError(err.response?.data?.error || "Failed to fetch product");
     }
