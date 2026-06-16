@@ -13,6 +13,7 @@ const initialForm = {
   sizes: "",
   colors: "",
   image: "",
+  description: "",
 };
 const initialPromoForm = {
   code: "",
@@ -710,12 +711,16 @@ console.log("Sending URL:", productUrl);
 
 console.log("FETCH RESPONSE:", res.data);
 
+
 setForm((prev) => ({
   ...prev,
   name: res.data.name || "",
   price: String(res.data.price || ""),
   brand: res.data.brand || "",
   image: res.data.image || "",
+  description: res.data.description || "",
+  sizes: (res.data.sizes || []).join(", "),
+  colors: (res.data.colors || []).join(", ")
 }));
     } catch (err) {
       setError(err.response?.data?.error || "Failed to fetch product");
@@ -749,6 +754,7 @@ setForm((prev) => ({
   tag: form.tag.trim() || "General",
   brand: form.brand.trim() || "Generic",
   colorFamily: form.colorFamily.trim() || "Neutral",
+  description: form.description || "",
 
   sizes: form.sizes
     ? form.sizes.split(",").map((s) => s.trim())

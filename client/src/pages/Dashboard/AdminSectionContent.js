@@ -119,6 +119,16 @@ export default function AdminSectionContent({ vm }) {
                 setForm((prev) => ({ ...prev, colorFamily: e.target.value }))
               }
             />
+            <textarea
+  placeholder="Product Description"
+  value={form.description}
+  onChange={(e) =>
+    setForm((prev) => ({
+      ...prev,
+      description: e.target.value,
+    }))
+  }
+/>
             <input
               type="text"
               placeholder="Sizes (S,M,L,XL)"
@@ -165,7 +175,6 @@ export default function AdminSectionContent({ vm }) {
 >
   Fetch Product
 </button>
-            <button onClick={fetchProductFromUrl}>Fetch Product</button>
             <input
               type="number"
               min="0"

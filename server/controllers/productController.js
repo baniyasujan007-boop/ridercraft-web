@@ -248,11 +248,44 @@ const image =
     const brand = name?.split(" ")[0] || "Generic";
 
 
+$('option').each((_, el) => {
+  const text = $(el).text().trim();
 
+  if (
+    ["XS", "S", "M", "L", "XL", "XXL"].includes(text) ||
+    /^\d+$/.test(text)
+  ) {
+    sizes.push(text);
+  }
+});
+
+const colorWords = [
+  "Black",
+  "Blue",
+  "Red",
+  "White",
+  "Grey",
+  "Gray",
+  "Green",
+  "Orange",
+  "Yellow"
+];
+
+colorWords.forEach((color) => {
+  if (response.data.includes(color)) {
+    colors.push(color);
+  }
+});
+
+sizes = [...new Set(sizes)];
+colors = [...new Set(colors)];
   res.json({
   name,
   brand,
   image,
+  description,
+sizes,
+colors,
   price: price ? Number(price) : 0
 });
  } catch (error) {
