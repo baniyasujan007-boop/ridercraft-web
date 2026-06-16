@@ -1,5 +1,6 @@
 import ServiceRequest from "../models/ServiceRequest.js";
 import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 
 const ALLOWED_PACKAGES = ["basic", "full", "premium"];
 const ALLOWED_SERVICE_STATUSES = [
@@ -165,7 +166,12 @@ export const createServiceRequest = async (req, res) => {
       "assignedGarage",
       "name email contactNumber garageProfile"
     );
-
+await Notification.create({
+  userId: req.user.id,
+  title: "Service Request Submitted",
+  body: "Your bike service request has been submitted successfully.",
+  type: "service"
+});
     return res.status(201).json({
       message: nearestGarage?.garage
         ? "Service request submitted and assigned to the nearest garage"
@@ -227,8 +233,16 @@ export const updateServiceRequestStatus = async (req, res) => {
     }
 
     requestDoc.status = nextStatus;
-    requestDoc.adminNote = adminNote;
-    await requestDoc.save();
+requestDoc.adminNote = adminNote;
+
+await requestDoc.save();
+
+await Notification.create({
+  userId: requestDoc.user,
+  title: "Service Status Updated",
+  body: `Your service request is now ${nextStatus.replace("_", " ")}.`,
+  type: "service"
+});
 
     return res.json({ message: "Service request updated", request: requestDoc });
   } catch {
@@ -259,6 +273,13 @@ export const respondGarageServiceRequest = async (req, res) => {
     requestDoc.garageNote = garageNote;
     requestDoc.garageRespondedAt = new Date();
     await requestDoc.save();
+
+await Notification.create({
+  userId: requestDoc.user,
+  title: "Garage Update",
+  body: `Your service booking is now ${nextStatus.replace("_", " ")}.`,
+  type: "service"
+});
 
     return res.json({ message: "Booking response submitted", request: requestDoc });
   } catch {
