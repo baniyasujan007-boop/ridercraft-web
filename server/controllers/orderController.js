@@ -341,8 +341,21 @@ export const reviewOrderReturn = async (req, res) => {
         note: adminNote || "Return request rejected",
         actor: "admin"
       });
-      await order.save();
-      return res.json({ message: "Return request rejected", order });
+     await Notification.create({
+  userId: order.user,
+  title: "Return Rejected",
+  body: `Your return request for order #${order._id
+    .toString()
+    .slice(-6)} was rejected.`,
+  type: "order"
+});
+
+await order.save();
+
+return res.json({
+  message: "Return request rejected",
+  order
+});
     }
 
     order.returnRequest.status = "approved";
@@ -364,6 +377,14 @@ export const reviewOrderReturn = async (req, res) => {
         actor: "system"
       });
       order.paymentStatus = "refunded";
+      await Notification.create({
+  userId: order.user,
+  title: "Refund Processed",
+  body: `Refund for order #${order._id
+    .toString()
+    .slice(-6)} has been processed successfully.`,
+  type: "payment"
+});
       order.returnRequest.status = "refunded";
       pushReturnEvent(order, {
         status: "refunded",
@@ -371,7 +392,14 @@ export const reviewOrderReturn = async (req, res) => {
         actor: "system"
       });
     }
-
+await Notification.create({
+  userId: order.user,
+  title: "Return Approved",
+  body: `Your return request for order #${order._id
+    .toString()
+    .slice(-6)} has been approved.`,
+  type: "order"
+});
     await order.save();
     return res.json({
       message:
