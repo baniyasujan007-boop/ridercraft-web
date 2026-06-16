@@ -183,7 +183,12 @@ export const fetchProductFromUrl = async (req, res) => {
 
    const response = await axios.get(url);
 const $ = cheerio.load(response.data);
-
+const price =
+  $('meta[property="product:price:amount"]').attr("content") ||
+  $('meta[property="product:price"]').attr("content") ||
+  $('[data-product-price]').first().text().trim() ||
+  "";
+  
 const name =
   $('meta[property="og:title"]').attr("content") ||
   $("title").text();
