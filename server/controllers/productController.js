@@ -208,8 +208,7 @@ export const rateProduct = async (req, res) => {
 
 export const fetchProductFromUrl = async (req, res) => {
   try {
-    console.log("URL RECEIVED:", req.body.url);
-    const { url } = req.body;
+        const { url } = req.body;
 if (
   url.includes("/cdn/") ||
   /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
@@ -256,11 +255,11 @@ const image =
   image,
   price: price ? Number(price) : 0
 });
-  } catch (error) {
-    console.error(error);
+ } catch (error) {
+  console.error("FETCH ERROR:", error.message);
 
-    res.status(500).json({
-      error: "Failed to fetch product"
-    });
-  }
+  res.status(500).json({
+    error: error.message
+  });
+}
 };
