@@ -193,7 +193,7 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
- order.status = nextStatus;
+   order.status = nextStatus;
 
 await order.save();
 
@@ -210,6 +210,10 @@ res.json({
   message: "Order status updated",
   order
 });
+  } catch {
+    res.status(500).json({ error: "Failed to update order status" });
+  }
+};
 
 export const updateOrderPaymentStatus = async (req, res) => {
   try {
