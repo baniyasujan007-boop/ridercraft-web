@@ -181,16 +181,15 @@ export const fetchProductFromUrl = async (req, res) => {
   try {
     const { url } = req.body;
 
-    const response = await axios.get(url);
+   const response = await axios.get(url);
+const $ = cheerio.load(response.data);
 
-    const $ = cheerio.load(response.data);
+const name =
+  $('meta[property="og:title"]').attr("content") ||
+  $("title").text();
 
-    const name =
-      $('meta[property="og:title"]').attr("content") ||
-      $("title").text();
-
-    const image =
-      $('meta[property="og:image"]').attr("content") || "";
+const image =
+  $('meta[property="og:image"]').attr("content") || "";
 
     const brand = name?.split(" ")[0] || "Generic";
 
