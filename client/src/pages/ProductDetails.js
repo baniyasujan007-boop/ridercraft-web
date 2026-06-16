@@ -45,12 +45,15 @@ function mapApiProductToUi(product) {
     description:
   product.description || "",
    images: product.images?.length ? product.images : [image],
- colors: product.colorFamily
+colors: product.colorFamily
   ? [
       {
         name: product.colorFamily,
-        value: product.colorHex || "#1f1f1f"
-      } 
+        value:
+          product.colorHex ||
+          colorMap[colorName] ||
+          "#1f1f1f"
+      }
     ]
   : [],
    sizes: []
