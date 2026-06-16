@@ -1,4 +1,6 @@
 import Promo from "../models/Promo.js";
+import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 
 function computeDiscount(promo, subtotal, shipping = 0) {
   if (promo.discountType === "shipping") {
@@ -100,6 +102,16 @@ export const createPromo = async (req, res) => {
       startsAt: starts,
       endsAt: ends
     });
+    const users = await User.find({}, "_id");
+
+await Notification.insertMany(
+  users.map((user) => ({
+    userId: user._id,
+    title: "Flash Sale Live",
+    body: `${promo.code} is now available. Limited time offer!`,
+    type: "coupon"
+  }))
+);
 
     res.status(201).json({ ...promo.toObject(), status: getPromoStatus(promo) });
   } catch (err) {
