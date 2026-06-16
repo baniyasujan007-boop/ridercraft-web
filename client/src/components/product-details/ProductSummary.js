@@ -42,8 +42,9 @@ export default function ProductSummary({
       <h1 className="pdp-title">{product.title}</h1>
 
       <div className="pdp-price-row">
-        <p className="pdp-old-price">${product.oldPrice}</p>
-        <p className="pdp-new-price">${product.price}</p>
+{product.oldPrice && (
+  <p className="pdp-old-price">${product.oldPrice}</p>
+)}        <p className="pdp-new-price">${product.price}</p>
       </div>
 
       <div className="pdp-meta-row">
@@ -57,52 +58,71 @@ export default function ProductSummary({
         <span>{formatSoldCount(product.soldCount)} ratings</span>
       </div>
 
-      <div className="pdp-description">
-        <p>{descriptionText}</p>
-        {needsToggle && (
-          <button className="pdp-link-btn" onClick={onToggleDescription} type="button">
-            {expanded ? "See less" : "See more"}
-          </button>
-        )}
-      </div>
+      {product.description && (
+  <div className="pdp-description">
+    <p>{descriptionText}</p>
+    {needsToggle && (
+      <button
+        className="pdp-link-btn"
+        onClick={onToggleDescription}
+        type="button"
+      >
+        {expanded ? "See less" : "See more"}
+      </button>
+    )}
+  </div>
+)}
 
       <div className="pdp-options">
-        <div className="pdp-option-group">
-          <p className="pdp-option-title">Color: {selectedColor.name}</p>
-          <div className="pdp-color-row">
-            {product.colors.map((color) => (
-              <button
-                key={color.name}
-                title={color.name}
-                className={
-                  selectedColor.name === color.name
-                    ? "pdp-color-swatch active"
-                    : "pdp-color-swatch"
-                }
-                style={{ backgroundColor: color.value }}
-                onClick={() => onSelectColor(color)}
-                type="button"
-              />
-            ))}
-          </div>
-        </div>
+        {product.colors.length > 0 && (
+  <div className="pdp-option-group">
+    <p className="pdp-option-title">
+      Color: {selectedColor?.name}
+    </p>
 
-        <div className="pdp-option-group">
-          <p className="pdp-option-title">Size</p>
-          <div className="pdp-size-grid">
-            {product.sizes.map((size) => (
-              <button
-                key={size}
-                className={selectedSize === size ? "pdp-size-btn active" : "pdp-size-btn"}
-                onClick={() => onSelectSize(size)}
-                type="button"
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="pdp-color-row">
+      {product.colors.map((color) => (
+        <button
+          key={color.name}
+          title={color.name}
+          className={
+            selectedColor?.name === color.name
+              ? "pdp-color-swatch active"
+              : "pdp-color-swatch"
+          }
+          style={{ backgroundColor: color.value }}
+          onClick={() => onSelectColor(color)}
+          type="button"
+        />
+      ))}
+    </div>
+  </div>
+)}
+
+      {product.sizes.length > 0 && (
+  <div className="pdp-option-group">
+    <p className="pdp-option-title">Size</p>
+
+    <div className="pdp-size-grid">
+      {product.sizes.map((size) => (
+        <button
+          key={size}
+          className={
+            selectedSize === size
+              ? "pdp-size-btn active"
+              : "pdp-size-btn"
+          }
+          onClick={() => onSelectSize(size)}
+          type="button"
+        >
+          {size}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
       </div>
+
 
       <div className="pdp-actions">
         <button className="pdp-btn pdp-btn-primary" type="button" onClick={onAddToCart}>
