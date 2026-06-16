@@ -10,6 +10,20 @@ import { DEFAULT_FALLBACK_IMAGE } from "../utils/fallbackImage";
 
 function mapApiProductToUi(product) {
   const image = product.image || "";
+  const colorMap = {
+    black: "#1f1f1f",
+    blue: "#2563eb",
+    red: "#dc2626",
+    green: "#16a34a",
+    white: "#ffffff",
+    gray: "#6b7280",
+    grey: "#6b7280",
+    yellow: "#eab308",
+    orange: "#f97316"
+  };
+   const colorName = String(
+    product.colorFamily || ""
+  ).toLowerCase();
   return {
     id: product._id,
     brand: product.brand || "Generic",
@@ -36,7 +50,7 @@ function mapApiProductToUi(product) {
       {
         name: product.colorFamily,
         value: product.colorHex || "#1f1f1f"
-      }
+      } 
     ]
   : [],
    sizes: []
