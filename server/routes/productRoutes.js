@@ -5,7 +5,9 @@ import {
   getProductById,
   listProducts,
   rateProduct,
-  updateProduct
+  updateProduct,
+  fetchProductFromUrl
+
 } from "../controllers/productController.js";
 import authMiddleware, { requireAdmin } from "../middleware/authMiddleware.js";
 
@@ -17,5 +19,6 @@ router.post("/", authMiddleware, requireAdmin, createProduct);
 router.post("/:id/rate", authMiddleware, rateProduct);
 router.put("/:id", authMiddleware, requireAdmin, updateProduct);
 router.delete("/:id", authMiddleware, requireAdmin, deleteProduct);
+router.post("/fetch-url", authMiddleware, requireAdmin, fetchProductFromUrl);
 
 export default router;

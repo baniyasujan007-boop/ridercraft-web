@@ -3,6 +3,7 @@ import axios from "axios";
 import AdminSectionContent from "./AdminSectionContent";
 import "../../styles/pages/admin.css";
 
+const [productUrl, setProductUrl] = useState("");
 const initialForm = {
   name: "Sample Product",
   price: "999",
@@ -624,7 +625,31 @@ export default function Admin() {
       rawValue && /^www\./i.test(rawValue) ? `https://${rawValue}` : rawValue;
     setForm((prev) => ({ ...prev, image: nextValue }));
   };
+const fetchProductFromUrl = async () => {
+  try {
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
 
+    const res = await axios.post(
+      "https://ridercraft-api.onrender.com/products/fetch-url",
+      { url: productUrl },
+      { headers }
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      name: res.data.name || "",
+      price: String(res.data.price || ""),
+      brand: res.data.brand || "",
+      image: res.data.image || ""
+    }));
+  } catch (err) {
+    setError(
+      err.response?.data?.error || "Failed to fetch product"
+    );
+  }
+};
   const saveProduct = async () => {
     setError("");
     setMessage("");

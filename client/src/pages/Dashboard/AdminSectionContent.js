@@ -115,6 +115,15 @@ export default function AdminSectionContent({ vm }) {
               onChange={handleProductImageUrlChange}
             />
             <input
+  placeholder="Paste product URL"
+  value={productUrl}
+  onChange={(e) => setProductUrl(e.target.value)}
+/>
+
+<button onClick={fetchProductFromUrl}>
+  Fetch Product
+</button>
+            <input
               type="number"
               min="0"
               placeholder="Stock"
