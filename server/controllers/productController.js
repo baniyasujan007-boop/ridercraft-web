@@ -183,11 +183,24 @@ export const fetchProductFromUrl = async (req, res) => {
 
    const response = await axios.get(url);
 const $ = cheerio.load(response.data);
-const price =
-  $('meta[property="product:price:amount"]').attr("content") ||
-  $('meta[property="product:price"]').attr("content") ||
-  $('[data-product-price]').first().text().trim() ||
-  "";
+let price = "";
+
+$('script[type="application/ld+json"]').each((_, el) => {
+  try {
+    const json = JSON.parse($(el).html());
+
+    if (json.offers?.price) {
+      price = String(json.offers.price);
+    }
+
+    if (
+      Array.isArray(json.offers) &&
+      json.offers[0]?.price
+    ) {
+      price = String(json.offers[0].price);
+    }
+  } catch {}
+});
   
 const name =
   $('meta[property="og:title"]').attr("content") ||
@@ -200,12 +213,12 @@ const image =
 console.log("Name:", name);
 console.log("Price raw:", price);
 console.log("Image:", image);
-    res.json({
-      name,
-      brand,
-      image,
-      price: price ? Number(price.replace(/[^0-9.]/g, "")) : 0
-    });
+  res.json({
+  name,
+  brand,
+  image,
+  price: price ? Number(price) : 0
+});
   } catch (error) {
     console.error(error);
 
