@@ -28,23 +28,25 @@ export const getProductById = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const {
-  name,
-  price,
-  tag,
-  brand,
-  colorFamily,
-  sizes,
-  colors,
-  stock,
-  image
-} = req.body;
+      name,
+      price,
+      tag,
+      brand,
+      colorFamily,
+      sizes,
+      colors,
+      stock,
+      image,
+    } = req.body;
     if (!name || price === undefined || price === null) {
       return res.status(400).json({ error: "Name and price are required" });
     }
 
     const numericPrice = Number(price);
     if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-      return res.status(400).json({ error: "Price must be a valid non-negative number" });
+      return res
+        .status(400)
+        .json({ error: "Price must be a valid non-negative number" });
     }
 
     const product = await Product.create({
@@ -54,10 +56,12 @@ export const createProduct = async (req, res) => {
       brand: brand ? String(brand).trim() : "Generic",
       colorFamily: colorFamily ? String(colorFamily).trim() : "Neutral",
       sizes: Array.isArray(sizes) ? sizes : [],
-colors: Array.isArray(colors) ? colors : [],
+      colors: Array.isArray(colors) ? colors : [],
       stock:
-        Number.isInteger(Number(stock)) && Number(stock) >= 0 ? Number(stock) : 25,
-      image: image ? String(image) : ""
+        Number.isInteger(Number(stock)) && Number(stock) >= 0
+          ? Number(stock)
+          : 25,
+      image: image ? String(image) : "",
     });
 
     res.status(201).json(product);
@@ -69,17 +73,18 @@ colors: Array.isArray(colors) ? colors : [],
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-const {
-  name,
-  price,
-  tag,
-  brand,
-  colorFamily,
-  sizes,
-  colors,
-  stock,
-  image
-} = req.body;    const product = await Product.findById(id);
+    const {
+      name,
+      price,
+      tag,
+      brand,
+      colorFamily,
+      sizes,
+      colors,
+      stock,
+      image,
+    } = req.body;
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
@@ -96,7 +101,9 @@ const {
     if (price !== undefined) {
       const numericPrice = Number(price);
       if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-        return res.status(400).json({ error: "Price must be a valid non-negative number" });
+        return res
+          .status(400)
+          .json({ error: "Price must be a valid non-negative number" });
       }
       product.price = numericPrice;
     }
@@ -113,17 +120,19 @@ const {
       product.colorFamily = String(colorFamily).trim() || "Neutral";
     }
     if (sizes !== undefined) {
-  product.sizes = Array.isArray(sizes) ? sizes : [];
-}
+      product.sizes = Array.isArray(sizes) ? sizes : [];
+    }
 
-if (colors !== undefined) {
-  product.colors = Array.isArray(colors) ? colors : [];
-}
+    if (colors !== undefined) {
+      product.colors = Array.isArray(colors) ? colors : [];
+    }
 
     if (stock !== undefined) {
       const parsedStock = Number(stock);
       if (!Number.isInteger(parsedStock) || parsedStock < 0) {
-        return res.status(400).json({ error: "Stock must be a non-negative integer" });
+        return res
+          .status(400)
+          .json({ error: "Stock must be a non-negative integer" });
       }
       product.stock = parsedStock;
     }
@@ -162,10 +171,14 @@ export const rateProduct = async (req, res) => {
     const hasHalfStep = Number.isInteger(rating * 2);
 
     if (rating < 0.5 || rating > 5 || !hasHalfStep) {
-      return res.status(400).json({ error: "Rating must be in 0.5 steps from 0.5 to 5" });
+      return res
+        .status(400)
+        .json({ error: "Rating must be in 0.5 steps from 0.5 to 5" });
     }
     if (comment.length > 300) {
-      return res.status(400).json({ error: "Comment must be 300 characters or less" });
+      return res
+        .status(400)
+        .json({ error: "Comment must be 300 characters or less" });
     }
 
     const product = await Product.findById(id);
@@ -176,13 +189,17 @@ export const rateProduct = async (req, res) => {
     const userId = String(req.user.id);
     const purchasedOrder = await Order.findOne({
       user: req.user.id,
-      "items.productId": id
+      "items.productId": id,
     }).select("_id");
     if (!purchasedOrder) {
-      return res.status(403).json({ error: "You can rate this product after purchase" });
+      return res
+        .status(403)
+        .json({ error: "You can rate this product after purchase" });
     }
 
-    const existing = product.ratings.find((entry) => String(entry.user) === userId);
+    const existing = product.ratings.find(
+      (entry) => String(entry.user) === userId,
+    );
 
     if (existing) {
       existing.value = rating;
@@ -199,7 +216,7 @@ export const rateProduct = async (req, res) => {
     await product.save();
     res.json({
       message: existing ? "Rating updated" : "Rating added",
-      product
+      product,
     });
   } catch {
     res.status(500).json({ error: "Failed to save rating" });
@@ -208,91 +225,88 @@ export const rateProduct = async (req, res) => {
 
 export const fetchProductFromUrl = async (req, res) => {
   try {
-        const { url } = req.body;
-if (
-  url.includes("/cdn/") ||
-  /\.(jpg|jpeg|png|webp|gif)$/i.test(url)
-) {
-  return res.status(400).json({
-    error: "Please enter a product page URL, not an image URL"
-  });
-}
-   const response = await axios.get(url);
-const $ = cheerio.load(response.data);
-let price = "";
-
-$('script[type="application/ld+json"]').each((_, el) => {
-  try {
-    const json = JSON.parse($(el).html());
-
-    if (json.offers?.price) {
-      price = String(json.offers.price);
+    const { url } = req.body;
+    if (url.includes("/cdn/") || /\.(jpg|jpeg|png|webp|gif)$/i.test(url)) {
+      return res.status(400).json({
+        error: "Please enter a product page URL, not an image URL",
+      });
     }
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+    let price = "";
 
-    if (
-      Array.isArray(json.offers) &&
-      json.offers[0]?.price
-    ) {
-      price = String(json.offers[0].price);
-    }
-  } catch {}
-});
-  
-const name =
-  $('meta[property="og:title"]').attr("content") ||
-  $("title").text();
+    $('script[type="application/ld+json"]').each((_, el) => {
+      try {
+        const json = JSON.parse($(el).html());
 
-const image =
-  $('meta[property="og:image"]').attr("content") || "";
+        if (json.offers?.price) {
+          price = String(json.offers.price);
+        }
+
+        if (Array.isArray(json.offers) && json.offers[0]?.price) {
+          price = String(json.offers[0].price);
+        }
+      } catch {}
+    });
+
+    const name =
+      $('meta[property="og:title"]').attr("content") || $("title").text();
+
+    const image = $('meta[property="og:image"]').attr("content") || "";
 
     const brand = name?.split(" ")[0] || "Generic";
+     const description =
+  $('meta[property="og:description"]').attr("content") || "";
 
+let sizes = [];
+let colors = [];
 
-$('option').each((_, el) => {
-  const text = $(el).text().trim();
+    $("option").each((_, el) => {
+      const text = $(el).text().trim();
 
-  if (
-    ["XS", "S", "M", "L", "XL", "XXL"].includes(text) ||
-    /^\d+$/.test(text)
-  ) {
-    sizes.push(text);
+      if (
+        ["XS", "S", "M", "L", "XL", "XXL"].includes(text) ||
+        /^\d+$/.test(text)
+      ) {
+        sizes.push(text);
+      }
+    });
+
+    const colorWords = [
+      "Black",
+      "Blue",
+      "Red",
+      "White",
+      "Grey",
+      "Gray",
+      "Green",
+      "Orange",
+      "Yellow",
+    ];
+
+    colorWords.forEach((color) => {
+      if (response.data.includes(color)) {
+        colors.push(color);
+      }
+    });
+
+    sizes = [...new Set(sizes)];
+    colors = [...new Set(colors)];
+   
+    res.json({
+      name,
+      brand,
+      image,
+      description,
+      sizes,
+      colors,
+      price: price ? Number(price) : 0,
+    });
+  } catch (error) {
+    console.error("FETCH ERROR:", error.message);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
-});
-
-const colorWords = [
-  "Black",
-  "Blue",
-  "Red",
-  "White",
-  "Grey",
-  "Gray",
-  "Green",
-  "Orange",
-  "Yellow"
-];
-
-colorWords.forEach((color) => {
-  if (response.data.includes(color)) {
-    colors.push(color);
-  }
-});
-
-sizes = [...new Set(sizes)];
-colors = [...new Set(colors)];
-  res.json({
-  name,
-  brand,
-  image,
-  description,
-sizes,
-colors,
-  price: price ? Number(price) : 0
-});
- } catch (error) {
-  console.error("FETCH ERROR:", error.message);
-
-  res.status(500).json({
-    error: error.message
-  });
-}
 };
