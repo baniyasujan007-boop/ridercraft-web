@@ -14,7 +14,7 @@ function mapApiProductToUi(product) {
     id: product._id,
     brand: (product.tag || "General").toUpperCase(),
     title: product.name || "Product",
-    oldPrice: Math.round(Number(product.price || 0) * 1.25),
+    oldPrice: null,
     price: Number(product.price || 0),
     rating: Number(product.ratingAverage || 0),
     soldCount: Number(product.ratingCount || 0),
@@ -29,14 +29,17 @@ function mapApiProductToUi(product) {
           .sort((a, b) => b.value - a.value)
       : [],
     description:
-      "A premium piece built for everyday use with a refined finish and versatile styling potential.",
-    images: [image, image, image, image],
-    colors: [
-      { name: "Black", value: "#1f1f1f" },
-      { name: "Stone", value: "#cfc7bb" },
-      { name: "Navy", value: "#2d3952" }
-    ],
-    sizes: ["6", "8", "10", "12", "14"]
+  product.description || "",
+   images: product.images?.length ? product.images : [image],
+ colors: product.colorFamily
+  ? [
+      {
+        name: product.colorFamily,
+        value: "#1f1f1f"
+      }
+    ]
+  : [],
+   sizes: []
   };
 }
 
@@ -95,8 +98,8 @@ export default function ProductDetails() {
     if (!product) return;
     setActiveImage(0);
     setIsExpanded(false);
-    setSelectedColor(product.colors[0]);
-    setSelectedSize(product.sizes[0]);
+  setSelectedColor(product.colors[0] || null);
+setSelectedSize(product.sizes[0] || "");
   }, [product]);
 
   const fallbackImage = DEFAULT_FALLBACK_IMAGE;
@@ -138,7 +141,7 @@ export default function ProductDetails() {
         {loading && <p className="pdp-state">Loading product...</p>}
         {!loading && error && <p className="pdp-state pdp-state-error">{error}</p>}
 
-        {!loading && product && selectedColor && (
+       {!loading && product && (
           <>
             <section className="pdp-top-grid">
               <ProductGallery
