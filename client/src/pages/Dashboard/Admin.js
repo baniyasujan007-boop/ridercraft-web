@@ -50,6 +50,7 @@ const toDateTimeInputValue = (value) => {
 };
 
 export default function Admin() {
+  const [productUrl, setProductUrl] = useState("");
   const [products, setProducts] = useState([]);
   const [promos, setPromos] = useState([]);
   const [heroOffers, setHeroOffers] = useState([]);
@@ -65,7 +66,7 @@ export default function Admin() {
     priceRange: "all",
     sortByDate: "newest"
   });
-  const [productUrl, setProductUrl] = useState("");
+  
   const [editingId, setEditingId] = useState(null);
   const [editingPromoId, setEditingPromoId] = useState(null);
   const [heroOfferForm, setHeroOfferForm] = useState(initialHeroOfferForm);
