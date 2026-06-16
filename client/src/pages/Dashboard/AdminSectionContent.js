@@ -72,37 +72,45 @@ export default function AdminSectionContent({ vm }) {
     startEditFeaturedSection,
     removeFeaturedSection,
     productUrl,
-setProductUrl,
-fetchProductFromUrl,
+    setProductUrl,
+    fetchProductFromUrl,
   } = vm;
 
   return (
     <>
-        {section === "products" && (
+      {section === "products" && (
         <section className="admin-form-wrap">
           <h2>{editingId ? "Edit Product" : "Add Product"}</h2>
           <div className="admin-form-grid">
             <input
               placeholder="Product name"
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, name: e.target.value }))
+              }
             />
             <input
               type="number"
               min="0"
               placeholder="Price"
               value={form.price}
-              onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, price: e.target.value }))
+              }
             />
             <input
               placeholder="Tag"
               value={form.tag}
-              onChange={(e) => setForm((prev) => ({ ...prev, tag: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, tag: e.target.value }))
+              }
             />
             <input
               placeholder="Brand"
               value={form.brand}
-              onChange={(e) => setForm((prev) => ({ ...prev, brand: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, brand: e.target.value }))
+              }
             />
             <input
               placeholder="Colour Family"
@@ -112,28 +120,55 @@ fetchProductFromUrl,
               }
             />
             <input
+              type="text"
+              placeholder="Sizes (S,M,L,XL)"
+              value={form.sizes}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  sizes: e.target.value,
+                }))
+              }
+            />
+
+            <input
+              type="text"
+              placeholder="Colors (Blue,Black,White)"
+              value={form.colors}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  colors: e.target.value,
+                }))
+              }
+            />
+            <input
               type="url"
               placeholder="Image URL (optional, e.g. https://...)"
               value={form.image}
               onChange={handleProductImageUrlChange}
             />
             <input
-  placeholder="Paste product URL"
-  value={productUrl}
-  onChange={(e) => setProductUrl(e.target.value)}
-/>
+              placeholder="Paste product URL"
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+            />
 
-<button onClick={fetchProductFromUrl}>
-  Fetch Product
-</button>
+            <button onClick={fetchProductFromUrl}>Fetch Product</button>
             <input
               type="number"
               min="0"
               placeholder="Stock"
               value={form.stock}
-              onChange={(e) => setForm((prev) => ({ ...prev, stock: e.target.value }))}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, stock: e.target.value }))
+              }
             />
-            <input type="file" accept="image/*" onChange={handleProductImageChange} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProductImageChange}
+            />
           </div>
           {form.image && (
             <div className="admin-image-preview-wrap">
@@ -163,22 +198,32 @@ fetchProductFromUrl,
             )}
           </div>
         </section>
-        )}
-        {section === "promos" && (
+      )}
+      {section === "promos" && (
         <section className="admin-form-wrap">
-          <h2>{editingPromoId ? "Edit Payment Promo Code" : "Create Payment Promo Code"}</h2>
+          <h2>
+            {editingPromoId
+              ? "Edit Payment Promo Code"
+              : "Create Payment Promo Code"}
+          </h2>
           <div className="admin-form-grid">
             <input
               placeholder="Promo Code (e.g. SAVE20)"
               value={promoForm.code}
               onChange={(e) =>
-                setPromoForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
+                setPromoForm((prev) => ({
+                  ...prev,
+                  code: e.target.value.toUpperCase(),
+                }))
               }
             />
             <select
               value={promoForm.discountType}
               onChange={(e) =>
-                setPromoForm((prev) => ({ ...prev, discountType: e.target.value }))
+                setPromoForm((prev) => ({
+                  ...prev,
+                  discountType: e.target.value,
+                }))
               }
             >
               <option value="percent">Percent</option>
@@ -191,7 +236,10 @@ fetchProductFromUrl,
               placeholder="Value (%) / Amount ($)"
               value={promoForm.discountValue}
               onChange={(e) =>
-                setPromoForm((prev) => ({ ...prev, discountValue: e.target.value }))
+                setPromoForm((prev) => ({
+                  ...prev,
+                  discountValue: e.target.value,
+                }))
               }
             />
             <input
@@ -199,24 +247,33 @@ fetchProductFromUrl,
               min="1"
               placeholder="Usage Limit (max redemptions)"
               value={promoForm.maxUses}
-              onChange={(e) => setPromoForm((prev) => ({ ...prev, maxUses: e.target.value }))}
+              onChange={(e) =>
+                setPromoForm((prev) => ({ ...prev, maxUses: e.target.value }))
+              }
             />
             <input
               type="datetime-local"
               aria-label="Starts On"
               value={promoForm.startsAt}
-              onChange={(e) => setPromoForm((prev) => ({ ...prev, startsAt: e.target.value }))}
+              onChange={(e) =>
+                setPromoForm((prev) => ({ ...prev, startsAt: e.target.value }))
+              }
             />
             <input
               type="datetime-local"
               aria-label="Ends On"
               value={promoForm.endsAt}
-              onChange={(e) => setPromoForm((prev) => ({ ...prev, endsAt: e.target.value }))}
+              onChange={(e) =>
+                setPromoForm((prev) => ({ ...prev, endsAt: e.target.value }))
+              }
             />
             <select
               value={promoForm.isActive ? "active" : "inactive"}
               onChange={(e) =>
-                setPromoForm((prev) => ({ ...prev, isActive: e.target.value === "active" }))
+                setPromoForm((prev) => ({
+                  ...prev,
+                  isActive: e.target.value === "active",
+                }))
               }
             >
               <option value="active">Active</option>
@@ -234,8 +291,8 @@ fetchProductFromUrl,
             )}
           </div>
         </section>
-        )}
-        {section === "promos" && (
+      )}
+      {section === "promos" && (
         <section className="admin-table-wrap">
           <h2>Payment Promo Codes</h2>
           <table className="admin-table">
@@ -276,12 +333,17 @@ fetchProductFromUrl,
             </tbody>
           </table>
         </section>
-        )}
-        {section === "promos" && (
+      )}
+      {section === "promos" && (
         <section className="admin-form-wrap">
-          <h2>{editingHeroOfferId ? "Edit Hero Offer Banner" : "Create Hero Offer Banner"}</h2>
+          <h2>
+            {editingHeroOfferId
+              ? "Edit Hero Offer Banner"
+              : "Create Hero Offer Banner"}
+          </h2>
           <p className="admin-hint">
-            Set <strong>Type = Flash Offer</strong> to power the Flash Sale countdown in shop hero.
+            Set <strong>Type = Flash Offer</strong> to power the Flash Sale
+            countdown in shop hero.
           </p>
           <div className="admin-form-grid">
             <input
@@ -294,7 +356,10 @@ fetchProductFromUrl,
             <select
               value={heroOfferForm.offerType}
               onChange={(e) =>
-                setHeroOfferForm((prev) => ({ ...prev, offerType: e.target.value }))
+                setHeroOfferForm((prev) => ({
+                  ...prev,
+                  offerType: e.target.value,
+                }))
               }
             >
               <option value="tag">Tag Offer</option>
@@ -306,14 +371,20 @@ fetchProductFromUrl,
               placeholder="Priority"
               value={heroOfferForm.priority}
               onChange={(e) =>
-                setHeroOfferForm((prev) => ({ ...prev, priority: e.target.value }))
+                setHeroOfferForm((prev) => ({
+                  ...prev,
+                  priority: e.target.value,
+                }))
               }
             />
             <input
               placeholder="CTA search query (optional)"
               value={heroOfferForm.ctaQuery}
               onChange={(e) =>
-                setHeroOfferForm((prev) => ({ ...prev, ctaQuery: e.target.value }))
+                setHeroOfferForm((prev) => ({
+                  ...prev,
+                  ctaQuery: e.target.value,
+                }))
               }
             />
             <input
@@ -321,7 +392,10 @@ fetchProductFromUrl,
               aria-label="Offer Starts On"
               value={heroOfferForm.startsAt}
               onChange={(e) =>
-                setHeroOfferForm((prev) => ({ ...prev, startsAt: e.target.value }))
+                setHeroOfferForm((prev) => ({
+                  ...prev,
+                  startsAt: e.target.value,
+                }))
               }
             />
             <input
@@ -329,7 +403,10 @@ fetchProductFromUrl,
               aria-label="Offer Ends On"
               value={heroOfferForm.endsAt}
               onChange={(e) =>
-                setHeroOfferForm((prev) => ({ ...prev, endsAt: e.target.value }))
+                setHeroOfferForm((prev) => ({
+                  ...prev,
+                  endsAt: e.target.value,
+                }))
               }
             />
             <select
@@ -337,7 +414,7 @@ fetchProductFromUrl,
               onChange={(e) =>
                 setHeroOfferForm((prev) => ({
                   ...prev,
-                  isActive: e.target.value === "active"
+                  isActive: e.target.value === "active",
                 }))
               }
             >
@@ -350,14 +427,17 @@ fetchProductFromUrl,
               {editingHeroOfferId ? "Update Hero Offer" : "Add Hero Offer"}
             </button>
             {editingHeroOfferId && (
-              <button onClick={resetHeroOfferForm} className="admin-secondary-btn">
+              <button
+                onClick={resetHeroOfferForm}
+                className="admin-secondary-btn"
+              >
                 Cancel Edit
               </button>
             )}
           </div>
         </section>
-        )}
-        {section === "promos" && (
+      )}
+      {section === "promos" && (
         <section className="admin-table-wrap">
           <h2>Hero Offers (Shop Banner)</h2>
           <table className="admin-table">
@@ -378,8 +458,16 @@ fetchProductFromUrl,
                   <td>{offer.title}</td>
                   <td>{offer.offerType}</td>
                   <td>{offer.priority}</td>
-                  <td>{offer.startsAt ? new Date(offer.startsAt).toLocaleString() : "-"}</td>
-                  <td>{offer.endsAt ? new Date(offer.endsAt).toLocaleString() : "-"}</td>
+                  <td>
+                    {offer.startsAt
+                      ? new Date(offer.startsAt).toLocaleString()
+                      : "-"}
+                  </td>
+                  <td>
+                    {offer.endsAt
+                      ? new Date(offer.endsAt).toLocaleString()
+                      : "-"}
+                  </td>
                   <td>{offer.status}</td>
                   <td>
                     <div className="row-actions">
@@ -407,8 +495,8 @@ fetchProductFromUrl,
             </tbody>
           </table>
         </section>
-        )}
-        {section === "products" && (
+      )}
+      {section === "products" && (
         <section className="admin-table-wrap">
           <h2>Current Products</h2>
           <table className="admin-table">
@@ -436,10 +524,13 @@ fetchProductFromUrl,
                   <td>{Number(product.stock ?? 0)}</td>
                   <td>${product.price}</td>
                   <td>
-                    {(product.ratingAverage || 0).toFixed(1)} / 5 ({product.ratingCount || 0})
+                    {(product.ratingAverage || 0).toFixed(1)} / 5 (
+                    {product.ratingCount || 0})
                   </td>
                   <td>
-                    {flashSaleProductIds.includes(String(product._id)) ? "Yes" : "No"}
+                    {flashSaleProductIds.includes(String(product._id))
+                      ? "Yes"
+                      : "No"}
                   </td>
                   <td>
                     {product.image ? (
@@ -482,15 +573,15 @@ fetchProductFromUrl,
             </tbody>
           </table>
         </section>
-        )}
-        {section === "orders" && (
+      )}
+      {section === "orders" && (
         <section className="admin-table-wrap admin-orders-wrap">
           <h2>Orders</h2>
           {pendingReturnOrders.length > 0 && (
             <div className="admin-return-alert">
               <p>
-                <strong>{pendingReturnOrders.length}</strong> refund request(s) initiated by users
-                need admin action.
+                <strong>{pendingReturnOrders.length}</strong> refund request(s)
+                initiated by users need admin action.
               </p>
               <div className="admin-return-alert-list">
                 {pendingReturnOrders.slice(0, 6).map((order) => (
@@ -503,7 +594,8 @@ fetchProductFromUrl,
                       setSelectedOrderId(order._id);
                     }}
                   >
-                    #{String(order._id).slice(-6)} • {order.user?.name || order.user?.email || "User"}
+                    #{String(order._id).slice(-6)} •{" "}
+                    {order.user?.name || order.user?.email || "User"}
                   </button>
                 ))}
               </div>
@@ -515,7 +607,10 @@ fetchProductFromUrl,
                 <select
                   value={orderFilters.orderStatus}
                   onChange={(e) =>
-                    setOrderFilters((prev) => ({ ...prev, orderStatus: e.target.value }))
+                    setOrderFilters((prev) => ({
+                      ...prev,
+                      orderStatus: e.target.value,
+                    }))
                   }
                 >
                   <option value="all">Any status</option>
@@ -527,7 +622,10 @@ fetchProductFromUrl,
                 <select
                   value={orderFilters.priceRange}
                   onChange={(e) =>
-                    setOrderFilters((prev) => ({ ...prev, priceRange: e.target.value }))
+                    setOrderFilters((prev) => ({
+                      ...prev,
+                      priceRange: e.target.value,
+                    }))
                   }
                 >
                   <option value="all">All prices</option>
@@ -540,13 +638,19 @@ fetchProductFromUrl,
                   placeholder="Search order, customer, promo"
                   value={orderFilters.search}
                   onChange={(e) =>
-                    setOrderFilters((prev) => ({ ...prev, search: e.target.value }))
+                    setOrderFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                    }))
                   }
                 />
                 <select
                   value={orderFilters.sortByDate}
                   onChange={(e) =>
-                    setOrderFilters((prev) => ({ ...prev, sortByDate: e.target.value }))
+                    setOrderFilters((prev) => ({
+                      ...prev,
+                      sortByDate: e.target.value,
+                    }))
                   }
                 >
                   <option value="newest">Sort by Date</option>
@@ -572,7 +676,11 @@ fetchProductFromUrl,
                   {filteredOrders.map((order) => (
                     <tr
                       key={order._id}
-                      className={selectedOrder?._id === order._id ? "admin-row-selected" : ""}
+                      className={
+                        selectedOrder?._id === order._id
+                          ? "admin-row-selected"
+                          : ""
+                      }
                       onClick={() => setSelectedOrderId(order._id)}
                     >
                       <td>
@@ -586,11 +694,16 @@ fetchProductFromUrl,
                       <td>#{order._id.slice(-6)}</td>
                       <td>{order.user?.name || order.user?.email || "User"}</td>
                       <td>
-                        <span className={`admin-status-pill admin-status-${order.paymentStatus || "pending"}`}>
+                        <span
+                          className={`admin-status-pill admin-status-${order.paymentStatus || "pending"}`}
+                        >
                           {order.paymentStatus === "paid" ? "Paid" : "Pending"}
                         </span>
-                        {String(order.returnRequest?.status || "none") === "requested" && (
-                          <span className="admin-return-chip">Return Requested</span>
+                        {String(order.returnRequest?.status || "none") ===
+                          "requested" && (
+                          <span className="admin-return-chip">
+                            Return Requested
+                          </span>
                         )}
                       </td>
                       <td>${Number(order.total || 0).toFixed(2)}</td>
@@ -614,17 +727,25 @@ fetchProductFromUrl,
                   <div className="admin-order-details-head">
                     <div>
                       <h3>Order #{selectedOrder._id.slice(-6)}</h3>
-                      <p>{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                      <p>
+                        {new Date(selectedOrder.createdAt).toLocaleString()}
+                      </p>
                     </div>
                   </div>
                   <div className="admin-order-details-meta">
-                    <span className={`admin-status-pill admin-status-${selectedOrder.paymentStatus || "pending"}`}>
-                      {selectedOrder.paymentStatus === "paid" ? "Paid" : "Pending"}
+                    <span
+                      className={`admin-status-pill admin-status-${selectedOrder.paymentStatus || "pending"}`}
+                    >
+                      {selectedOrder.paymentStatus === "paid"
+                        ? "Paid"
+                        : "Pending"}
                     </span>
                     <span>{selectedOrder.promoCode || "No promo"}</span>
                     <select
                       value={selectedOrder.status}
-                      onChange={(e) => updateOrderStatus(selectedOrder._id, e.target.value)}
+                      onChange={(e) =>
+                        updateOrderStatus(selectedOrder._id, e.target.value)
+                      }
                     >
                       <option value="placed">Placed</option>
                       <option value="processing">Processing</option>
@@ -636,36 +757,41 @@ fetchProductFromUrl,
                     <h4>Return & Refund</h4>
                     <p>
                       Return Status:{" "}
-                      <strong>{String(selectedOrder.returnRequest?.status || "none")}</strong>
+                      <strong>
+                        {String(selectedOrder.returnRequest?.status || "none")}
+                      </strong>
                     </p>
                     <p>
                       Payment Status:{" "}
-                      <strong>{String(selectedOrder.paymentStatus || "pending")}</strong>
+                      <strong>
+                        {String(selectedOrder.paymentStatus || "pending")}
+                      </strong>
                     </p>
                     {selectedOrder.returnRequest?.reason && (
                       <p>Reason: {selectedOrder.returnRequest.reason}</p>
                     )}
                     {Array.isArray(selectedOrder.returnRequest?.evidence) &&
                       selectedOrder.returnRequest.evidence.length > 0 && (
-                      <div className="admin-return-proof-grid">
-                        {selectedOrder.returnRequest.evidence.map((file, idx) =>
-                          file.type === "video" ? (
-                            <video
-                              key={`admin-return-proof-video-${idx}`}
-                              src={file.url}
-                              controls
-                            />
-                          ) : (
-                            <img
-                              key={`admin-return-proof-image-${idx}`}
-                              src={file.url}
-                              alt={file.name || "Defect proof"}
-                              onError={applyImageFallback}
-                            />
-                          )
-                        )}
-                      </div>
-                    )}
+                        <div className="admin-return-proof-grid">
+                          {selectedOrder.returnRequest.evidence.map(
+                            (file, idx) =>
+                              file.type === "video" ? (
+                                <video
+                                  key={`admin-return-proof-video-${idx}`}
+                                  src={file.url}
+                                  controls
+                                />
+                              ) : (
+                                <img
+                                  key={`admin-return-proof-image-${idx}`}
+                                  src={file.url}
+                                  alt={file.name || "Defect proof"}
+                                  onError={applyImageFallback}
+                                />
+                              ),
+                          )}
+                        </div>
+                      )}
 
                     <input
                       placeholder="Admin note (optional)"
@@ -676,16 +802,24 @@ fetchProductFromUrl,
                       <button
                         type="button"
                         className="admin-primary-btn"
-                        onClick={() => reviewReturnRequest(selectedOrder._id, "approve")}
-                        disabled={selectedOrder.returnRequest?.status !== "requested"}
+                        onClick={() =>
+                          reviewReturnRequest(selectedOrder._id, "approve")
+                        }
+                        disabled={
+                          selectedOrder.returnRequest?.status !== "requested"
+                        }
                       >
                         Approve Return
                       </button>
                       <button
                         type="button"
                         className="admin-secondary-btn"
-                        onClick={() => reviewReturnRequest(selectedOrder._id, "reject")}
-                        disabled={selectedOrder.returnRequest?.status !== "requested"}
+                        onClick={() =>
+                          reviewReturnRequest(selectedOrder._id, "reject")
+                        }
+                        disabled={
+                          selectedOrder.returnRequest?.status !== "requested"
+                        }
                       >
                         Reject Return
                       </button>
@@ -694,19 +828,28 @@ fetchProductFromUrl,
                     <div className="admin-order-return-track-row">
                       <select
                         value={returnTrackingStatus}
-                        onChange={(e) => setReturnTrackingStatus(e.target.value)}
+                        onChange={(e) =>
+                          setReturnTrackingStatus(e.target.value)
+                        }
                       >
                         <option value="approved">Approved</option>
                         <option value="in_transit">In Transit</option>
                         <option value="received">Received</option>
-                        <option value="refund_initiated">Refund Initiated</option>
+                        <option value="refund_initiated">
+                          Refund Initiated
+                        </option>
                         <option value="refunded">Refunded</option>
                         <option value="closed">Closed</option>
                       </select>
                       <button
                         type="button"
                         className="admin-primary-btn"
-                        onClick={() => updateReturnTracking(selectedOrder._id, returnTrackingStatus)}
+                        onClick={() =>
+                          updateReturnTracking(
+                            selectedOrder._id,
+                            returnTrackingStatus,
+                          )
+                        }
                       >
                         Update Return Tracking
                       </button>
@@ -721,7 +864,9 @@ fetchProductFromUrl,
                       />
                     ) : (
                       <div className="admin-customer-avatar-placeholder">
-                        {(selectedOrder.user?.name || "U").slice(0, 1).toUpperCase()}
+                        {(selectedOrder.user?.name || "U")
+                          .slice(0, 1)
+                          .toUpperCase()}
                       </div>
                     )}
                     <div>
@@ -731,7 +876,10 @@ fetchProductFromUrl,
                   </div>
                   <div className="admin-order-contact-row">
                     {selectedOrder.user?.email && (
-                      <a href={`mailto:${selectedOrder.user.email}`} aria-label="Email customer">
+                      <a
+                        href={`mailto:${selectedOrder.user.email}`}
+                        aria-label="Email customer"
+                      >
                         ✉
                       </a>
                     )}
@@ -747,9 +895,16 @@ fetchProductFromUrl,
                   <h4>Order items</h4>
                   <div className="admin-order-item-list">
                     {(selectedOrder.items || []).map((item, idx) => (
-                      <article className="admin-order-item-row" key={`${selectedOrder._id}-${idx}`}>
+                      <article
+                        className="admin-order-item-row"
+                        key={`${selectedOrder._id}-${idx}`}
+                      >
                         {item.image ? (
-                          <img src={item.image} alt={item.name} onError={applyImageFallback} />
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            onError={applyImageFallback}
+                          />
                         ) : (
                           <div className="admin-order-item-thumb" />
                         )}
@@ -762,7 +917,9 @@ fetchProductFromUrl,
                   </div>
                   <div className="admin-order-total-row">
                     <span>Total</span>
-                    <strong>${Number(selectedOrder.total || 0).toFixed(2)}</strong>
+                    <strong>
+                      ${Number(selectedOrder.total || 0).toFixed(2)}
+                    </strong>
                   </div>
                   <div className="admin-order-actions">
                     <button
@@ -771,7 +928,9 @@ fetchProductFromUrl,
                       onClick={() => handleTrackOrder(selectedOrder)}
                       disabled={selectedOrder.status === "delivered"}
                     >
-                      {selectedOrder.status === "delivered" ? "Delivered" : "Track"}
+                      {selectedOrder.status === "delivered"
+                        ? "Delivered"
+                        : "Track"}
                     </button>
                     <button
                       type="button"
@@ -779,7 +938,9 @@ fetchProductFromUrl,
                       onClick={() => handleRefundOrder(selectedOrder)}
                       disabled={selectedOrder.paymentStatus === "refunded"}
                     >
-                      {selectedOrder.paymentStatus === "refunded" ? "Refunded" : "Refund"}
+                      {selectedOrder.paymentStatus === "refunded"
+                        ? "Refunded"
+                        : "Refund"}
                     </button>
                   </div>
                 </>
@@ -787,8 +948,8 @@ fetchProductFromUrl,
             </aside>
           </div>
         </section>
-        )}
-        {section === "services" && (
+      )}
+      {section === "services" && (
         <section className="admin-table-wrap admin-orders-wrap">
           <h2>Bike Service Requests</h2>
           <div className="admin-orders-shell">
@@ -797,7 +958,10 @@ fetchProductFromUrl,
                 <select
                   value={serviceFilters.packageType}
                   onChange={(e) =>
-                    setServiceFilters((prev) => ({ ...prev, packageType: e.target.value }))
+                    setServiceFilters((prev) => ({
+                      ...prev,
+                      packageType: e.target.value,
+                    }))
                   }
                 >
                   <option value="all">All packages</option>
@@ -808,7 +972,10 @@ fetchProductFromUrl,
                 <select
                   value={serviceFilters.priority}
                   onChange={(e) =>
-                    setServiceFilters((prev) => ({ ...prev, priority: e.target.value }))
+                    setServiceFilters((prev) => ({
+                      ...prev,
+                      priority: e.target.value,
+                    }))
                   }
                 >
                   <option value="all">All priorities</option>
@@ -818,7 +985,10 @@ fetchProductFromUrl,
                 <select
                   value={serviceFilters.status}
                   onChange={(e) =>
-                    setServiceFilters((prev) => ({ ...prev, status: e.target.value }))
+                    setServiceFilters((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
                   }
                 >
                   <option value="all">Any status</option>
@@ -832,13 +1002,19 @@ fetchProductFromUrl,
                   placeholder="Search customer, bike, phone, address"
                   value={serviceFilters.search}
                   onChange={(e) =>
-                    setServiceFilters((prev) => ({ ...prev, search: e.target.value }))
+                    setServiceFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                    }))
                   }
                 />
                 <select
                   value={serviceFilters.sortByDate}
                   onChange={(e) =>
-                    setServiceFilters((prev) => ({ ...prev, sortByDate: e.target.value }))
+                    setServiceFilters((prev) => ({
+                      ...prev,
+                      sortByDate: e.target.value,
+                    }))
                   }
                 >
                   <option value="newest">Sort by Date</option>
@@ -862,15 +1038,22 @@ fetchProductFromUrl,
                     <tr
                       key={request._id}
                       className={
-                        selectedServiceRequest?._id === request._id ? "admin-row-selected" : ""
+                        selectedServiceRequest?._id === request._id
+                          ? "admin-row-selected"
+                          : ""
                       }
                       onClick={() => setSelectedServiceRequestId(request._id)}
                     >
                       <td>#{request._id.slice(-6)}</td>
-                      <td>{request.user?.name || request.user?.email || "User"}</td>
                       <td>
-                        {String(request.priority || "normal") === "emergency" ? (
-                          <span className="admin-emergency-chip">Emergency</span>
+                        {request.user?.name || request.user?.email || "User"}
+                      </td>
+                      <td>
+                        {String(request.priority || "normal") ===
+                        "emergency" ? (
+                          <span className="admin-emergency-chip">
+                            Emergency
+                          </span>
                         ) : (
                           "Normal"
                         )}
@@ -881,7 +1064,10 @@ fetchProductFromUrl,
                       </td>
                       <td>
                         <span className="admin-status-pill admin-status-pending">
-                          {String(request.status || "requested").replace("_", " ")}
+                          {String(request.status || "requested").replace(
+                            "_",
+                            " ",
+                          )}
                         </span>
                       </td>
                       <td>...</td>
@@ -889,7 +1075,9 @@ fetchProductFromUrl,
                   ))}
                   {filteredServiceRequests.length === 0 && (
                     <tr>
-                      <td colSpan="7">No service requests match your filters.</td>
+                      <td colSpan="7">
+                        No service requests match your filters.
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -902,31 +1090,51 @@ fetchProductFromUrl,
                   <div className="admin-order-details-head">
                     <div>
                       <h3>Service #{selectedServiceRequest._id.slice(-6)}</h3>
-                      <p>{new Date(selectedServiceRequest.createdAt).toLocaleString()}</p>
+                      <p>
+                        {new Date(
+                          selectedServiceRequest.createdAt,
+                        ).toLocaleString()}
+                      </p>
                     </div>
                   </div>
                   <div className="admin-order-details-meta">
                     <span className="admin-status-pill admin-status-pending">
-                      {String(selectedServiceRequest.status || "requested").replace("_", " ")}
+                      {String(
+                        selectedServiceRequest.status || "requested",
+                      ).replace("_", " ")}
                     </span>
-                    {String(selectedServiceRequest.priority || "normal") === "emergency" ? (
-                      <span className="admin-emergency-chip">Emergency Priority</span>
+                    {String(selectedServiceRequest.priority || "normal") ===
+                    "emergency" ? (
+                      <span className="admin-emergency-chip">
+                        Emergency Priority
+                      </span>
                     ) : (
                       <span>Normal Priority</span>
                     )}
                     <span>{selectedServiceRequest.packageType}</span>
                   </div>
                   <div className="admin-service-detail-grid">
-                    <p><strong>Bike:</strong> {selectedServiceRequest.bikeModel}</p>
                     <p>
-                      <strong>Preferred Slot:</strong> {selectedServiceRequest.preferredDate}{" "}
+                      <strong>Bike:</strong> {selectedServiceRequest.bikeModel}
+                    </p>
+                    <p>
+                      <strong>Preferred Slot:</strong>{" "}
+                      {selectedServiceRequest.preferredDate}{" "}
                       {selectedServiceRequest.preferredTime}
                     </p>
-                    <p><strong>Contact:</strong> {selectedServiceRequest.contactNumber}</p>
-                    <p><strong>Pickup Address:</strong> {selectedServiceRequest.pickupAddress}</p>
-                    {String(selectedServiceRequest.priority || "normal") === "emergency" && (
+                    <p>
+                      <strong>Contact:</strong>{" "}
+                      {selectedServiceRequest.contactNumber}
+                    </p>
+                    <p>
+                      <strong>Pickup Address:</strong>{" "}
+                      {selectedServiceRequest.pickupAddress}
+                    </p>
+                    {String(selectedServiceRequest.priority || "normal") ===
+                      "emergency" && (
                       <p>
-                        <strong>Breakdown Issue:</strong> {selectedServiceRequest.breakdownIssue || "-"}
+                        <strong>Breakdown Issue:</strong>{" "}
+                        {selectedServiceRequest.breakdownIssue || "-"}
                       </p>
                     )}
                     <p>
@@ -936,19 +1144,28 @@ fetchProductFromUrl,
                     </p>
                     <p>
                       <strong>Accuracy:</strong>{" "}
-                      {selectedServiceRequest.pickupLocation?.accuracyMeters ?? "N/A"} meters
+                      {selectedServiceRequest.pickupLocation?.accuracyMeters ??
+                        "N/A"}{" "}
+                      meters
                     </p>
                     <p>
                       <strong>Captured At:</strong>{" "}
                       {selectedServiceRequest.pickupLocation?.capturedAt
-                        ? new Date(selectedServiceRequest.pickupLocation.capturedAt).toLocaleString()
+                        ? new Date(
+                            selectedServiceRequest.pickupLocation.capturedAt,
+                          ).toLocaleString()
                         : "-"}
                     </p>
-                    <p><strong>Customer Note:</strong> {selectedServiceRequest.notes || "-"}</p>
+                    <p>
+                      <strong>Customer Note:</strong>{" "}
+                      {selectedServiceRequest.notes || "-"}
+                    </p>
                   </div>
                   <div className="admin-service-map-wrap">
-                    {selectedServiceRequest.pickupLocation?.latitude !== undefined &&
-                      selectedServiceRequest.pickupLocation?.longitude !== undefined && (
+                    {selectedServiceRequest.pickupLocation?.latitude !==
+                      undefined &&
+                      selectedServiceRequest.pickupLocation?.longitude !==
+                        undefined && (
                         <>
                           <a
                             href={`https://www.google.com/maps?q=${selectedServiceRequest.pickupLocation.latitude},${selectedServiceRequest.pickupLocation.longitude}`}
@@ -1009,7 +1226,7 @@ fetchProductFromUrl,
                           updateServiceStatus(
                             selectedServiceRequest._id,
                             serviceTrackingStatus,
-                            serviceAdminNote
+                            serviceAdminNote,
                           )
                         }
                       >
@@ -1026,8 +1243,8 @@ fetchProductFromUrl,
             </aside>
           </div>
         </section>
-        )}
-        {section === "customers" && (
+      )}
+      {section === "customers" && (
         <section className="admin-table-wrap">
           <h2>Customers</h2>
           <div className="admin-customers-layout">
@@ -1047,7 +1264,9 @@ fetchProductFromUrl,
                     <tr
                       key={customer.email}
                       className={
-                        selectedCustomer?.email === customer.email ? "admin-row-selected" : ""
+                        selectedCustomer?.email === customer.email
+                          ? "admin-row-selected"
+                          : ""
                       }
                       onClick={() => setSelectedCustomerEmail(customer.email)}
                     >
@@ -1090,20 +1309,30 @@ fetchProductFromUrl,
                     <div>
                       <h3>{selectedCustomer.name}</h3>
                       <p>{selectedCustomer.email}</p>
-                      <p>{selectedCustomer.contactNumber || "No contact number"}</p>
-                      <p>{selectedCustomer.deliveryAddress || "No delivery address"}</p>
+                      <p>
+                        {selectedCustomer.contactNumber || "No contact number"}
+                      </p>
+                      <p>
+                        {selectedCustomer.deliveryAddress ||
+                          "No delivery address"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="admin-customer-stats">
                     <span>Orders: {selectedCustomer.ordersCount}</span>
-                    <span>Total Spent: ${selectedCustomer.totalSpent.toFixed(2)}</span>
+                    <span>
+                      Total Spent: ${selectedCustomer.totalSpent.toFixed(2)}
+                    </span>
                   </div>
 
                   <h4>Orders by this customer</h4>
                   <div className="admin-customer-order-list">
                     {selectedCustomer.orders.map((order) => (
-                      <article key={order.id} className="admin-customer-order-item">
+                      <article
+                        key={order.id}
+                        className="admin-customer-order-item"
+                      >
                         {order.previewImages.length > 0 && (
                           <div className="admin-customer-order-images">
                             {order.previewImages.map((imgSrc, imgIndex) => (
@@ -1117,7 +1346,8 @@ fetchProductFromUrl,
                           </div>
                         )}
                         <p>
-                          <strong>#{order.id.slice(-8)}</strong> • {order.status}
+                          <strong>#{order.id.slice(-8)}</strong> •{" "}
+                          {order.status}
                         </p>
                         <p>
                           ${order.total.toFixed(2)} • {order.itemsCount} items
@@ -1132,8 +1362,8 @@ fetchProductFromUrl,
             </aside>
           </div>
         </section>
-        )}
-        {section === "inventory" && (
+      )}
+      {section === "inventory" && (
         <section className="admin-table-wrap">
           <h2>Inventory Alert Center</h2>
           <div className="admin-inventory-stats">
@@ -1166,7 +1396,11 @@ fetchProductFromUrl,
               {products.map((product) => {
                 const stock = Number(product.stock ?? 0);
                 const status =
-                  stock <= 0 ? "Out of stock" : stock <= 5 ? "Low stock" : "In stock";
+                  stock <= 0
+                    ? "Out of stock"
+                    : stock <= 5
+                      ? "Low stock"
+                      : "In stock";
                 const reminder =
                   stock <= 0
                     ? "Restock immediately"
@@ -1202,14 +1436,16 @@ fetchProductFromUrl,
               })}
               {products.length === 0 && (
                 <tr>
-                  <td colSpan="6">No products found for inventory monitoring.</td>
+                  <td colSpan="6">
+                    No products found for inventory monitoring.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </section>
-        )}
-        {section === "performance" && (
+      )}
+      {section === "performance" && (
         <section className="admin-table-wrap">
           <h2>Product Performance Insights</h2>
           <div className="admin-performance-stats">
@@ -1232,19 +1468,25 @@ fetchProductFromUrl,
               <h3>Top Rated</h3>
               {productPerformance.topRated.map((product) => (
                 <p key={`top-rated-${product._id}`}>
-                  {product.name} • {product.rating.toFixed(1)}★ ({product.reviews})
+                  {product.name} • {product.rating.toFixed(1)}★ (
+                  {product.reviews})
                 </p>
               ))}
-              {productPerformance.topRated.length === 0 && <p>No rated products yet.</p>}
+              {productPerformance.topRated.length === 0 && (
+                <p>No rated products yet.</p>
+              )}
             </div>
             <div className="admin-performance-list">
               <h3>Most Reviewed</h3>
               {productPerformance.mostReviewed.map((product) => (
                 <p key={`most-reviewed-${product._id}`}>
-                  {product.name} • {product.reviews} reviews ({product.rating.toFixed(1)}★)
+                  {product.name} • {product.reviews} reviews (
+                  {product.rating.toFixed(1)}★)
                 </p>
               ))}
-              {productPerformance.mostReviewed.length === 0 && <p>No reviews yet.</p>}
+              {productPerformance.mostReviewed.length === 0 && (
+                <p>No reviews yet.</p>
+              )}
             </div>
           </div>
 
@@ -1272,14 +1514,16 @@ fetchProductFromUrl,
               ))}
               {productPerformance.ranked.length === 0 && (
                 <tr>
-                  <td colSpan="6">No products available for performance analysis.</td>
+                  <td colSpan="6">
+                    No products available for performance analysis.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </section>
-        )}
-        {section === "featured" && (
+      )}
+      {section === "featured" && (
         <section className="admin-form-wrap">
           <h2>Flash Sale Products (Deals of the Day)</h2>
           <p className="admin-hint">
@@ -1288,7 +1532,9 @@ fetchProductFromUrl,
           </p>
           <div className="admin-flash-product-grid">
             {products.map((product) => {
-              const isSelected = flashSaleProductIds.includes(String(product._id));
+              const isSelected = flashSaleProductIds.includes(
+                String(product._id),
+              );
               return (
                 <label
                   key={`flash-${product._id}`}
@@ -1300,9 +1546,15 @@ fetchProductFromUrl,
                     onChange={() => toggleFlashSaleProduct(product._id)}
                   />
                   {product.image ? (
-                    <img src={product.image} alt={product.name} onError={applyImageFallback} />
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      onError={applyImageFallback}
+                    />
                   ) : (
-                    <div className="admin-flash-thumb-placeholder">No image</div>
+                    <div className="admin-flash-thumb-placeholder">
+                      No image
+                    </div>
                   )}
                   <div>
                     <p>{product.name}</p>
@@ -1313,23 +1565,34 @@ fetchProductFromUrl,
             })}
           </div>
           <div className="admin-actions">
-            <button onClick={saveFlashSaleProducts} className="admin-primary-btn">
+            <button
+              onClick={saveFlashSaleProducts}
+              className="admin-primary-btn"
+            >
               Save Flash Sale Products
             </button>
           </div>
         </section>
-        )}
-        {section === "featured" && (
+      )}
+      {section === "featured" && (
         <section className="admin-form-wrap">
-          <h2>{editingFeaturedSectionId ? "Edit Featured Section" : "Create Featured Section"}</h2>
+          <h2>
+            {editingFeaturedSectionId
+              ? "Edit Featured Section"
+              : "Create Featured Section"}
+          </h2>
           <p className="admin-hint">
-            The <strong>Deals of the Day</strong> section powers Flash Sale products in shop.
+            The <strong>Deals of the Day</strong> section powers Flash Sale
+            products in shop.
           </p>
           <div className="admin-form-grid">
             <select
               value={featuredSectionForm.key}
               onChange={(e) =>
-                setFeaturedSectionForm((prev) => ({ ...prev, key: e.target.value }))
+                setFeaturedSectionForm((prev) => ({
+                  ...prev,
+                  key: e.target.value,
+                }))
               }
             >
               <option value="trending">🔥 Trending Products</option>
@@ -1343,7 +1606,10 @@ fetchProductFromUrl,
               placeholder="Section title"
               value={featuredSectionForm.title}
               onChange={(e) =>
-                setFeaturedSectionForm((prev) => ({ ...prev, title: e.target.value }))
+                setFeaturedSectionForm((prev) => ({
+                  ...prev,
+                  title: e.target.value,
+                }))
               }
             />
             <input
@@ -1352,7 +1618,10 @@ fetchProductFromUrl,
               placeholder="Sort order"
               value={featuredSectionForm.sortOrder}
               onChange={(e) =>
-                setFeaturedSectionForm((prev) => ({ ...prev, sortOrder: e.target.value }))
+                setFeaturedSectionForm((prev) => ({
+                  ...prev,
+                  sortOrder: e.target.value,
+                }))
               }
             />
             <select
@@ -1360,7 +1629,7 @@ fetchProductFromUrl,
               onChange={(e) =>
                 setFeaturedSectionForm((prev) => ({
                   ...prev,
-                  isActive: e.target.value === "active"
+                  isActive: e.target.value === "active",
                 }))
               }
             >
@@ -1372,8 +1641,13 @@ fetchProductFromUrl,
               className="admin-multi-select"
               value={featuredSectionForm.productIds}
               onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map((opt) => opt.value);
-                setFeaturedSectionForm((prev) => ({ ...prev, productIds: selected }));
+                const selected = Array.from(e.target.selectedOptions).map(
+                  (opt) => opt.value,
+                );
+                setFeaturedSectionForm((prev) => ({
+                  ...prev,
+                  productIds: selected,
+                }));
               }}
             >
               {products.map((product) => (
@@ -1383,20 +1657,30 @@ fetchProductFromUrl,
               ))}
             </select>
           </div>
-          <p className="admin-hint">Hold Ctrl/Cmd to select multiple products.</p>
+          <p className="admin-hint">
+            Hold Ctrl/Cmd to select multiple products.
+          </p>
           <div className="admin-actions">
-            <button onClick={createFeaturedSection} className="admin-primary-btn">
-              {editingFeaturedSectionId ? "Update Featured Section" : "Add Featured Section"}
+            <button
+              onClick={createFeaturedSection}
+              className="admin-primary-btn"
+            >
+              {editingFeaturedSectionId
+                ? "Update Featured Section"
+                : "Add Featured Section"}
             </button>
             {editingFeaturedSectionId && (
-              <button onClick={resetFeaturedSectionForm} className="admin-secondary-btn">
+              <button
+                onClick={resetFeaturedSectionForm}
+                className="admin-secondary-btn"
+              >
                 Cancel Edit
               </button>
             )}
           </div>
         </section>
-        )}
-        {section === "featured" && (
+      )}
+      {section === "featured" && (
         <section className="admin-table-wrap">
           <h2>Featured Sections</h2>
           <table className="admin-table">
@@ -1415,7 +1699,9 @@ fetchProductFromUrl,
                 <tr key={row._id}>
                   <td>{row.key}</td>
                   <td>{row.title}</td>
-                  <td>{Array.isArray(row.products) ? row.products.length : 0}</td>
+                  <td>
+                    {Array.isArray(row.products) ? row.products.length : 0}
+                  </td>
                   <td>{row.sortOrder}</td>
                   <td>{row.isActive ? "active" : "inactive"}</td>
                   <td>
@@ -1444,7 +1730,7 @@ fetchProductFromUrl,
             </tbody>
           </table>
         </section>
-        )}
+      )}
     </>
   );
 }

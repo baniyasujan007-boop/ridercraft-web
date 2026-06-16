@@ -27,7 +27,17 @@ export const getProductById = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, price, tag, brand, colorFamily, stock, image } = req.body;
+    const {
+  name,
+  price,
+  tag,
+  brand,
+  colorFamily,
+  sizes,
+  colors,
+  stock,
+  image
+} = req.body;
     if (!name || price === undefined || price === null) {
       return res.status(400).json({ error: "Name and price are required" });
     }
@@ -43,6 +53,8 @@ export const createProduct = async (req, res) => {
       tag: tag ? String(tag).trim() : "General",
       brand: brand ? String(brand).trim() : "Generic",
       colorFamily: colorFamily ? String(colorFamily).trim() : "Neutral",
+      sizes: Array.isArray(sizes) ? sizes : [],
+colors: Array.isArray(colors) ? colors : [],
       stock:
         Number.isInteger(Number(stock)) && Number(stock) >= 0 ? Number(stock) : 25,
       image: image ? String(image) : ""
@@ -57,8 +69,17 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, tag, brand, colorFamily, stock, image } = req.body;
-    const product = await Product.findById(id);
+const {
+  name,
+  price,
+  tag,
+  brand,
+  colorFamily,
+  sizes,
+  colors,
+  stock,
+  image
+} = req.body;    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
@@ -91,6 +112,13 @@ export const updateProduct = async (req, res) => {
     if (colorFamily !== undefined) {
       product.colorFamily = String(colorFamily).trim() || "Neutral";
     }
+    if (sizes !== undefined) {
+  product.sizes = Array.isArray(sizes) ? sizes : [];
+}
+
+if (colors !== undefined) {
+  product.colors = Array.isArray(colors) ? colors : [];
+}
 
     if (stock !== undefined) {
       const parsedStock = Number(stock);
@@ -210,9 +238,9 @@ const image =
   $('meta[property="og:image"]').attr("content") || "";
 
     const brand = name?.split(" ")[0] || "Generic";
-console.log("Name:", name);
-console.log("Price raw:", price);
-console.log("Image:", image);
+
+
+
   res.json({
   name,
   brand,

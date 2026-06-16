@@ -3,7 +3,6 @@ import axios from "axios";
 import AdminSectionContent from "./AdminSectionContent";
 import "../../styles/pages/admin.css";
 
-
 const initialForm = {
   name: "Sample Product",
   price: "999",
@@ -11,7 +10,9 @@ const initialForm = {
   brand: "Generic",
   colorFamily: "Neutral",
   stock: "25",
-  image: ""
+  sizes: "",
+  colors: "",
+  image: "",
 };
 const initialPromoForm = {
   code: "",
@@ -20,7 +21,7 @@ const initialPromoForm = {
   maxUses: "50",
   startsAt: "",
   endsAt: "",
-  isActive: true
+  isActive: true,
 };
 const initialHeroOfferForm = {
   title: "",
@@ -29,14 +30,14 @@ const initialHeroOfferForm = {
   endsAt: "",
   priority: "1",
   ctaQuery: "",
-  isActive: true
+  isActive: true,
 };
 const initialFeaturedSectionForm = {
   key: "trending",
   title: "🔥 Trending Products",
   productIds: [],
   sortOrder: "1",
-  isActive: true
+  isActive: true,
 };
 
 const toDateTimeInputValue = (value) => {
@@ -45,7 +46,7 @@ const toDateTimeInputValue = (value) => {
   if (!Number.isFinite(date.getTime())) return "";
   const pad = (num) => String(num).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours()
+    date.getHours(),
   )}:${pad(date.getMinutes())}`;
 };
 
@@ -64,15 +65,18 @@ export default function Admin() {
     search: "",
     orderStatus: "all",
     priceRange: "all",
-    sortByDate: "newest"
+    sortByDate: "newest",
   });
-  
+
   const [editingId, setEditingId] = useState(null);
   const [editingPromoId, setEditingPromoId] = useState(null);
   const [heroOfferForm, setHeroOfferForm] = useState(initialHeroOfferForm);
   const [editingHeroOfferId, setEditingHeroOfferId] = useState(null);
-  const [featuredSectionForm, setFeaturedSectionForm] = useState(initialFeaturedSectionForm);
-  const [editingFeaturedSectionId, setEditingFeaturedSectionId] = useState(null);
+  const [featuredSectionForm, setFeaturedSectionForm] = useState(
+    initialFeaturedSectionForm,
+  );
+  const [editingFeaturedSectionId, setEditingFeaturedSectionId] =
+    useState(null);
   const [flashSaleProductIds, setFlashSaleProductIds] = useState([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -84,45 +88,49 @@ export default function Admin() {
     packageType: "all",
     priority: "all",
     status: "all",
-    sortByDate: "newest"
+    sortByDate: "newest",
   });
-  const [serviceTrackingStatus, setServiceTrackingStatus] = useState("requested");
+  const [serviceTrackingStatus, setServiceTrackingStatus] =
+    useState("requested");
   const [serviceAdminNote, setServiceAdminNote] = useState("");
   const [returnReviewNote, setReturnReviewNote] = useState("");
-  const [returnTrackingStatus, setReturnTrackingStatus] = useState("in_transit");
+  const [returnTrackingStatus, setReturnTrackingStatus] =
+    useState("in_transit");
   const sectionMeta = {
     products: {
       title: "Product Dashboard",
-      subtitle: "Add, edit, and delete items shown to users."
+      subtitle: "Add, edit, and delete items shown to users.",
     },
     orders: {
       title: "Orders Dashboard",
-      subtitle: "Track all order activity and update delivery status."
+      subtitle: "Track all order activity and update delivery status.",
     },
     promos: {
       title: "Payment & Promo Dashboard",
-      subtitle: "Manage promo codes and payment discount campaigns."
+      subtitle: "Manage promo codes and payment discount campaigns.",
     },
     customers: {
       title: "Customers Dashboard",
-      subtitle: "View your customer list and buying behavior."
+      subtitle: "View your customer list and buying behavior.",
     },
     inventory: {
       title: "Inventory Alerts",
-      subtitle: "Track low stock, out-of-stock products, and restock reminders."
+      subtitle:
+        "Track low stock, out-of-stock products, and restock reminders.",
     },
     performance: {
       title: "Product Performance Insights",
-      subtitle: "Monitor top performers, weak products, and rating momentum."
+      subtitle: "Monitor top performers, weak products, and rating momentum.",
     },
     featured: {
       title: "Featured Sections Dashboard",
-      subtitle: "Manage top shop sections and assign products to each one."
+      subtitle: "Manage top shop sections and assign products to each one.",
     },
     services: {
       title: "Service Requests Dashboard",
-      subtitle: "Track bike servicing requests, exact location, and fulfillment status."
-    }
+      subtitle:
+        "Track bike servicing requests, exact location, and fulfillment status.",
+    },
   };
 
   const token = localStorage.getItem("token");
@@ -134,7 +142,9 @@ export default function Admin() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await axios.get("https://ridercraft-api.onrender.com/products");
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/products",
+      );
       setProducts(res.data);
     } catch {
       setError("Failed to load products");
@@ -143,7 +153,10 @@ export default function Admin() {
   const fetchPromos = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("https://ridercraft-api.onrender.com/promos", { headers });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/promos",
+        { headers },
+      );
       setPromos(res.data);
     } catch {
       setError("Failed to load promo codes");
@@ -152,7 +165,10 @@ export default function Admin() {
   const fetchOrders = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("https://ridercraft-api.onrender.com/orders", { headers });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/orders",
+        { headers },
+      );
       setOrders(res.data);
     } catch {
       setError("Failed to load orders");
@@ -161,7 +177,10 @@ export default function Admin() {
   const fetchServiceRequests = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("https://ridercraft-api.onrender.com/service-requests/admin", { headers });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/service-requests/admin",
+        { headers },
+      );
       setServiceRequests(Array.isArray(res.data) ? res.data : []);
     } catch {
       setError("Failed to load service requests");
@@ -170,7 +189,10 @@ export default function Admin() {
   const fetchHeroOffers = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("https://ridercraft-api.onrender.com/hero-offers/admin", { headers });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/hero-offers/admin",
+        { headers },
+      );
       setHeroOffers(res.data);
     } catch {
       setError("Failed to load hero offers");
@@ -179,7 +201,10 @@ export default function Admin() {
   const fetchFeaturedSections = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get("https://ridercraft-api.onrender.com/featured-sections/admin", { headers });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/featured-sections/admin",
+        { headers },
+      );
       setFeaturedSections(res.data);
     } catch {
       setError("Failed to load featured sections");
@@ -200,12 +225,14 @@ export default function Admin() {
         ordersCount: 0,
         totalSpent: 0,
         lastOrderAt: "",
-        orders: []
+        orders: [],
       };
       previous.ordersCount += 1;
       previous.totalSpent += Number(order.total || 0);
       const orderTime = new Date(order.createdAt).getTime();
-      const prevTime = previous.lastOrderAt ? new Date(previous.lastOrderAt).getTime() : 0;
+      const prevTime = previous.lastOrderAt
+        ? new Date(previous.lastOrderAt).getTime()
+        : 0;
       if (orderTime > prevTime) {
         previous.lastOrderAt = order.createdAt;
       }
@@ -219,7 +246,7 @@ export default function Admin() {
         previewImages: (order.items || [])
           .map((item) => item.image)
           .filter(Boolean)
-          .slice(0, 3)
+          .slice(0, 3),
       });
       map.set(key, previous);
     });
@@ -227,8 +254,9 @@ export default function Admin() {
       .map((customer) => ({
         ...customer,
         orders: [...customer.orders].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        ),
       }))
       .sort((a, b) => b.totalSpent - a.totalSpent);
   }, [orders]);
@@ -243,27 +271,36 @@ export default function Admin() {
     const query = orderFilters.search.trim().toLowerCase();
     return orders
       .filter((order) => {
-      const customerName = String(order.user?.name || order.user?.email || "User");
-      const orderStatus = String(order.status || "").toLowerCase();
-      const total = Number(order.total || 0);
-      let matchesPrice = true;
-      if (orderFilters.priceRange !== "all") {
-        const [min, max] = String(orderFilters.priceRange || "")
-          .split("-")
-          .map(Number);
-        matchesPrice =
-          Number.isFinite(min) && Number.isFinite(max) ? total >= min && total <= max : true;
-      }
+        const customerName = String(
+          order.user?.name || order.user?.email || "User",
+        );
+        const orderStatus = String(order.status || "").toLowerCase();
+        const total = Number(order.total || 0);
+        let matchesPrice = true;
+        if (orderFilters.priceRange !== "all") {
+          const [min, max] = String(orderFilters.priceRange || "")
+            .split("-")
+            .map(Number);
+          matchesPrice =
+            Number.isFinite(min) && Number.isFinite(max)
+              ? total >= min && total <= max
+              : true;
+        }
 
-      const matchesQuery =
-        !query ||
-        String(order._id || "").toLowerCase().includes(query) ||
-        customerName.toLowerCase().includes(query) ||
-        String(order.promoCode || "").toLowerCase().includes(query);
-      const matchesOrderStatus =
-        orderFilters.orderStatus === "all" || orderStatus === orderFilters.orderStatus;
-      return matchesQuery && matchesOrderStatus && matchesPrice;
-    })
+        const matchesQuery =
+          !query ||
+          String(order._id || "")
+            .toLowerCase()
+            .includes(query) ||
+          customerName.toLowerCase().includes(query) ||
+          String(order.promoCode || "")
+            .toLowerCase()
+            .includes(query);
+        const matchesOrderStatus =
+          orderFilters.orderStatus === "all" ||
+          orderStatus === orderFilters.orderStatus;
+        return matchesQuery && matchesOrderStatus && matchesPrice;
+      })
       .sort((a, b) => {
         const at = new Date(a.createdAt).getTime();
         const bt = new Date(b.createdAt).getTime();
@@ -272,28 +309,34 @@ export default function Admin() {
   }, [orders, orderFilters]);
   const selectedOrder = useMemo(() => {
     if (!filteredOrders.length) return null;
-    return filteredOrders.find((order) => order._id === selectedOrderId) || filteredOrders[0];
+    return (
+      filteredOrders.find((order) => order._id === selectedOrderId) ||
+      filteredOrders[0]
+    );
   }, [filteredOrders, selectedOrderId]);
   const pendingReturnOrders = useMemo(
     () =>
-      orders.filter((order) => String(order.returnRequest?.status || "none") === "requested"),
-    [orders]
+      orders.filter(
+        (order) =>
+          String(order.returnRequest?.status || "none") === "requested",
+      ),
+    [orders],
   );
   const pendingServiceRequests = useMemo(
     () =>
       serviceRequests.filter(
-        (request) => String(request.status || "").toLowerCase() === "requested"
+        (request) => String(request.status || "").toLowerCase() === "requested",
       ),
-    [serviceRequests]
+    [serviceRequests],
   );
   const dealsSection = useMemo(
     () => featuredSections.find((row) => row.key === "deals-of-day") || null,
-    [featuredSections]
+    [featuredSections],
   );
   const inventoryInsights = useMemo(() => {
     const normalized = products.map((product) => ({
       ...product,
-      stockCount: Number(product.stock ?? 0)
+      stockCount: Number(product.stock ?? 0),
     }));
     const outOfStock = normalized
       .filter((product) => product.stockCount <= 0)
@@ -307,7 +350,7 @@ export default function Admin() {
     return {
       outOfStock,
       lowStock,
-      restockReminders
+      restockReminders,
     };
   }, [products]);
   const productPerformance = useMemo(() => {
@@ -315,21 +358,28 @@ export default function Admin() {
       const rating = Number(product.ratingAverage || 0);
       const reviews = Number(product.ratingCount || 0);
       const stock = Number(product.stock ?? 0);
-      const score = Number((rating * 18 + Math.min(reviews, 20) * 2 + Math.min(stock, 20) * 0.5).toFixed(1));
+      const score = Number(
+        (
+          rating * 18 +
+          Math.min(reviews, 20) * 2 +
+          Math.min(stock, 20) * 0.5
+        ).toFixed(1),
+      );
       return {
         ...product,
         rating,
         reviews,
         stock,
-        score
+        score,
       };
     });
     const ratedProducts = normalized.filter((product) => product.reviews > 0);
     const avgRating = ratedProducts.length
       ? Number(
           (
-            ratedProducts.reduce((sum, product) => sum + product.rating, 0) / ratedProducts.length
-          ).toFixed(1)
+            ratedProducts.reduce((sum, product) => sum + product.rating, 0) /
+            ratedProducts.length
+          ).toFixed(1),
         )
       : 0;
     const topRated = [...normalized]
@@ -339,16 +389,20 @@ export default function Admin() {
       .sort((a, b) => b.reviews - a.reviews || b.rating - a.rating)
       .slice(0, 5);
     const needsAttention = normalized.filter(
-      (product) => product.stock <= 0 || (product.reviews >= 3 && product.rating > 0 && product.rating < 3.5)
+      (product) =>
+        product.stock <= 0 ||
+        (product.reviews >= 3 && product.rating > 0 && product.rating < 3.5),
     );
-    const ranked = [...normalized].sort((a, b) => b.score - a.score || b.rating - a.rating);
+    const ranked = [...normalized].sort(
+      (a, b) => b.score - a.score || b.rating - a.rating,
+    );
     return {
       avgRating,
       ratedCount: ratedProducts.length,
       needsAttentionCount: needsAttention.length,
       topRated,
       mostReviewed,
-      ranked
+      ranked,
     };
   }, [products]);
   const updateOrderStatus = async (orderId, status) => {
@@ -359,7 +413,7 @@ export default function Admin() {
       await axios.put(
         `https://ridercraft-api.onrender.com/orders/${orderId}/status`,
         { status },
-        { headers }
+        { headers },
       );
       setMessage("Order status updated");
       fetchOrders();
@@ -375,7 +429,7 @@ export default function Admin() {
       await axios.put(
         `https://ridercraft-api.onrender.com/orders/${orderId}/payment-status`,
         { paymentStatus },
-        { headers }
+        { headers },
       );
       setMessage("Payment status updated");
       fetchOrders();
@@ -409,7 +463,7 @@ export default function Admin() {
       await axios.put(
         `https://ridercraft-api.onrender.com/orders/${orderId}/return-review`,
         { action, adminNote: returnReviewNote.trim() },
-        { headers }
+        { headers },
       );
       setMessage(action === "approve" ? "Return approved" : "Return rejected");
       setReturnReviewNote("");
@@ -426,7 +480,7 @@ export default function Admin() {
       await axios.put(
         `https://ridercraft-api.onrender.com/orders/${orderId}/return-tracking`,
         { status },
-        { headers }
+        { headers },
       );
       setMessage("Return tracking updated");
       fetchOrders();
@@ -456,18 +510,26 @@ export default function Admin() {
           contactNumber.toLowerCase().includes(query) ||
           pickupAddress.toLowerCase().includes(query) ||
           breakdownIssue.toLowerCase().includes(query) ||
-          String(request._id || "").toLowerCase().includes(query);
+          String(request._id || "")
+            .toLowerCase()
+            .includes(query);
         const matchesPackage =
-          serviceFilters.packageType === "all" || packageType === serviceFilters.packageType;
+          serviceFilters.packageType === "all" ||
+          packageType === serviceFilters.packageType;
         const matchesPriority =
-          serviceFilters.priority === "all" || priority === serviceFilters.priority;
+          serviceFilters.priority === "all" ||
+          priority === serviceFilters.priority;
         const matchesStatus =
           serviceFilters.status === "all" || status === serviceFilters.status;
-        return matchesQuery && matchesPackage && matchesPriority && matchesStatus;
+        return (
+          matchesQuery && matchesPackage && matchesPriority && matchesStatus
+        );
       })
       .sort((a, b) => {
-        const aEmergency = String(a.priority || "normal") === "emergency" ? 1 : 0;
-        const bEmergency = String(b.priority || "normal") === "emergency" ? 1 : 0;
+        const aEmergency =
+          String(a.priority || "normal") === "emergency" ? 1 : 0;
+        const bEmergency =
+          String(b.priority || "normal") === "emergency" ? 1 : 0;
         if (aEmergency !== bEmergency) return bEmergency - aEmergency;
         const at = new Date(a.createdAt).getTime();
         const bt = new Date(b.createdAt).getTime();
@@ -477,8 +539,9 @@ export default function Admin() {
   const selectedServiceRequest = useMemo(() => {
     if (!filteredServiceRequests.length) return null;
     return (
-      filteredServiceRequests.find((request) => request._id === selectedServiceRequestId) ||
-      filteredServiceRequests[0]
+      filteredServiceRequests.find(
+        (request) => request._id === selectedServiceRequestId,
+      ) || filteredServiceRequests[0]
     );
   }, [filteredServiceRequests, selectedServiceRequestId]);
   const updateServiceStatus = async (serviceRequestId, status, adminNote) => {
@@ -489,7 +552,7 @@ export default function Admin() {
       await axios.put(
         `https://ridercraft-api.onrender.com/service-requests/${serviceRequestId}/status`,
         { status, adminNote },
-        { headers }
+        { headers },
       );
       setMessage("Service request updated");
       fetchServiceRequests();
@@ -511,7 +574,7 @@ export default function Admin() {
     fetchOrders,
     fetchServiceRequests,
     fetchHeroOffers,
-    fetchFeaturedSections
+    fetchFeaturedSections,
   ]);
 
   useEffect(() => {
@@ -519,7 +582,9 @@ export default function Admin() {
       setSelectedCustomerEmail("");
       return;
     }
-    const exists = customers.some((customer) => customer.email === selectedCustomerEmail);
+    const exists = customers.some(
+      (customer) => customer.email === selectedCustomerEmail,
+    );
     if (!exists) {
       setSelectedCustomerEmail(customers[0].email);
     }
@@ -530,7 +595,9 @@ export default function Admin() {
       setSelectedOrderId("");
       return;
     }
-    const exists = filteredOrders.some((order) => order._id === selectedOrderId);
+    const exists = filteredOrders.some(
+      (order) => order._id === selectedOrderId,
+    );
     if (!exists) {
       setSelectedOrderId(filteredOrders[0]._id);
     }
@@ -541,7 +608,7 @@ export default function Admin() {
       return;
     }
     const exists = filteredServiceRequests.some(
-      (request) => request._id === selectedServiceRequestId
+      (request) => request._id === selectedServiceRequestId,
     );
     if (!exists) {
       setSelectedServiceRequestId(filteredServiceRequests[0]._id);
@@ -553,7 +620,9 @@ export default function Admin() {
       setServiceAdminNote("");
       return;
     }
-    setServiceTrackingStatus(String(selectedServiceRequest.status || "requested"));
+    setServiceTrackingStatus(
+      String(selectedServiceRequest.status || "requested"),
+    );
     setServiceAdminNote(String(selectedServiceRequest.adminNote || ""));
   }, [selectedServiceRequest]);
 
@@ -571,7 +640,7 @@ export default function Admin() {
   const toggleFlashSaleProduct = (productId) => {
     const id = String(productId);
     setFlashSaleProductIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -627,31 +696,29 @@ export default function Admin() {
       rawValue && /^www\./i.test(rawValue) ? `https://${rawValue}` : rawValue;
     setForm((prev) => ({ ...prev, image: nextValue }));
   };
-const fetchProductFromUrl = async () => {
-  try {
-    const headers = {
-      Authorization: `Bearer ${token}`
-    };
+  const fetchProductFromUrl = async () => {
+    try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
 
-    const res = await axios.post(
-      "https://ridercraft-api.onrender.com/products/fetch-url",
-      { url: productUrl },
-      { headers }
-    );
+      const res = await axios.post(
+        "https://ridercraft-api.onrender.com/products/fetch-url",
+        { url: productUrl },
+        { headers },
+      );
 
-    setForm((prev) => ({
-      ...prev,
-      name: res.data.name || "",
-      price: String(res.data.price || ""),
-      brand: res.data.brand || "",
-      image: res.data.image || ""
-    }));
-  } catch (err) {
-    setError(
-      err.response?.data?.error || "Failed to fetch product"
-    );
-  }
-};
+      setForm((prev) => ({
+        ...prev,
+        name: res.data.name || "",
+        price: String(res.data.price || ""),
+        brand: res.data.brand || "",
+        image: res.data.image || "",
+      }));
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to fetch product");
+    }
+  };
   const saveProduct = async () => {
     setError("");
     setMessage("");
@@ -668,30 +735,45 @@ const fetchProductFromUrl = async () => {
         !/^(https?:)?\/\//i.test(imageSource) &&
         !/^data:image\//i.test(imageSource)
       ) {
-        setError("Image must be a valid URL (example: https://...) or uploaded image");
+        setError(
+          "Image must be a valid URL (example: https://...) or uploaded image",
+        );
         return;
       }
 
-      const payload = {
-        name: form.name.trim(),
-        price: Number(form.price),
-        tag: form.tag.trim() || "General",
-        brand: form.brand.trim() || "Generic",
-        colorFamily: form.colorFamily.trim() || "Neutral",
-        stock: Number(form.stock || 0),
-        image: imageSource
-      };
+     const payload = {
+  name: form.name.trim(),
+  price: Number(form.price),
+  tag: form.tag.trim() || "General",
+  brand: form.brand.trim() || "Generic",
+  colorFamily: form.colorFamily.trim() || "Neutral",
+
+  sizes: form.sizes
+    ? form.sizes.split(",").map((s) => s.trim())
+    : [],
+
+  colors: form.colors
+    ? form.colors.split(",").map((c) => c.trim())
+    : [],
+
+  stock: Number(form.stock || 0),
+  image: imageSource,
+};
       const headers = { Authorization: `Bearer ${token}` };
 
       if (editingId) {
         await axios.put(
           `https://ridercraft-api.onrender.com/products/${editingId}`,
           payload,
-          { headers }
+          { headers },
         );
         setMessage("Product updated");
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/products", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/products",
+          payload,
+          { headers },
+        );
         setMessage("Product added");
       }
 
@@ -704,15 +786,24 @@ const fetchProductFromUrl = async () => {
 
   const startEdit = (product) => {
     setEditingId(product._id);
-    setForm({
-      name: product.name || "",
-      price: String(product.price ?? ""),
-      tag: product.tag || "",
-      brand: product.brand || "",
-      colorFamily: product.colorFamily || "",
-      stock: String(product.stock ?? "25"),
-      image: product.image || ""
-    });
+  setForm({
+  name: product.name || "",
+  price: String(product.price ?? ""),
+  tag: product.tag || "",
+  brand: product.brand || "",
+  colorFamily: product.colorFamily || "",
+
+  sizes: Array.isArray(product.sizes)
+    ? product.sizes.join(",")
+    : "",
+
+  colors: Array.isArray(product.colors)
+    ? product.colors.join(",")
+    : "",
+
+  stock: String(product.stock ?? "25"),
+  image: product.image || "",
+});
   };
 
   const removeProduct = async (id) => {
@@ -720,7 +811,7 @@ const fetchProductFromUrl = async () => {
     setMessage("");
     try {
       await axios.delete(`https://ridercraft-api.onrender.com/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setMessage("Product deleted");
       if (editingId === id) resetForm();
@@ -745,13 +836,21 @@ const fetchProductFromUrl = async () => {
         maxUses: Number(promoForm.maxUses),
         startsAt: new Date(promoForm.startsAt).toISOString(),
         endsAt: new Date(promoForm.endsAt).toISOString(),
-        isActive: Boolean(promoForm.isActive)
+        isActive: Boolean(promoForm.isActive),
       };
       if (editingPromoId) {
-        await axios.put(`https://ridercraft-api.onrender.com/promos/${editingPromoId}`, payload, { headers });
+        await axios.put(
+          `https://ridercraft-api.onrender.com/promos/${editingPromoId}`,
+          payload,
+          { headers },
+        );
         setMessage("Promo code updated");
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/promos", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/promos",
+          payload,
+          { headers },
+        );
         setMessage("Promo code created");
       }
       resetPromoForm();
@@ -769,7 +868,7 @@ const fetchProductFromUrl = async () => {
       maxUses: String(promo.maxUses ?? "1"),
       startsAt: toDateTimeInputValue(promo.startsAt),
       endsAt: toDateTimeInputValue(promo.endsAt),
-      isActive: Boolean(promo.isActive)
+      isActive: Boolean(promo.isActive),
     });
   };
   const createHeroOffer = async () => {
@@ -792,17 +891,21 @@ const fetchProductFromUrl = async () => {
           : null,
         priority: Number(heroOfferForm.priority || 1),
         ctaQuery: heroOfferForm.ctaQuery.trim(),
-        isActive: Boolean(heroOfferForm.isActive)
+        isActive: Boolean(heroOfferForm.isActive),
       };
       if (editingHeroOfferId) {
         await axios.put(
           `https://ridercraft-api.onrender.com/hero-offers/admin/${editingHeroOfferId}`,
           payload,
-          { headers }
+          { headers },
         );
         setMessage("Hero offer updated");
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/hero-offers/admin", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/hero-offers/admin",
+          payload,
+          { headers },
+        );
         setMessage("Hero offer created");
       }
       resetHeroOfferForm();
@@ -820,7 +923,7 @@ const fetchProductFromUrl = async () => {
       endsAt: toDateTimeInputValue(offer.endsAt),
       priority: String(offer.priority ?? "1"),
       ctaQuery: offer.ctaQuery || "",
-      isActive: Boolean(offer.isActive)
+      isActive: Boolean(offer.isActive),
     });
   };
   const removeHeroOffer = async (id) => {
@@ -828,7 +931,10 @@ const fetchProductFromUrl = async () => {
     setMessage("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`https://ridercraft-api.onrender.com/hero-offers/admin/${id}`, { headers });
+      await axios.delete(
+        `https://ridercraft-api.onrender.com/hero-offers/admin/${id}`,
+        { headers },
+      );
       setMessage("Hero offer deleted");
       if (editingHeroOfferId === id) resetHeroOfferForm();
       fetchHeroOffers();
@@ -854,17 +960,21 @@ const fetchProductFromUrl = async () => {
         title: featuredSectionForm.title.trim(),
         products: featuredSectionForm.productIds,
         sortOrder: Number(featuredSectionForm.sortOrder || 0),
-        isActive: Boolean(featuredSectionForm.isActive)
+        isActive: Boolean(featuredSectionForm.isActive),
       };
       if (editingFeaturedSectionId) {
         await axios.put(
           `https://ridercraft-api.onrender.com/featured-sections/admin/${editingFeaturedSectionId}`,
           payload,
-          { headers }
+          { headers },
         );
         setMessage("Featured section updated");
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/featured-sections/admin",
+          payload,
+          { headers },
+        );
         setMessage("Featured section created");
       }
       resetFeaturedSectionForm();
@@ -882,7 +992,7 @@ const fetchProductFromUrl = async () => {
         ? sectionRow.products.map((item) => item._id || item)
         : [],
       sortOrder: String(sectionRow.sortOrder ?? "0"),
-      isActive: Boolean(sectionRow.isActive)
+      isActive: Boolean(sectionRow.isActive),
     });
   };
   const removeFeaturedSection = async (id) => {
@@ -890,12 +1000,17 @@ const fetchProductFromUrl = async () => {
     setMessage("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      await axios.delete(`https://ridercraft-api.onrender.com/featured-sections/admin/${id}`, { headers });
+      await axios.delete(
+        `https://ridercraft-api.onrender.com/featured-sections/admin/${id}`,
+        { headers },
+      );
       setMessage("Featured section deleted");
       if (editingFeaturedSectionId === id) resetFeaturedSectionForm();
       fetchFeaturedSections();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to delete featured section");
+      setError(
+        err.response?.data?.error || "Failed to delete featured section",
+      );
     }
   };
   const saveFlashSaleProducts = async () => {
@@ -912,21 +1027,27 @@ const fetchProductFromUrl = async () => {
         title: "💰 Deals of the Day",
         products: flashSaleProductIds,
         sortOrder: 4,
-        isActive: true
+        isActive: true,
       };
       if (dealsSection?._id) {
         await axios.put(
           `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
           payload,
-          { headers }
+          { headers },
         );
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/featured-sections/admin",
+          payload,
+          { headers },
+        );
       }
       setMessage("Flash sale products updated");
       fetchFeaturedSections();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to update flash sale products");
+      setError(
+        err.response?.data?.error || "Failed to update flash sale products",
+      );
     }
   };
   const toggleProductFlashSale = async (productId) => {
@@ -945,18 +1066,24 @@ const fetchProductFromUrl = async () => {
         title: "💰 Deals of the Day",
         products: nextProductIds,
         sortOrder: 4,
-        isActive: true
+        isActive: true,
       };
       if (dealsSection?._id) {
         await axios.put(
           `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
           payload,
-          { headers }
+          { headers },
         );
       } else {
-        await axios.post("https://ridercraft-api.onrender.com/featured-sections/admin", payload, { headers });
+        await axios.post(
+          "https://ridercraft-api.onrender.com/featured-sections/admin",
+          payload,
+          { headers },
+        );
       }
-      setMessage(isSelected ? "Removed from flash sale" : "Added to flash sale");
+      setMessage(
+        isSelected ? "Removed from flash sale" : "Added to flash sale",
+      );
       fetchFeaturedSections();
     } catch (err) {
       setError(err.response?.data?.error || "Failed to update flash sale");
@@ -970,7 +1097,11 @@ const fetchProductFromUrl = async () => {
         <ul>
           <li>
             <button
-              className={section === "products" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "products"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("products")}
             >
               1. Product Manager
@@ -978,18 +1109,28 @@ const fetchProductFromUrl = async () => {
           </li>
           <li>
             <button
-              className={section === "orders" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "orders"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("orders")}
             >
               2. Orders
               {pendingReturnOrders.length > 0 && (
-                <span className="admin-side-count">{pendingReturnOrders.length}</span>
+                <span className="admin-side-count">
+                  {pendingReturnOrders.length}
+                </span>
               )}
             </button>
           </li>
           <li>
             <button
-              className={section === "promos" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "promos"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("promos")}
             >
               3. Payment Promo Code
@@ -997,7 +1138,11 @@ const fetchProductFromUrl = async () => {
           </li>
           <li>
             <button
-              className={section === "customers" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "customers"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("customers")}
             >
               4. Customers
@@ -1005,18 +1150,28 @@ const fetchProductFromUrl = async () => {
           </li>
           <li>
             <button
-              className={section === "services" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "services"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("services")}
             >
               5. Service Requests
               {pendingServiceRequests.length > 0 && (
-                <span className="admin-side-count">{pendingServiceRequests.length}</span>
+                <span className="admin-side-count">
+                  {pendingServiceRequests.length}
+                </span>
               )}
             </button>
           </li>
           <li>
             <button
-              className={section === "featured" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "featured"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("featured")}
             >
               6. Featured Sections
@@ -1024,7 +1179,11 @@ const fetchProductFromUrl = async () => {
           </li>
           <li>
             <button
-              className={section === "inventory" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "inventory"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("inventory")}
             >
               7. Inventory Alerts
@@ -1032,7 +1191,11 @@ const fetchProductFromUrl = async () => {
           </li>
           <li>
             <button
-              className={section === "performance" ? "admin-side-btn active" : "admin-side-btn"}
+              className={
+                section === "performance"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
               onClick={() => setSection("performance")}
             >
               8. Product Performance
@@ -1045,7 +1208,10 @@ const fetchProductFromUrl = async () => {
         <header className="admin-header">
           <div>
             <h1>{sectionMeta[section]?.title || "Admin Dashboard"}</h1>
-            <p>{sectionMeta[section]?.subtitle || "Manage your store operations."}</p>
+            <p>
+              {sectionMeta[section]?.subtitle ||
+                "Manage your store operations."}
+            </p>
           </div>
           <button onClick={logout} className="admin-logout-btn">
             Logout
@@ -1125,8 +1291,8 @@ const fetchProductFromUrl = async () => {
             startEditFeaturedSection,
             removeFeaturedSection,
             productUrl,
-setProductUrl,
-fetchProductFromUrl,
+            setProductUrl,
+            fetchProductFromUrl,
           }}
         />
       </main>
