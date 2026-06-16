@@ -1,5 +1,7 @@
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
 export const listProducts = async (_req, res) => {
   try {
@@ -179,15 +181,28 @@ export const fetchProductFromUrl = async (req, res) => {
   try {
     const { url } = req.body;
 
-    console.log("Fetching:", url);
+    const response = await axios.get(url);
+
+    const $ = cheerio.load(response.data);
+
+    const name =
+      $('meta[property="og:title"]').attr("content") ||
+      $("title").text();
+
+    const image =
+      $('meta[property="og:image"]').attr("content") || "";
+
+    const brand = name?.split(" ")[0] || "Generic";
 
     res.json({
-      name: "Steelbird SBA-7 Helmet",
-      price: 1499,
-      brand: "Steelbird",
-      image: "https://example.com/helmet.jpg"
+      name,
+      brand,
+      image,
+      price: ""
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       error: "Failed to fetch product"
     });
