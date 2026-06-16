@@ -104,15 +104,25 @@ export const createPromo = async (req, res) => {
     });
     const users = await User.find({}, "_id");
 
+const discountText =
+  promo.discountType === "percent"
+    ? `${promo.discountValue}% OFF`
+    : promo.discountType === "flat"
+    ? `Rs ${promo.discountValue} OFF`
+    : "Free Shipping";
+
+const expiryDate = new Date(
+  promo.endsAt
+).toLocaleDateString();
+
 await Notification.insertMany(
   users.map((user) => ({
     userId: user._id,
-    title: "Flash Sale Live",
-    body: `${promo.code} is now available. Limited time offer!`,
+    title: "🎟️ Flash Sale Live",
+    body: `Use code ${promo.code} and get ${discountText}. Valid until ${expiryDate}.`,
     type: "coupon"
   }))
 );
-
     res.status(201).json({ ...promo.toObject(), status: getPromoStatus(promo) });
   } catch (err) {
     if (err.code === 11000) {
