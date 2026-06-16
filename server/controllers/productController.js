@@ -205,9 +205,10 @@ export const rateProduct = async (req, res) => {
     res.status(500).json({ error: "Failed to save rating" });
   }
 };
-console.log("URL RECEIVED:", req.body.url);
+
 export const fetchProductFromUrl = async (req, res) => {
   try {
+    console.log("URL RECEIVED:", req.body.url);
     const { url } = req.body;
 
    const response = await axios.get(url);
