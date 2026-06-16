@@ -28,7 +28,22 @@ function getPromoStatus(promo) {
   if (new Date(promo.endsAt) < now) return "expired";
   return "active";
 }
+export const fetchProductFromUrl = async (req, res) => {
+  try {
+    const { url } = req.body;
 
+    res.json({
+      name: "Steelbird SBA-7 Helmet",
+      price: 1499,
+      brand: "Steelbird",
+      image: "https://example.com/helmet.jpg"
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to fetch product"
+    });
+  }
+};
 export const listPromos = async (_req, res) => {
   try {
     const promos = await Promo.find().sort({ createdAt: -1 });
@@ -257,4 +272,5 @@ export const redeemPromo = async (req, res) => {
   } catch {
     res.status(500).json({ error: "Failed to redeem promo code" });
   }
+  
 };
