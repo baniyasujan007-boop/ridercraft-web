@@ -197,7 +197,9 @@ const image =
   $('meta[property="og:image"]').attr("content") || "";
 
     const brand = name?.split(" ")[0] || "Generic";
-
+console.log("Name:", name);
+console.log("Price raw:", price);
+console.log("Image:", image);
     res.json({
       name,
       brand,
