@@ -148,12 +148,23 @@ export default function AdminSectionContent({ vm }) {
               value={form.image}
               onChange={handleProductImageUrlChange}
             />
-            <input
-              placeholder="Paste product URL"
-              value={productUrl}
-              onChange={(e) => setProductUrl(e.target.value)}
-            />
+          <input
+  placeholder="Paste product URL"
+  value={productUrl}
+  onChange={(e) => {
+    console.log("Input value:", e.target.value);
+    setProductUrl(e.target.value);
+  }}
+/>
 
+<button
+  onClick={() => {
+    console.log("Button clicked. productUrl =", productUrl);
+    fetchProductFromUrl();
+  }}
+>
+  Fetch Product
+</button>
             <button onClick={fetchProductFromUrl}>Fetch Product</button>
             <input
               type="number"
