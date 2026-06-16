@@ -3,7 +3,7 @@ import axios from "axios";
 import AdminSectionContent from "./AdminSectionContent";
 import "../../styles/pages/admin.css";
 
-const [productUrl, setProductUrl] = useState("");
+
 const initialForm = {
   name: "Sample Product",
   price: "999",
@@ -65,6 +65,7 @@ export default function Admin() {
     priceRange: "all",
     sortByDate: "newest"
   });
+  const [productUrl, setProductUrl] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editingPromoId, setEditingPromoId] = useState(null);
   const [heroOfferForm, setHeroOfferForm] = useState(initialHeroOfferForm);
@@ -1121,7 +1122,10 @@ const fetchProductFromUrl = async () => {
             resetFeaturedSectionForm,
             featuredSections,
             startEditFeaturedSection,
-            removeFeaturedSection
+            removeFeaturedSection,
+            productUrl,
+setProductUrl,
+fetchProductFromUrl,
           }}
         />
       </main>

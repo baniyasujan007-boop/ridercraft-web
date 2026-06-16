@@ -175,3 +175,21 @@ export const rateProduct = async (req, res) => {
     res.status(500).json({ error: "Failed to save rating" });
   }
 };
+export const fetchProductFromUrl = async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    console.log("Fetching:", url);
+
+    res.json({
+      name: "Steelbird SBA-7 Helmet",
+      price: 1499,
+      brand: "Steelbird",
+      image: "https://example.com/helmet.jpg"
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to fetch product"
+    });
+  }
+};

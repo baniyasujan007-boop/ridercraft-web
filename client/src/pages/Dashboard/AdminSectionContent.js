@@ -70,7 +70,10 @@ export default function AdminSectionContent({ vm }) {
     resetFeaturedSectionForm,
     featuredSections,
     startEditFeaturedSection,
-    removeFeaturedSection
+    removeFeaturedSection,
+    productUrl,
+setProductUrl,
+fetchProductFromUrl,
   } = vm;
 
   return (
