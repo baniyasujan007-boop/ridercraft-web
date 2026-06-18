@@ -13,6 +13,7 @@ import "../styles/landing-profile.css";
 import "../styles/landing-service.css";
 import { applyImageFallback } from "../../../utils/fallbackImage";
 
+const [shopQuery, setShopQuery] = useState("");
 const SERVICE_BIKE_MODELS = [
   "Hero Xpulse 200",
   "Royal Enfield Classic 350",
@@ -1463,6 +1464,8 @@ export default function Landing() {
         profile={profile}
         isAdmin={isAdmin}
         logout={logout}
+        searchQuery={shopQuery}
+        setSearchQuery={setShopQuery}
       />
 
       {view === "home" && (
@@ -1700,10 +1703,7 @@ export default function Landing() {
           </section>
 
           <section className="category-grid">
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("All")}
-            >
+            <div className="category-card" onClick={() => setActiveTag("All")}>
               <span className="category-icon">🏍</span>
               <h3>All product</h3>
             </div>
