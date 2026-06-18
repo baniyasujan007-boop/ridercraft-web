@@ -1462,7 +1462,7 @@ useEffect(() => {
             })}
           </div>
 
-          <div className="shop-hero-banner">
+          {/* <div className="shop-hero-banner">
             <div>
               <p className="shop-hero-eyebrow">New Season Collection</p>
               <h2>Discover premium picks for your everyday lifestyle</h2>
@@ -1512,7 +1512,58 @@ useEffect(() => {
                 Shop Deals
               </button>
             </div>
-          </div>
+          </div> */}
+          <section className="ridercraft-hero">
+  <div className="ridercraft-hero-content">
+    <p className="hero-badge">
+      🏍 Premium Motorcycle Marketplace
+    </p>
+
+    <h1>
+      Ride Better.
+      <br />
+      Ride Safer.
+    </h1>
+
+    <p>
+      Premium helmets, riding gear, bike accessories,
+      servicing and exclusive flash sale deals.
+    </p>
+
+    <div className="hero-buttons">
+      <button
+        className="hero-primary-btn"
+        onClick={() => setShopQuery("")}
+      >
+        Shop Now
+      </button>
+
+      <button
+        className="hero-secondary-btn"
+        onClick={() => setView("servicing")}
+      >
+        Book Service
+      </button>
+    </div>
+  </div>
+
+  <div className="ridercraft-hero-image">
+    <img
+      src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
+      alt="Motorcycle Rider"
+    />
+  </div>
+</section>
+<section className="category-grid">
+  <div className="category-card">🪖 Helmets</div>
+  <div className="category-card">🧤 Gloves</div>
+  <div className="category-card">🛡 Riding Gear</div>
+  <div className="category-card">💡 Lights</div>
+  <div className="category-card">🎒 Luggage</div>
+  <div className="category-card">📱 Mobile Holders</div>
+  <div className="category-card">🔧 Bike Parts</div>
+  <div className="category-card">⚙ Maintenance</div>
+</section>
           <div className={showFilters ? "shop-content" : "shop-content no-filters"}>
             {showFilters && (
             <aside className="shop-filters">
