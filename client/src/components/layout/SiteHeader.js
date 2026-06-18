@@ -1,4 +1,5 @@
-import { Link, useEffect, useState } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import ridercraftLogo from "../../assets/ridercraft-logo.png";
 
 export default function SiteHeader({
