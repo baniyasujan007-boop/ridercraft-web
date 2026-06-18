@@ -11,8 +11,6 @@ export default function Navbar({
   profile,
   isAdmin,
   logout,
-  searchQuery,
-  setSearchQuery,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
