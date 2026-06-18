@@ -1554,15 +1554,71 @@ useEffect(() => {
     />
   </div>
 </section>
+
+  
+
 <section className="category-grid">
-  <div className="category-card">🪖 Helmets</div>
-  <div className="category-card">🧤 Gloves</div>
-  <div className="category-card">🛡 Riding Gear</div>
-  <div className="category-card">💡 Lights</div>
-  <div className="category-card">🎒 Luggage</div>
-  <div className="category-card">📱 Mobile Holders</div>
-  <div className="category-card">🔧 Bike Parts</div>
-  <div className="category-card">⚙ Maintenance</div>
+  <div
+  className="category-card"
+  onClick={() => setActiveTag("All")}
+>
+  🏍 All Products
+</div>
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Helmet")}
+  >
+    🪖 Helmets
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Gloves")}
+  >
+    🧤 Gloves
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Riding Gear")}
+  >
+    🛡 Riding Gear
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Lights")}
+  >
+    💡 Lights
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Luggage")}
+  >
+    🎒 Luggage
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Mobile Holder")}
+  >
+    📱 Mobile Holders
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Bike Parts")}
+  >
+    🔧 Bike Parts
+  </div>
+
+  <div
+    className="category-card"
+    onClick={() => setActiveTag("Maintenance")}
+  >
+    ⚙ Maintenance
+  </div>
 </section>
           <div className={showFilters ? "shop-content" : "shop-content no-filters"}>
             {showFilters && (
