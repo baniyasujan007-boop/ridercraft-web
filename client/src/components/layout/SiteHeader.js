@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import ridercraftLogo from "../../assets/ridercraft-logo.png";
 
+
 export default function SiteHeader({
   searchQuery,
   setSearchQuery,

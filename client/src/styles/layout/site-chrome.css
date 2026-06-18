@@ -117,10 +117,16 @@
 }
 
 @media (max-width: 640px) {
-  .site-header-inner {
-    height: 62px;
-    width: min(1220px, calc(100% - 16px));
-  }
+ .site-header-inner {
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.site-header-search {
+  width: 100%;
+  max-width: 100%;
+}
 
   .site-logo {
     gap: 8px;
