@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+
 function formatSoldCount(count) {
   if (count >= 1000) return `${(count / 1000).toFixed(1)}k sold`;
   return `${count} sold`;
@@ -38,54 +38,11 @@ export default function ProductSummary({
     expanded || !needsToggle
       ? product.description
       : `${product.description.slice(0, 145).trim()}...`;
-      const [timeLeft, setTimeLeft] = useState("");
-      useEffect(() => {
-  if (!product.flashSaleEndsAt) return;
-
-  const timer = setInterval(() => {
-    const diff =
-      new Date(product.flashSaleEndsAt).getTime() -
-      new Date().getTime();
-
-    if (diff <= 0) {
-      setTimeLeft("Expired");
-      return;
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (diff / (1000 * 60 * 60)) % 24
-    );
-    const mins = Math.floor(
-      (diff / (1000 * 60)) % 60
-    );
-    const secs = Math.floor(
-      (diff / 1000) % 60
-    );
-
-    setTimeLeft(
-      `${days}d ${hours}h ${mins}m ${secs}s`
-    );
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [product.flashSaleEndsAt]);
 
   return (
     <section className="pdp-summary">
       <p className="pdp-brand">{product.brand}</p>
 
-     {product.isFlashSale && (
-  <>
-    <div className="flash-sale-badge">
-      🔥 FLASH SALE
-    </div>
-
-    <div className="flash-sale-timer">
-      Ends In: {timeLeft}
-    </div>
-  </>
-)}
 
       <h1 className="pdp-title">{product.title}</h1>
       <p className="pdp-brand-name">Brand: {product.brand}</p>

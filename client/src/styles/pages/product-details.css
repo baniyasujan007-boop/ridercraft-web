@@ -584,18 +584,3 @@
     height: 200px;
   }
 }
-.flash-sale-badge {
-  display: inline-block;
-  background: #ef4444;
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.flash-sale-timer {
-  color: #ef4444;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
