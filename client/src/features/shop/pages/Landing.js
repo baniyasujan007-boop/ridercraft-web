@@ -252,29 +252,6 @@ export default function Landing() {
     sortBy,
     minRating,
   ]);
-
-  // Debug: log shopQuery changes and filteredProducts updates
-  useEffect(() => {
-    console.log("Landing: shopQuery changed:", shopQuery);
-  }, [shopQuery]);
-
-  useEffect(() => {
-    console.log("Landing: filteredProducts count:", filteredProducts.length);
-  }, [filteredProducts.length]);
-
-  // Listen for global shopQueryChange events emitted by SiteHeader when it
-  // isn't wired up via props. This preserves existing business logic while
-  // allowing the moved search input to still update the Landing filter.
-  useEffect(() => {
-    const onShopQueryChange = (e) => {
-      const v = e?.detail ?? (typeof e === "string" ? e : undefined);
-      console.log("Landing: received shopQueryChange event:", v);
-      if (typeof v === "string") setShopQuery(v);
-    };
-
-    window.addEventListener("shopQueryChange", onShopQueryChange);
-    return () => window.removeEventListener("shopQueryChange", onShopQueryChange);
-  }, []);
   const featuredSections = useMemo(
     () =>
       featuredSectionsData
@@ -321,7 +298,6 @@ export default function Landing() {
     () => activeHeroOffers.find((offer) => offer.offerType === "flash"),
     [activeHeroOffers],
   );
-  // eslint-disable-next-line no-unused-vars
   const tagHeroOffers = useMemo(
     () => activeHeroOffers.filter((offer) => offer.offerType !== "flash"),
     [activeHeroOffers],
@@ -1507,115 +1483,6 @@ export default function Landing() {
 
       {view === "shop" && (
         <section className="shop-experience">
-          <section className="ridercraft-hero">
-            <div className="ridercraft-hero-content">
-              <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
-
-              <h1>
-                Ride Better.
-                <br />
-                Ride Safer.
-              </h1>
-
-              <p>
-                Premium helmets, riding gear, bike accessories, servicing and
-                exclusive flash sale deals.
-              </p>
-
-              <div className="hero-buttons">
-                <button
-                  className="hero-primary-btn"
-                  onClick={() => setShopQuery("")}
-                >
-                  Shop Now
-                </button>
-
-                <button
-                  className="hero-secondary-btn"
-                  onClick={() => setView("servicing")}
-                >
-                  Book Service
-                </button>
-              </div>
-            </div>
-
-            <div className="ridercraft-hero-image">
-              <img
-                src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-                alt="Motorcycle Rider"
-              />
-            </div>
-          </section>
-
-          <section className="category-grid">
-            <div className="category-card" onClick={() => setActiveTag("All")}>
-              <span className="category-icon">🏍</span>
-              <h3>All product</h3>
-            </div>
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Helmet")}
-            >
-              <span className="category-icon">🪖</span>
-              <h3>Helmets</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Gloves")}
-            >
-              <span className="category-icon">🧤</span>
-              <h3>Gloves</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Riding Gear")}
-            >
-              <span className="category-icon">🛡️</span>
-              <h3>Riding Gear</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Lights")}
-            >
-              <span className="category-icon">💡</span>
-              <h3>Lights</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Luggage")}
-            >
-              <span className="category-icon">🎒</span>
-              <h3>Luggage</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Mobile Holder")}
-            >
-              <span className="category-icon">📱</span>
-              <h3>Mobile Holders</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Bike Parts")}
-            >
-              <span className="category-icon">🔧</span>
-              <h3>Bike Parts</h3>
-            </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Maintenance")}
-            >
-              <span className="category-icon">⚙️</span>
-              <h3>Maintenance</h3>
-            </div>
-          </section>
           <section className="flash-sale-banner">
             <div className="flash-sale-head">
               <h3>⚡ {flashDealsSection.title || "Flash Sale Section"}</h3>
@@ -1795,22 +1662,115 @@ export default function Landing() {
               </button>
             </div>
           </div> */}
-          <section className="brands-section">
-            <div className="section-header">
-              <h2>Featured Brands</h2>
-              <p>Trusted by riders worldwide</p>
+          <section className="ridercraft-hero">
+            <div className="ridercraft-hero-content">
+              <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
+
+              <h1>
+                Ride Better.
+                <br />
+                Ride Safer.
+              </h1>
+
+              <p>
+                Premium helmets, riding gear, bike accessories, servicing and
+                exclusive flash sale deals.
+              </p>
+
+              <div className="hero-buttons">
+                <button
+                  className="hero-primary-btn"
+                  onClick={() => setShopQuery("")}
+                >
+                  Shop Now
+                </button>
+
+                <button
+                  className="hero-secondary-btn"
+                  onClick={() => setView("servicing")}
+                >
+                  Book Service
+                </button>
+              </div>
             </div>
 
-            <div className="brands-grid">
-              <div className="brand-card">Arai</div>
-              <div className="brand-card">LS2</div>
-              <div className="brand-card">MT Helmets</div>
-              <div className="brand-card">SMK</div>
-              <div className="brand-card">Steelbird</div>
-              <div className="brand-card">Alpinestars</div>
+            <div className="ridercraft-hero-image">
+              <img
+                src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
+                alt="Motorcycle Rider"
+              />
             </div>
           </section>
 
+          <section className="category-grid">
+            <div className="category-card" onClick={() => setActiveTag("All")}>
+              <span className="category-icon">🏍</span>
+              <h3>All product</h3>
+            </div>
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Helmet")}
+            >
+              <span className="category-icon">🪖</span>
+              <h3>Helmets</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Gloves")}
+            >
+              <span className="category-icon">🧤</span>
+              <h3>Gloves</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Riding Gear")}
+            >
+              <span className="category-icon">🛡️</span>
+              <h3>Riding Gear</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Lights")}
+            >
+              <span className="category-icon">💡</span>
+              <h3>Lights</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Luggage")}
+            >
+              <span className="category-icon">🎒</span>
+              <h3>Luggage</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Mobile Holder")}
+            >
+              <span className="category-icon">📱</span>
+              <h3>Mobile Holders</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Bike Parts")}
+            >
+              <span className="category-icon">🔧</span>
+              <h3>Bike Parts</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Maintenance")}
+            >
+              <span className="category-icon">⚙️</span>
+              <h3>Maintenance</h3>
+            </div>
+          </section>
           <div
             className={showFilters ? "shop-content" : "shop-content no-filters"}
           >
