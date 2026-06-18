@@ -20,7 +20,7 @@ const SERVICE_BIKE_MODELS = [
   "Yamaha MT 15",
   "TVS Apache RTR 160",
   "Honda CB350",
-  "KTM Duke 200"
+  "KTM Duke 200",
 ];
 
 const getTodayDateValue = () => {
@@ -34,53 +34,45 @@ const DUMMY_CARD = {
   cardNumber: "4242424242424242",
   cardHolder: "TEST CUSTOMER",
   expiry: "12/30",
-  cvv: "123"
+  cvv: "123",
 };
 
 const DUMMY_EWALLET = {
   walletProvider: "Google Pay",
-  walletId: "dummy.wallet@quickgpt.test"
+  walletId: "dummy.wallet@quickgpt.test",
 };
 
 const CUSTOMER_NOTIFICATION_STORAGE_KEY = "ridercraft_customer_notifications";
 
 export default function Landing() {
-const [dbNotifications, setDbNotifications] = useState([]);
+  const [dbNotifications, setDbNotifications] = useState([]);
 
-const loadDbNotifications = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  const loadDbNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/notifications",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    const res = await axios.get(
-      "https://ridercraft-api.onrender.com/notifications",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+      setDbNotifications(res.data || []);
+    } catch (err) {
+      console.error("Notification error:", err.response?.data || err);
+    }
+  };
 
+  useEffect(() => {
+    loadDbNotifications();
+  }, []);
 
-    setDbNotifications(res.data || []);
-  } catch (err) {
-    console.error(
-      "Notification error:",
-      err.response?.data || err
-    );
-  }
-};
-
-useEffect(() => {
-  loadDbNotifications();
-}, []);
-
-useEffect(() => {
-  console.log(
-    "DB Notifications:",
-    dbNotifications
-  );
-}, [dbNotifications]);
+  useEffect(() => {
+    console.log("DB Notifications:", dbNotifications);
+  }, [dbNotifications]);
   const navigate = useNavigate();
   const location = useLocation();
   const [view, setView] = useState("shop");
@@ -122,30 +114,31 @@ useEffect(() => {
       latitude: null,
       longitude: null,
       accuracyMeters: null,
-      capturedAt: ""
+      capturedAt: "",
     },
     contactNumber: "",
     breakdownIssue: "",
-    notes: ""
+    notes: "",
   });
   const [returnReasonByOrder, setReturnReasonByOrder] = useState({});
   const [returnEvidenceByOrder, setReturnEvidenceByOrder] = useState({});
   const [returnActionLoadingId, setReturnActionLoadingId] = useState("");
   const [returnMessage, setReturnMessage] = useState("");
   const [returnError, setReturnError] = useState("");
-  const { cart, addToCart, changeQty, clearCart, totalItems, totalPrice } = useCart();
+  const { cart, addToCart, changeQty, clearCart, totalItems, totalPrice } =
+    useCart();
   const [profile, setProfile] = useState({
     name: "",
     email: "",
     avatar: "",
     contactNumber: "",
-    deliveryAddress: ""
+    deliveryAddress: "",
   });
   const [profileForm, setProfileForm] = useState({
     name: "",
     avatar: "",
     contactNumber: "",
-    deliveryAddress: ""
+    deliveryAddress: "",
   });
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -160,7 +153,7 @@ useEffect(() => {
     expiry: "",
     cvv: "",
     walletProvider: "",
-    walletId: ""
+    walletId: "",
   });
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
@@ -169,7 +162,9 @@ useEffect(() => {
   const [offerNow, setOfferNow] = useState(Date.now());
   const [customerNotifications, setCustomerNotifications] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(CUSTOMER_NOTIFICATION_STORAGE_KEY) || "[]");
+      return JSON.parse(
+        localStorage.getItem(CUSTOMER_NOTIFICATION_STORAGE_KEY) || "[]",
+      );
     } catch {
       return [];
     }
@@ -184,15 +179,18 @@ useEffect(() => {
 
   const availableTags = useMemo(
     () => ["All", ...new Set(products.map((item) => item.tag || "General"))],
-    [products]
+    [products],
   );
   const availableBrands = useMemo(
     () => ["All", ...new Set(products.map((item) => item.brand || "Generic"))],
-    [products]
+    [products],
   );
   const availableColorFamilies = useMemo(
-    () => ["All", ...new Set(products.map((item) => item.colorFamily || "Neutral"))],
-    [products]
+    () => [
+      "All",
+      ...new Set(products.map((item) => item.colorFamily || "Neutral")),
+    ],
+    [products],
   );
   const tagCounts = useMemo(() => {
     const counts = products.reduce((acc, item) => {
@@ -211,7 +209,8 @@ useEffect(() => {
   const filteredProducts = useMemo(() => {
     const query = shopQuery.trim().toLowerCase();
     const filtered = products.filter((item) => {
-      const matchesTag = activeTag === "All" || (item.tag || "General") === activeTag;
+      const matchesTag =
+        activeTag === "All" || (item.tag || "General") === activeTag;
       const matchesBrand =
         activeBrand === "All" || (item.brand || "Generic") === activeBrand;
       const matchesColorFamily =
@@ -243,25 +242,38 @@ useEffect(() => {
       sorted.sort((a, b) => String(a.name).localeCompare(String(b.name)));
     }
     return sorted;
-  }, [products, shopQuery, activeTag, activeBrand, activeColorFamily, sortBy, minRating]);
+  }, [
+    products,
+    shopQuery,
+    activeTag,
+    activeBrand,
+    activeColorFamily,
+    sortBy,
+    minRating,
+  ]);
   const featuredSections = useMemo(
     () =>
       featuredSectionsData
         .filter((section) => section.isActive && section.key !== "deals-of-day")
         .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
-    [featuredSectionsData]
+    [featuredSectionsData],
   );
   const flashDealsSection = useMemo(
     () =>
-      featuredSectionsData.find((section) => section.key === "deals-of-day") || {
+      featuredSectionsData.find(
+        (section) => section.key === "deals-of-day",
+      ) || {
         key: "deals-of-day",
         title: "Flash Sale Section",
-        products: []
+        products: [],
       },
-    [featuredSectionsData]
+    [featuredSectionsData],
   );
   const flashSaleProducts = useMemo(() => {
-    if (!Array.isArray(flashDealsSection.products) || flashDealsSection.products.length === 0) {
+    if (
+      !Array.isArray(flashDealsSection.products) ||
+      flashDealsSection.products.length === 0
+    ) {
       return [];
     }
     return flashDealsSection.products.slice(0, 4);
@@ -271,7 +283,9 @@ useEffect(() => {
     return heroOffers
       .filter((offer) => {
         if (!offer?.isActive) return false;
-        const startsAt = offer.startsAt ? new Date(offer.startsAt).getTime() : 0;
+        const startsAt = offer.startsAt
+          ? new Date(offer.startsAt).getTime()
+          : 0;
         const endsAt = offer.endsAt ? new Date(offer.endsAt).getTime() : 0;
         if (startsAt && startsAt > now) return false;
         if (endsAt && endsAt <= now) return false;
@@ -281,21 +295,27 @@ useEffect(() => {
   }, [heroOffers, offerNow]);
   const flashHeroOffer = useMemo(
     () => activeHeroOffers.find((offer) => offer.offerType === "flash"),
-    [activeHeroOffers]
+    [activeHeroOffers],
   );
   const tagHeroOffers = useMemo(
     () => activeHeroOffers.filter((offer) => offer.offerType !== "flash"),
-    [activeHeroOffers]
+    [activeHeroOffers],
   );
-  const tax = useMemo(() => Number((totalPrice * 0.08).toFixed(2)), [totalPrice]);
-  const shipping = useMemo(() => (totalPrice >= 75 || totalPrice === 0 ? 0 : 7.99), [totalPrice]);
+  const tax = useMemo(
+    () => Number((totalPrice * 0.08).toFixed(2)),
+    [totalPrice],
+  );
+  const shipping = useMemo(
+    () => (totalPrice >= 75 || totalPrice === 0 ? 0 : 7.99),
+    [totalPrice],
+  );
   const estimatedTotal = useMemo(
     () => Number((totalPrice + tax + shipping - promoDiscount).toFixed(2)),
-    [totalPrice, tax, shipping, promoDiscount]
+    [totalPrice, tax, shipping, promoDiscount],
   );
   const freeShippingGap = useMemo(
     () => Math.max(0, Number((75 - totalPrice).toFixed(2))),
-    [totalPrice]
+    [totalPrice],
   );
 
   const submitRating = async (productId, value, comment = "") => {
@@ -309,7 +329,12 @@ useEffect(() => {
     }
 
     const selected = Number(value);
-    if (!Number.isFinite(selected) || selected < 0.5 || selected > 5 || !Number.isInteger(selected * 2)) {
+    if (
+      !Number.isFinite(selected) ||
+      selected < 0.5 ||
+      selected > 5 ||
+      !Number.isInteger(selected * 2)
+    ) {
       setRatingError("Select a rating from 0.5 to 5");
       return;
     }
@@ -319,16 +344,16 @@ useEffect(() => {
       const res = await axios.post(
         `https://ridercraft-api.onrender.com/products/${productId}/rate`,
         { rating: selected, comment: String(comment || "").trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setProducts((prev) =>
-        prev.map((item) => (item._id === productId ? res.data.product : item))
+        prev.map((item) => (item._id === productId ? res.data.product : item)),
       );
       setRatingInputs((prev) => ({ ...prev, [productId]: selected }));
       if (comment !== undefined) {
         setRatingComments((prev) => ({
           ...prev,
-          [productId]: String(comment || "").trim()
+          [productId]: String(comment || "").trim(),
         }));
       }
       setRatingMessage("Rating submitted");
@@ -347,11 +372,14 @@ useEffect(() => {
       return;
     }
     try {
-      const res = await axios.post("https://ridercraft-api.onrender.com/promos/validate", {
-        code: normalized,
-        subtotal: totalPrice,
-        shipping
-      });
+      const res = await axios.post(
+        "https://ridercraft-api.onrender.com/promos/validate",
+        {
+          code: normalized,
+          subtotal: totalPrice,
+          shipping,
+        },
+      );
       setPromoDiscount(Number(res.data.discountAmount || 0));
       setAppliedPromoCode(normalized);
       setPromoMessage(res.data.message || "Promo applied");
@@ -365,15 +393,19 @@ useEffect(() => {
     if (paymentMethod === "card") {
       const cardNumber = paymentDetails.cardNumber.replace(/\s+/g, "");
       if (!/^\d{16}$/.test(cardNumber)) return "Card number must be 16 digits.";
-      if (!paymentDetails.cardHolder.trim()) return "Card holder name is required.";
+      if (!paymentDetails.cardHolder.trim())
+        return "Card holder name is required.";
       if (!/^\d{2}\/\d{2}$/.test(paymentDetails.expiry.trim())) {
         return "Card expiry must be in MM/YY format.";
       }
-      if (!/^\d{3,4}$/.test(paymentDetails.cvv.trim())) return "CVV must be 3 or 4 digits.";
+      if (!/^\d{3,4}$/.test(paymentDetails.cvv.trim()))
+        return "CVV must be 3 or 4 digits.";
     }
     if (paymentMethod === "ewallet") {
-      if (!paymentDetails.walletProvider.trim()) return "Please select wallet provider.";
-      if (!paymentDetails.walletId.trim()) return "Wallet number/email is required.";
+      if (!paymentDetails.walletProvider.trim())
+        return "Please select wallet provider.";
+      if (!paymentDetails.walletId.trim())
+        return "Wallet number/email is required.";
     }
     return "";
   };
@@ -402,12 +434,17 @@ useEffect(() => {
       }
 
       if (appliedPromoCode) {
-        const res = await axios.post("https://ridercraft-api.onrender.com/promos/redeem", {
-          code: appliedPromoCode,
-          subtotal: totalPrice,
-          shipping
-        });
-        setPromoMessage(`Promo ${appliedPromoCode} used (${res.data.usedCount}/${res.data.maxUses}).`);
+        const res = await axios.post(
+          "https://ridercraft-api.onrender.com/promos/redeem",
+          {
+            code: appliedPromoCode,
+            subtotal: totalPrice,
+            shipping,
+          },
+        );
+        setPromoMessage(
+          `Promo ${appliedPromoCode} used (${res.data.usedCount}/${res.data.maxUses}).`,
+        );
       } else {
         setPromoMessage("");
       }
@@ -420,7 +457,7 @@ useEffect(() => {
             name: item.name,
             price: item.price,
             qty: item.qty,
-            image: item.image
+            image: item.image,
           })),
           subtotal: totalPrice,
           tax,
@@ -431,18 +468,24 @@ useEffect(() => {
           paymentMethod,
           paymentDetails: {
             ...paymentDetails,
-            isDummy: paymentMethod === "card" || paymentMethod === "ewallet"
-          }
+            isDummy: paymentMethod === "card" || paymentMethod === "ewallet",
+          },
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       const baseMessage =
         paymentMethod === "card" || paymentMethod === "ewallet"
           ? "Dummy payment approved. Checkout complete."
           : "Checkout complete.";
-      setPromoMessage(appliedPromoCode ? `${baseMessage} Promo kept applied to order.` : baseMessage);
-      setPaymentSuccessMessage("Payment successful. Your order has been placed.");
+      setPromoMessage(
+        appliedPromoCode
+          ? `${baseMessage} Promo kept applied to order.`
+          : baseMessage,
+      );
+      setPaymentSuccessMessage(
+        "Payment successful. Your order has been placed.",
+      );
 
       clearCart();
       setPromoCode("");
@@ -455,7 +498,7 @@ useEffect(() => {
         expiry: "",
         cvv: "",
         walletProvider: "",
-        walletId: ""
+        walletId: "",
       });
       await loadMyOrders();
     } catch (err) {
@@ -471,7 +514,7 @@ useEffect(() => {
       cardNumber: DUMMY_CARD.cardNumber,
       cardHolder: DUMMY_CARD.cardHolder,
       expiry: DUMMY_CARD.expiry,
-      cvv: DUMMY_CARD.cvv
+      cvv: DUMMY_CARD.cvv,
     }));
     setPromoMessage("Dummy card details filled.");
   };
@@ -480,13 +523,14 @@ useEffect(() => {
     setPaymentDetails((prev) => ({
       ...prev,
       walletProvider: DUMMY_EWALLET.walletProvider,
-      walletId: DUMMY_EWALLET.walletId
+      walletId: DUMMY_EWALLET.walletId,
     }));
     setPromoMessage("Dummy e-wallet details filled.");
   };
   const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
   const renderRatingStars = (value) => {
-    const rounded = Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
+    const rounded =
+      Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
     return [1, 2, 3, 4, 5].map((star) => {
       const isFull = star <= rounded;
       const isHalf = !isFull && star - 0.5 === rounded;
@@ -522,14 +566,14 @@ useEffect(() => {
     if (Number.isFinite(startTime) && offerNow < startTime) {
       return {
         label: "Starts in",
-        value: formatCountdown(featuredSection.countdownStartsAt)
+        value: formatCountdown(featuredSection.countdownStartsAt),
       };
     }
 
     if (Number.isFinite(endTime) && offerNow <= endTime) {
       return {
         label: "Ends in",
-        value: formatCountdown(featuredSection.countdownEndsAt)
+        value: formatCountdown(featuredSection.countdownEndsAt),
       };
     }
 
@@ -539,31 +583,49 @@ useEffect(() => {
     new Date(value).toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
-      day: "numeric"
+      day: "numeric",
     });
   const trackingSteps = ["placed", "processing", "shipped", "delivered"];
   const servicePackages = [
     {
       value: "basic",
       label: "Basic Tune-Up",
-      summary: "Brake check, chain lube, tire pressure, and quick safety inspection.",
-      includes: ["Brake check", "Chain lubrication", "Tire pressure setup", "Safety inspection"]
+      summary:
+        "Brake check, chain lube, tire pressure, and quick safety inspection.",
+      includes: [
+        "Brake check",
+        "Chain lubrication",
+        "Tire pressure setup",
+        "Safety inspection",
+      ],
     },
     {
       value: "full",
       label: "Full Service",
-      summary: "Complete drivetrain cleaning, brake alignment, and multi-point diagnostics.",
-      includes: ["Drivetrain deep clean", "Brake alignment", "Bolt torque check", "Multi-point diagnostics"]
+      summary:
+        "Complete drivetrain cleaning, brake alignment, and multi-point diagnostics.",
+      includes: [
+        "Drivetrain deep clean",
+        "Brake alignment",
+        "Bolt torque check",
+        "Multi-point diagnostics",
+      ],
     },
     {
       value: "premium",
       label: "Premium Care",
-      summary: "Suspension setup, wheel truing, deep clean, and performance optimization.",
-      includes: ["Suspension setup", "Wheel truing", "Full detailing", "Performance optimization"]
-    }
+      summary:
+        "Suspension setup, wheel truing, deep clean, and performance optimization.",
+      includes: [
+        "Suspension setup",
+        "Wheel truing",
+        "Full detailing",
+        "Performance optimization",
+      ],
+    },
   ];
   const servicePackageLabels = Object.fromEntries(
-    servicePackages.map((pkg) => [pkg.value, pkg.label])
+    servicePackages.map((pkg) => [pkg.value, pkg.label]),
   );
   const returnTrackingSteps = [
     "requested",
@@ -571,7 +633,7 @@ useEffect(() => {
     "in_transit",
     "received",
     "refund_initiated",
-    "refunded"
+    "refunded",
   ];
   const getStatusIndex = (status) => {
     const index = trackingSteps.indexOf(String(status || "").toLowerCase());
@@ -582,7 +644,9 @@ useEffect(() => {
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }, []);
   const getReturnStatusIndex = (status) => {
-    const index = returnTrackingSteps.indexOf(String(status || "").toLowerCase());
+    const index = returnTrackingSteps.indexOf(
+      String(status || "").toLowerCase(),
+    );
     return index === -1 ? 0 : index;
   };
   const addCustomerNotification = useCallback((notification) => {
@@ -590,29 +654,40 @@ useEffect(() => {
       const next = [
         {
           createdAt: new Date().toISOString(),
-          ...notification
+          ...notification,
         },
-        ...prev.filter((item) => item.id !== notification.id)
+        ...prev.filter((item) => item.id !== notification.id),
       ].slice(0, 20);
-      localStorage.setItem(CUSTOMER_NOTIFICATION_STORAGE_KEY, JSON.stringify(next));
+      localStorage.setItem(
+        CUSTOMER_NOTIFICATION_STORAGE_KEY,
+        JSON.stringify(next),
+      );
       return next;
     });
   }, []);
-  const createOrderStatusSnapshot = useCallback((orders) =>
-    orders.reduce((acc, order) => {
-      acc[order._id] = String(order.status || "placed").toLowerCase();
-      return acc;
-    }, {}), []);
+  const createOrderStatusSnapshot = useCallback(
+    (orders) =>
+      orders.reduce((acc, order) => {
+        acc[order._id] = String(order.status || "placed").toLowerCase();
+        return acc;
+      }, {}),
+    [],
+  );
   const notifications = useMemo(() => {
     const items = [];
     const latestOrder = [...orderHistory].sort(
-      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
     )[0];
     const activeReturns = orderHistory.filter(
-      (order) => String(order.returnRequest?.status || "none").toLowerCase() !== "none"
+      (order) =>
+        String(order.returnRequest?.status || "none").toLowerCase() !== "none",
     );
     const latestServiceRequest = [...serviceRequests].sort(
-      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
     )[0];
 
     customerNotifications.forEach((notification) => {
@@ -623,11 +698,14 @@ useEffect(() => {
       items.push({
         id: `sale-${offer._id}`,
         type: offer.offerType === "flash" ? "danger" : "success",
-        title: offer.offerType === "flash" ? "Flash sale is live" : "Sale available",
+        title:
+          offer.offerType === "flash" ? "Flash sale is live" : "Sale available",
         body: offer.title,
-        meta: offer.endsAt ? `Ends ${formatOrderDate(offer.endsAt)}` : "Limited time",
+        meta: offer.endsAt
+          ? `Ends ${formatOrderDate(offer.endsAt)}`
+          : "Limited time",
         action: "Shop sale",
-        view: "shop"
+        view: "shop",
       });
     });
 
@@ -645,7 +723,7 @@ useEffect(() => {
         body: `${promoDescription}. Apply this code at checkout.`,
         meta: promo.endsAt ? `Ends ${formatOrderDate(promo.endsAt)}` : "Active",
         action: "Use code",
-        view: "cart"
+        view: "cart",
       });
     });
 
@@ -657,7 +735,7 @@ useEffect(() => {
         body: paymentSuccessMessage,
         meta: "Just now",
         action: "View orders",
-        view: "orders"
+        view: "orders",
       });
     }
 
@@ -665,11 +743,13 @@ useEffect(() => {
       items.push({
         id: "promo-message",
         type: appliedPromoCode ? "success" : "info",
-        title: appliedPromoCode ? `Promo ${appliedPromoCode} applied` : "Promo update",
+        title: appliedPromoCode
+          ? `Promo ${appliedPromoCode} applied`
+          : "Promo update",
         body: promoMessage,
         meta: "Cart",
         action: "Open cart",
-        view: "cart"
+        view: "cart",
       });
     }
 
@@ -684,7 +764,7 @@ useEffect(() => {
             : "You unlocked free shipping for this order.",
         meta: formatCurrency(totalPrice),
         action: "Checkout",
-        view: "cart"
+        view: "cart",
       });
     }
 
@@ -694,9 +774,11 @@ useEffect(() => {
         type: "info",
         title: `Order ${getStatusLabel(latestOrder.status || "placed")}`,
         body: `#${String(latestOrder._id).slice(-8).toUpperCase()} total ${formatCurrency(latestOrder.total)}.`,
-        meta: latestOrder.createdAt ? formatOrderDate(latestOrder.createdAt) : "Recent",
+        meta: latestOrder.createdAt
+          ? formatOrderDate(latestOrder.createdAt)
+          : "Recent",
         action: "Track order",
-        view: "orders"
+        view: "orders",
       });
     }
 
@@ -710,7 +792,7 @@ useEffect(() => {
           ? formatOrderDate(order.returnRequest.requestedAt)
           : "Return",
         action: "View return",
-        view: "orders"
+        view: "orders",
       });
     });
 
@@ -718,16 +800,18 @@ useEffect(() => {
       items.push({
         id: `service-${latestServiceRequest._id}`,
         type:
-          String(latestServiceRequest.priority || "normal").toLowerCase() === "emergency"
+          String(latestServiceRequest.priority || "normal").toLowerCase() ===
+          "emergency"
             ? "danger"
             : "info",
         title: `Service ${getStatusLabel(latestServiceRequest.status || "requested")}`,
         body: `${latestServiceRequest.bikeModel || "Bike"} booking for ${
           latestServiceRequest.preferredDate || "your selected date"
         } at ${latestServiceRequest.preferredTime || "your selected time"}.`,
-        meta: servicePackageLabels[latestServiceRequest.packageType] || "Service",
+        meta:
+          servicePackageLabels[latestServiceRequest.packageType] || "Service",
         action: "View service",
-        view: "servicing"
+        view: "servicing",
       });
     }
 
@@ -739,7 +823,7 @@ useEffect(() => {
         body: "Add contact number and delivery address to make checkout and service booking faster.",
         meta: "Profile",
         action: "Update profile",
-        view: "profile"
+        view: "profile",
       });
     }
 
@@ -751,7 +835,7 @@ useEffect(() => {
         body: "No urgent account, order, cart, or service updates right now.",
         meta: "RiderCraft",
         action: "Browse shop",
-        view: "shop"
+        view: "shop",
       });
     }
 
@@ -772,58 +856,70 @@ useEffect(() => {
     servicePackageLabels,
     serviceRequests,
     totalItems,
-    totalPrice
+    totalPrice,
   ]);
   const notificationCount =
-    notifications.length === 1 && notifications[0].id === "all-clear" ? 0 : notifications.length;
+    notifications.length === 1 && notifications[0].id === "all-clear"
+      ? 0
+      : notifications.length;
   const normalizeProductKey = (id) => String(id?._id || id || "");
-  const loadMyOrders = useCallback(async ({ notifyChanges = false, silent = false } = {}) => {
-    setOrdersError("");
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      if (!silent) setOrdersLoading(true);
-      const res = await axios.get("https://ridercraft-api.onrender.com/orders/my", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const nextOrders = Array.isArray(res.data) ? res.data : [];
-      const nextSnapshot = createOrderStatusSnapshot(nextOrders);
-      const previousSnapshot = orderStatusSnapshotRef.current;
+  const loadMyOrders = useCallback(
+    async ({ notifyChanges = false, silent = false } = {}) => {
+      setOrdersError("");
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        if (!silent) setOrdersLoading(true);
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/orders/my",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        const nextOrders = Array.isArray(res.data) ? res.data : [];
+        const nextSnapshot = createOrderStatusSnapshot(nextOrders);
+        const previousSnapshot = orderStatusSnapshotRef.current;
 
-      if (notifyChanges && previousSnapshot) {
-        nextOrders.forEach((order) => {
-          const orderId = String(order._id || "");
-          const previousStatus = previousSnapshot[orderId];
-          const nextStatus = nextSnapshot[orderId];
-          if (!previousStatus || previousStatus === nextStatus) return;
+        if (notifyChanges && previousSnapshot) {
+          nextOrders.forEach((order) => {
+            const orderId = String(order._id || "");
+            const previousStatus = previousSnapshot[orderId];
+            const nextStatus = nextSnapshot[orderId];
+            if (!previousStatus || previousStatus === nextStatus) return;
 
-          const notification = {
-            id: `order-status-${orderId}-${nextStatus}`,
-            type: nextStatus === "delivered" ? "success" : "info",
-            title: `Order ${getStatusLabel(nextStatus)}`,
-            body: `Your order #${orderId.slice(-8).toUpperCase()} changed from ${getStatusLabel(
-              previousStatus
-            )} to ${getStatusLabel(nextStatus)}.`,
-            meta: "Order update",
-            action: "Track order",
-            view: "orders"
-          };
-          addCustomerNotification(notification);
-          toast.info(notification.body);
-        });
+            const notification = {
+              id: `order-status-${orderId}-${nextStatus}`,
+              type: nextStatus === "delivered" ? "success" : "info",
+              title: `Order ${getStatusLabel(nextStatus)}`,
+              body: `Your order #${orderId.slice(-8).toUpperCase()} changed from ${getStatusLabel(
+                previousStatus,
+              )} to ${getStatusLabel(nextStatus)}.`,
+              meta: "Order update",
+              action: "Track order",
+              view: "orders",
+            };
+            addCustomerNotification(notification);
+            toast.info(notification.body);
+          });
+        }
+
+        orderStatusSnapshotRef.current = nextSnapshot;
+        setOrderHistory(nextOrders);
+      } catch (err) {
+        setOrdersError(
+          err.response?.data?.error || "Could not load order history",
+        );
+      } finally {
+        if (!silent) setOrdersLoading(false);
       }
-
-      orderStatusSnapshotRef.current = nextSnapshot;
-      setOrderHistory(nextOrders);
-    } catch (err) {
-      setOrdersError(err.response?.data?.error || "Could not load order history");
-    } finally {
-      if (!silent) setOrdersLoading(false);
-    }
-  }, [addCustomerNotification, createOrderStatusSnapshot, getStatusLabel]);
+    },
+    [addCustomerNotification, createOrderStatusSnapshot, getStatusLabel],
+  );
   const loadActivePromos = useCallback(async () => {
     try {
-      const res = await axios.get("https://ridercraft-api.onrender.com/promos/active");
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/promos/active",
+      );
       setActivePromos(Array.isArray(res.data) ? res.data : []);
     } catch {
       setActivePromos([]);
@@ -835,12 +931,17 @@ useEffect(() => {
       const token = localStorage.getItem("token");
       if (!token) return;
       setServiceRequestsLoading(true);
-      const res = await axios.get("https://ridercraft-api.onrender.com/service-requests/my", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(
+        "https://ridercraft-api.onrender.com/service-requests/my",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setServiceRequests(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      setServiceError(err.response?.data?.error || "Could not load service requests");
+      setServiceError(
+        err.response?.data?.error || "Could not load service requests",
+      );
     } finally {
       setServiceRequestsLoading(false);
     }
@@ -852,9 +953,10 @@ useEffect(() => {
     const bikeModel = String(serviceForm.bikeModel || "").trim();
     const pickupAddress = String(serviceForm.pickupAddress || "").trim();
     const contactNumber = String(serviceForm.contactNumber || "").trim();
-    const priority = String(serviceForm.priority || "normal").toLowerCase() === "emergency"
-      ? "emergency"
-      : "normal";
+    const priority =
+      String(serviceForm.priority || "normal").toLowerCase() === "emergency"
+        ? "emergency"
+        : "normal";
     const breakdownIssue = String(serviceForm.breakdownIssue || "").trim();
     const pickupLatitude = Number(serviceForm.pickupLocation?.latitude);
     const pickupLongitude = Number(serviceForm.pickupLocation?.longitude);
@@ -884,11 +986,19 @@ useEffect(() => {
       setServiceError("Pickup address is required");
       return;
     }
-    if (!Number.isFinite(pickupLatitude) || pickupLatitude < -90 || pickupLatitude > 90) {
+    if (
+      !Number.isFinite(pickupLatitude) ||
+      pickupLatitude < -90 ||
+      pickupLatitude > 90
+    ) {
       setServiceError("Please capture your exact pickup location");
       return;
     }
-    if (!Number.isFinite(pickupLongitude) || pickupLongitude < -180 || pickupLongitude > 180) {
+    if (
+      !Number.isFinite(pickupLongitude) ||
+      pickupLongitude < -180 ||
+      pickupLongitude > 180
+    ) {
       setServiceError("Please capture your exact pickup location");
       return;
     }
@@ -896,7 +1006,9 @@ useEffect(() => {
       pickupAccuracyMeters !== null &&
       (!Number.isFinite(pickupAccuracyMeters) || pickupAccuracyMeters < 0)
     ) {
-      setServiceError("Captured pickup accuracy is invalid. Recapture location.");
+      setServiceError(
+        "Captured pickup accuracy is invalid. Recapture location.",
+      );
       return;
     }
     if (!contactNumber) {
@@ -904,7 +1016,9 @@ useEffect(() => {
       return;
     }
     if (priority === "emergency" && !breakdownIssue) {
-      setServiceError("Please describe your breakdown issue for emergency service");
+      setServiceError(
+        "Please describe your breakdown issue for emergency service",
+      );
       return;
     }
 
@@ -927,19 +1041,19 @@ useEffect(() => {
             latitude: pickupLatitude,
             longitude: pickupLongitude,
             accuracyMeters: pickupAccuracyMeters,
-            capturedAt: pickupCapturedAt
+            capturedAt: pickupCapturedAt,
           },
           contactNumber,
           priority,
           breakdownIssue,
-          notes: String(serviceForm.notes || "").trim()
+          notes: String(serviceForm.notes || "").trim(),
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setServiceMessage(
         priority === "emergency"
           ? "Emergency service request submitted with first priority."
-          : "Service request submitted"
+          : "Service request submitted",
       );
       setServiceForm((prev) => ({
         ...prev,
@@ -947,11 +1061,13 @@ useEffect(() => {
         bikeModel: SERVICE_BIKE_MODELS[0],
         preferredDate: getTodayDateValue(),
         breakdownIssue: "",
-        notes: ""
+        notes: "",
       }));
       await loadMyServiceRequests();
     } catch (err) {
-      setServiceError(err.response?.data?.error || "Failed to submit service request");
+      setServiceError(
+        err.response?.data?.error || "Failed to submit service request",
+      );
     } finally {
       setServiceSubmitting(false);
     }
@@ -972,22 +1088,26 @@ useEffect(() => {
         const accuracyMeters = Number.isFinite(position.coords.accuracy)
           ? Number(position.coords.accuracy.toFixed(0))
           : null;
-        const capturedAt = new Date(position.timestamp || Date.now()).toISOString();
+        const capturedAt = new Date(
+          position.timestamp || Date.now(),
+        ).toISOString();
         setServiceForm((prev) => ({
           ...prev,
           pickupLocation: {
             latitude,
             longitude,
             accuracyMeters,
-            capturedAt
-          }
+            capturedAt,
+          },
         }));
         setServiceLocationLoading(false);
       },
       (error) => {
         setServiceLocationLoading(false);
         if (error.code === error.PERMISSION_DENIED) {
-          setServiceError("Location permission denied. Please allow location access.");
+          setServiceError(
+            "Location permission denied. Please allow location access.",
+          );
           return;
         }
         if (error.code === error.TIMEOUT) {
@@ -999,8 +1119,8 @@ useEffect(() => {
       {
         enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: 0
-      }
+        maximumAge: 0,
+      },
     );
   };
   const requestReturnForOrder = async (orderId) => {
@@ -1028,14 +1148,16 @@ useEffect(() => {
       await axios.post(
         `https://ridercraft-api.onrender.com/orders/${orderId}/return-request`,
         { reason, evidence },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setReturnMessage("Return request submitted");
       setReturnReasonByOrder((prev) => ({ ...prev, [orderId]: "" }));
       setReturnEvidenceByOrder((prev) => ({ ...prev, [orderId]: [] }));
       await loadMyOrders();
     } catch (err) {
-      setReturnError(err.response?.data?.error || "Failed to submit return request");
+      setReturnError(
+        err.response?.data?.error || "Failed to submit return request",
+      );
     } finally {
       setReturnActionLoadingId("");
     }
@@ -1055,16 +1177,16 @@ useEffect(() => {
           const maxSize = isVideo ? 3 * 1024 * 1024 : 2 * 1024 * 1024;
           if (file.size > maxSize) {
             throw new Error(
-              `${file.name} is too large (${isVideo ? "max 3MB video" : "max 2MB image"})`
+              `${file.name} is too large (${isVideo ? "max 3MB video" : "max 2MB image"})`,
             );
           }
           const dataUrl = await readFileAsDataUrl(file);
           return {
             type: isVideo ? "video" : "image",
             url: dataUrl,
-            name: file.name
+            name: file.name,
           };
-        })
+        }),
       );
       setReturnEvidenceByOrder((prev) => ({ ...prev, [orderId]: converted }));
       setReturnError("");
@@ -1111,21 +1233,24 @@ useEffect(() => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await axios.get("https://ridercraft-api.onrender.com/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/auth/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         setProfile({
           name: res.data.name || "",
           email: res.data.email || "",
           avatar: res.data.avatar || "",
           contactNumber: res.data.contactNumber || "",
-          deliveryAddress: res.data.deliveryAddress || ""
+          deliveryAddress: res.data.deliveryAddress || "",
         });
         setProfileForm({
           name: res.data.name || "",
           avatar: res.data.avatar || "",
           contactNumber: res.data.contactNumber || "",
-          deliveryAddress: res.data.deliveryAddress || ""
+          deliveryAddress: res.data.deliveryAddress || "",
         });
       } catch {
         setProfileError("Could not load profile");
@@ -1137,7 +1262,9 @@ useEffect(() => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const res = await axios.get("https://ridercraft-api.onrender.com/products");
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/products",
+        );
         setProducts(res.data);
       } catch {
         setProductsError("Could not load products");
@@ -1149,7 +1276,9 @@ useEffect(() => {
   useEffect(() => {
     const loadHeroOffers = async () => {
       try {
-        const res = await axios.get("https://ridercraft-api.onrender.com/hero-offers");
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/hero-offers",
+        );
         setHeroOffers(Array.isArray(res.data) ? res.data : []);
       } catch {
         setHeroOffers([]);
@@ -1165,7 +1294,9 @@ useEffect(() => {
   useEffect(() => {
     const loadFeaturedSections = async () => {
       try {
-        const res = await axios.get("https://ridercraft-api.onrender.com/featured-sections");
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/featured-sections",
+        );
         setFeaturedSectionsData(Array.isArray(res.data) ? res.data : []);
       } catch {
         setFeaturedSectionsData([]);
@@ -1200,7 +1331,7 @@ useEffect(() => {
       try {
         const [offersRes, promosRes] = await Promise.all([
           axios.get("https://ridercraft-api.onrender.com/hero-offers"),
-          axios.get("https://ridercraft-api.onrender.com/promos/active")
+          axios.get("https://ridercraft-api.onrender.com/promos/active"),
         ]);
         setHeroOffers(Array.isArray(offersRes.data) ? offersRes.data : []);
         setActivePromos(Array.isArray(promosRes.data) ? promosRes.data : []);
@@ -1224,7 +1355,7 @@ useEffect(() => {
     setServiceForm((prev) => ({
       ...prev,
       pickupAddress: prev.pickupAddress || profile.deliveryAddress || "",
-      contactNumber: prev.contactNumber || profile.contactNumber || ""
+      contactNumber: prev.contactNumber || profile.contactNumber || "",
     }));
   }, [profile.deliveryAddress, profile.contactNumber]);
 
@@ -1235,7 +1366,7 @@ useEffect(() => {
       const next = { ...prev };
       products.forEach((product) => {
         const entry = product.ratings?.find(
-          (rating) => String(rating.user) === currentUserId
+          (rating) => String(rating.user) === currentUserId,
         );
         if (entry && next[product._id] === undefined) {
           next[product._id] = entry.value;
@@ -1248,7 +1379,7 @@ useEffect(() => {
       const next = { ...prev };
       products.forEach((product) => {
         const entry = product.ratings?.find(
-          (rating) => String(rating.user) === currentUserId
+          (rating) => String(rating.user) === currentUserId,
         );
         if (entry && next[product._id] === undefined) {
           next[product._id] = entry.comment || "";
@@ -1301,16 +1432,16 @@ useEffect(() => {
           name: profileForm.name,
           avatar: profileForm.avatar,
           contactNumber: profileForm.contactNumber,
-          deliveryAddress: profileForm.deliveryAddress
+          deliveryAddress: profileForm.deliveryAddress,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setProfile(res.data.user);
       setProfileForm({
         name: res.data.user.name || "",
         avatar: res.data.user.avatar || "",
         contactNumber: res.data.user.contactNumber || "",
-        deliveryAddress: res.data.user.deliveryAddress || ""
+        deliveryAddress: res.data.user.deliveryAddress || "",
       });
       setProfileMessage("Profile updated successfully");
     } catch (err) {
@@ -1321,18 +1452,18 @@ useEffect(() => {
   return (
     <div className="shop-wrapper">
       <Navbar
-  view={view}
-  setView={setView}
-  totalItems={totalItems}
-  totalOrders={orderHistory.length}
-  notifications={dbNotifications}
-  notificationCount={dbNotifications.filter(
-    (item) => !item.isRead
-  ).length}
-  profile={profile}
-  isAdmin={isAdmin}
-  logout={logout}
-/>
+        view={view}
+        setView={setView}
+        totalItems={totalItems}
+        totalOrders={orderHistory.length}
+        notifications={dbNotifications}
+        notificationCount={
+          dbNotifications.filter((item) => !item.isRead).length
+        }
+        profile={profile}
+        isAdmin={isAdmin}
+        logout={logout}
+      />
 
       {view === "home" && (
         <section className="hero">
@@ -1365,7 +1496,7 @@ useEffect(() => {
                 const maxStockBase = 20;
                 const soldProgress = Math.min(
                   100,
-                  Math.max(0, ((maxStockBase - stock) / maxStockBase) * 100)
+                  Math.max(0, ((maxStockBase - stock) / maxStockBase) * 100),
                 );
                 return (
                   <article
@@ -1382,11 +1513,15 @@ useEffect(() => {
                           onError={applyImageFallback}
                         />
                       ) : (
-                        <div className="flash-sale-image flash-sale-image-placeholder">No image</div>
+                        <div className="flash-sale-image flash-sale-image-placeholder">
+                          No image
+                        </div>
                       )}
                       <div>
                         <p className="flash-sale-name">{product.name}</p>
-                        <p className="flash-sale-price">${Number(product.price || 0).toFixed(2)}</p>
+                        <p className="flash-sale-price">
+                          ${Number(product.price || 0).toFixed(2)}
+                        </p>
                       </div>
                     </div>
                     <p className="flash-sale-stock">
@@ -1403,7 +1538,9 @@ useEffect(() => {
               })}
             </div>
             {flashSaleProducts.length === 0 && (
-              <p className="shop-hero-empty">No flash sale products assigned by admin yet.</p>
+              <p className="shop-hero-empty">
+                No flash sale products assigned by admin yet.
+              </p>
             )}
           </section>
 
@@ -1411,7 +1548,10 @@ useEffect(() => {
             {featuredSections.map((section) => {
               const featuredCountdown = getFeaturedCountdown(section);
               return (
-                <section className="featured-block" key={section._id || section.key}>
+                <section
+                  className="featured-block"
+                  key={section._id || section.key}
+                >
                   <div className="featured-head">
                     <h3>{section.title}</h3>
                     {featuredCountdown && (
@@ -1436,11 +1576,15 @@ useEffect(() => {
                               onError={applyImageFallback}
                             />
                           ) : (
-                            <div className="product-card-image-placeholder">No image</div>
+                            <div className="product-card-image-placeholder">
+                              No image
+                            </div>
                           )}
                         </div>
                         <p className="featured-name">{product.name}</p>
-                        <p className="featured-price">${Number(product.price || 0).toFixed(2)}</p>
+                        <p className="featured-price">
+                          ${Number(product.price || 0).toFixed(2)}
+                        </p>
                         <button
                           type="button"
                           className="featured-add-btn"
@@ -1455,7 +1599,9 @@ useEffect(() => {
                     ))}
                   </div>
                   {(!section.products || section.products.length === 0) && (
-                    <p className="empty">No products assigned by admin for this section yet.</p>
+                    <p className="empty">
+                      No products assigned by admin for this section yet.
+                    </p>
                   )}
                 </section>
               );
@@ -1514,217 +1660,230 @@ useEffect(() => {
             </div>
           </div> */}
           <section className="ridercraft-hero">
-  <div className="ridercraft-hero-content">
-    <p className="hero-badge">
-      🏍 Premium Motorcycle Marketplace
-    </p>
+            <div className="ridercraft-hero-content">
+              <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
 
-    <h1>
-      Ride Better.
-      <br />
-      Ride Safer.
-    </h1>
+              <h1>
+                Ride Better.
+                <br />
+                Ride Safer.
+              </h1>
 
-    <p>
-      Premium helmets, riding gear, bike accessories,
-      servicing and exclusive flash sale deals.
-    </p>
+              <p>
+                Premium helmets, riding gear, bike accessories, servicing and
+                exclusive flash sale deals.
+              </p>
 
-    <div className="hero-buttons">
-      <button
-        className="hero-primary-btn"
-        onClick={() => setShopQuery("")}
-      >
-        Shop Now
-      </button>
-
-      <button
-        className="hero-secondary-btn"
-        onClick={() => setView("servicing")}
-      >
-        Book Service
-      </button>
-    </div>
-  </div>
-
-  <div className="ridercraft-hero-image">
-    <img
-      src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-      alt="Motorcycle Rider"
-    />
-  </div>
-</section>
-
-  
-
-<section className="category-grid">
-  <div
-  className="category-card"
-  onClick={() => setActiveTag("All")}
->
-  🏍 All Products
-</div>
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Helmet")}
-  >
-    🪖 Helmets
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Gloves")}
-  >
-    🧤 Gloves
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Riding Gear")}
-  >
-    🛡 Riding Gear
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Lights")}
-  >
-    💡 Lights
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Luggage")}
-  >
-    🎒 Luggage
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Mobile Holder")}
-  >
-    📱 Mobile Holders
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Bike Parts")}
-  >
-    🔧 Bike Parts
-  </div>
-
-  <div
-    className="category-card"
-    onClick={() => setActiveTag("Maintenance")}
-  >
-    ⚙ Maintenance
-  </div>
-</section>
-          <div className={showFilters ? "shop-content" : "shop-content no-filters"}>
-            {showFilters && (
-            <aside className="shop-filters">
-              <div className="shop-filters-head">
-                <h3>Filter</h3>
+              <div className="hero-buttons">
                 <button
-                  className="filter-reset-btn"
-                  onClick={() => {
-                    setActiveTag("All");
-                    setActiveBrand("All");
-                    setActiveColorFamily("All");
-                    setMinRating(0);
-                    setShopQuery("");
-                    setCategoryQuery("");
-                    setSortBy("popular");
-                  }}
+                  className="hero-primary-btn"
+                  onClick={() => setShopQuery("")}
                 >
-                  Reset
+                  Shop Now
+                </button>
+
+                <button
+                  className="hero-secondary-btn"
+                  onClick={() => setView("servicing")}
+                >
+                  Book Service
                 </button>
               </div>
-              <div className="shop-filter-section">
-                <h4>Category</h4>
-                <input
-                  className="category-search"
-                  placeholder="Search category"
-                  value={categoryQuery}
-                  onChange={(e) => setCategoryQuery(e.target.value)}
-                />
-                <div className="tag-filter-list">
-                  {visibleTags.map((tag) => (
-                    <button
-                      key={tag}
-                      className={activeTag === tag ? "tag-pill active" : "tag-pill"}
-                      onClick={() =>
-                        setActiveTag((prev) =>
-                          prev === tag || tag === "All" ? "All" : tag
-                        )
-                      }
-                      aria-pressed={activeTag === tag}
-                    >
-                      <span>{tag}</span>
-                      <span className="tag-count">{tagCounts[tag] || 0}</span>
-                    </button>
-                  ))}
+            </div>
+
+            <div className="ridercraft-hero-image">
+              <img
+                src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
+                alt="Motorcycle Rider"
+              />
+            </div>
+          </section>
+
+          <section className="category-grid">
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("All")}
+            >
+              <span className="category-icon">🏍</span>
+              <h3>All product</h3>
+            </div>
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Helmet")}
+            >
+              <span className="category-icon">🪖</span>
+              <h3>Helmets</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Gloves")}
+            >
+              <span className="category-icon">🧤</span>
+              <h3>Gloves</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Riding Gear")}
+            >
+              <span className="category-icon">🛡️</span>
+              <h3>Riding Gear</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Lights")}
+            >
+              <span className="category-icon">💡</span>
+              <h3>Lights</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Luggage")}
+            >
+              <span className="category-icon">🎒</span>
+              <h3>Luggage</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Mobile Holder")}
+            >
+              <span className="category-icon">📱</span>
+              <h3>Mobile Holders</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Bike Parts")}
+            >
+              <span className="category-icon">🔧</span>
+              <h3>Bike Parts</h3>
+            </div>
+
+            <div
+              className="category-card"
+              onClick={() => setActiveTag("Maintenance")}
+            >
+              <span className="category-icon">⚙️</span>
+              <h3>Maintenance</h3>
+            </div>
+          </section>
+          <div
+            className={showFilters ? "shop-content" : "shop-content no-filters"}
+          >
+            {showFilters && (
+              <aside className="shop-filters">
+                <div className="shop-filters-head">
+                  <h3>Filter</h3>
+                  <button
+                    className="filter-reset-btn"
+                    onClick={() => {
+                      setActiveTag("All");
+                      setActiveBrand("All");
+                      setActiveColorFamily("All");
+                      setMinRating(0);
+                      setShopQuery("");
+                      setCategoryQuery("");
+                      setSortBy("popular");
+                    }}
+                  >
+                    Reset
+                  </button>
                 </div>
-                {visibleTags.length === 0 && (
-                  <p className="category-empty">No categories found.</p>
-                )}
-              </div>
-              <div className="shop-filter-section">
-                <h4>Rating</h4>
-                <div className="rating-filter-list">
-                  {[
-                    { label: "All Ratings", value: 0 },
-                    { label: "4★ & up", value: 4 },
-                    { label: "3★ & up", value: 3 },
-                    { label: "2★ & up", value: 2 }
-                  ].map((option) => (
-                    <button
-                      key={option.label}
-                      className={
-                        minRating === option.value
-                          ? "rating-filter-btn active"
-                          : "rating-filter-btn"
-                      }
-                      onClick={() => setMinRating(option.value)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                <div className="shop-filter-section">
+                  <h4>Category</h4>
+                  <input
+                    className="category-search"
+                    placeholder="Search category"
+                    value={categoryQuery}
+                    onChange={(e) => setCategoryQuery(e.target.value)}
+                  />
+                  <div className="tag-filter-list">
+                    {visibleTags.map((tag) => (
+                      <button
+                        key={tag}
+                        className={
+                          activeTag === tag ? "tag-pill active" : "tag-pill"
+                        }
+                        onClick={() =>
+                          setActiveTag((prev) =>
+                            prev === tag || tag === "All" ? "All" : tag,
+                          )
+                        }
+                        aria-pressed={activeTag === tag}
+                      >
+                        <span>{tag}</span>
+                        <span className="tag-count">{tagCounts[tag] || 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {visibleTags.length === 0 && (
+                    <p className="category-empty">No categories found.</p>
+                  )}
                 </div>
-              </div>
-              <div className="shop-filter-section">
-                <h4>Brand</h4>
-                <div className="brand-filter-list">
-                  {availableBrands.map((brand) => (
-                    <button
-                      key={brand}
-                      className={activeBrand === brand ? "brand-filter-btn active" : "brand-filter-btn"}
-                      onClick={() => setActiveBrand(brand)}
-                    >
-                      {brand}
-                    </button>
-                  ))}
+                <div className="shop-filter-section">
+                  <h4>Rating</h4>
+                  <div className="rating-filter-list">
+                    {[
+                      { label: "All Ratings", value: 0 },
+                      { label: "4★ & up", value: 4 },
+                      { label: "3★ & up", value: 3 },
+                      { label: "2★ & up", value: 2 },
+                    ].map((option) => (
+                      <button
+                        key={option.label}
+                        className={
+                          minRating === option.value
+                            ? "rating-filter-btn active"
+                            : "rating-filter-btn"
+                        }
+                        onClick={() => setMinRating(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="shop-filter-section">
-                <h4>Colour Family</h4>
-                <div className="brand-filter-list">
-                  {availableColorFamilies.map((family) => (
-                    <button
-                      key={family}
-                      className={
-                        activeColorFamily === family
-                          ? "brand-filter-btn active"
-                          : "brand-filter-btn"
-                      }
-                      onClick={() => setActiveColorFamily(family)}
-                    >
-                      {family}
-                    </button>
-                  ))}
+                <div className="shop-filter-section">
+                  <h4>Brand</h4>
+                  <div className="brand-filter-list">
+                    {availableBrands.map((brand) => (
+                      <button
+                        key={brand}
+                        className={
+                          activeBrand === brand
+                            ? "brand-filter-btn active"
+                            : "brand-filter-btn"
+                        }
+                        onClick={() => setActiveBrand(brand)}
+                      >
+                        {brand}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </aside>
+                <div className="shop-filter-section">
+                  <h4>Colour Family</h4>
+                  <div className="brand-filter-list">
+                    {availableColorFamilies.map((family) => (
+                      <button
+                        key={family}
+                        className={
+                          activeColorFamily === family
+                            ? "brand-filter-btn active"
+                            : "brand-filter-btn"
+                        }
+                        onClick={() => setActiveColorFamily(family)}
+                      >
+                        {family}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </aside>
             )}
 
             <div className="shop-results">
@@ -1749,7 +1908,9 @@ useEffect(() => {
 
               <p className="results-count">{filteredProducts.length} results</p>
               {productsError && <p className="error-text">{productsError}</p>}
-              {ratingMessage && <p className="rating-success">{ratingMessage}</p>}
+              {ratingMessage && (
+                <p className="rating-success">{ratingMessage}</p>
+              )}
               {ratingError && <p className="rating-error">{ratingError}</p>}
 
               <div className="products-grid">
@@ -1768,7 +1929,9 @@ useEffect(() => {
                           onError={applyImageFallback}
                         />
                       ) : (
-                        <div className="product-card-image-placeholder">No image</div>
+                        <div className="product-card-image-placeholder">
+                          No image
+                        </div>
                       )}
                     </div>
                     <p className="product-brand">{product.tag}</p>
@@ -1807,7 +1970,6 @@ useEffect(() => {
               )}
             </div>
           </div>
-
         </section>
       )}
 
@@ -1823,7 +1985,9 @@ useEffect(() => {
                 <span>Total</span>
               </div>
 
-              {cart.length === 0 && <p className="empty">Your cart is empty.</p>}
+              {cart.length === 0 && (
+                <p className="empty">Your cart is empty.</p>
+              )}
 
               {cart.map((item) => (
                 <article className="cart-item" key={item._id}>
@@ -1836,7 +2000,9 @@ useEffect(() => {
                         onError={applyImageFallback}
                       />
                     ) : (
-                      <div className="cart-item-image cart-item-placeholder">No image</div>
+                      <div className="cart-item-image cart-item-placeholder">
+                        No image
+                      </div>
                     )}
                     <div>
                       <h3>{item.name}</h3>
@@ -1853,7 +2019,9 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  <p className="cart-cell-price">{formatCurrency(item.price)}</p>
+                  <p className="cart-cell-price">
+                    {formatCurrency(item.price)}
+                  </p>
 
                   <div className="cart-cell-qty">
                     <select
@@ -1862,11 +2030,13 @@ useEffect(() => {
                         changeQty(item._id, Number(e.target.value) - item.qty)
                       }
                     >
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((qty) => (
-                        <option key={qty} value={qty}>
-                          {qty}
-                        </option>
-                      ))}
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map(
+                        (qty) => (
+                          <option key={qty} value={qty}>
+                            {qty}
+                          </option>
+                        ),
+                      )}
                     </select>
                   </div>
 
@@ -1896,7 +2066,9 @@ useEffect(() => {
               </div>
               {promoMessage && <p className="promo-message">{promoMessage}</p>}
               {paymentSuccessMessage && (
-                <p className="payment-success-message">{paymentSuccessMessage}</p>
+                <p className="payment-success-message">
+                  {paymentSuccessMessage}
+                </p>
               )}
 
               <div className="payment-block">
@@ -1946,7 +2118,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setPaymentDetails((prev) => ({
                           ...prev,
-                          cardNumber: e.target.value
+                          cardNumber: e.target.value,
                         }))
                       }
                     />
@@ -1956,7 +2128,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setPaymentDetails((prev) => ({
                           ...prev,
-                          cardHolder: e.target.value
+                          cardHolder: e.target.value,
                         }))
                       }
                     />
@@ -1968,7 +2140,7 @@ useEffect(() => {
                         onChange={(e) =>
                           setPaymentDetails((prev) => ({
                             ...prev,
-                            expiry: e.target.value
+                            expiry: e.target.value,
                           }))
                         }
                       />
@@ -1979,13 +2151,17 @@ useEffect(() => {
                         onChange={(e) =>
                           setPaymentDetails((prev) => ({
                             ...prev,
-                            cvv: e.target.value
+                            cvv: e.target.value,
                           }))
                         }
                       />
                     </div>
                     <div className="payment-dummy-actions">
-                      <button type="button" className="payment-dummy-btn" onClick={useDummyCardDetails}>
+                      <button
+                        type="button"
+                        className="payment-dummy-btn"
+                        onClick={useDummyCardDetails}
+                      >
                         Use Dummy Card
                       </button>
                     </div>
@@ -2002,7 +2178,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setPaymentDetails((prev) => ({
                           ...prev,
-                          walletProvider: e.target.value
+                          walletProvider: e.target.value,
                         }))
                       }
                     >
@@ -2019,12 +2195,16 @@ useEffect(() => {
                       onChange={(e) =>
                         setPaymentDetails((prev) => ({
                           ...prev,
-                          walletId: e.target.value
+                          walletId: e.target.value,
                         }))
                       }
                     />
                     <div className="payment-dummy-actions">
-                      <button type="button" className="payment-dummy-btn" onClick={useDummyEwalletDetails}>
+                      <button
+                        type="button"
+                        className="payment-dummy-btn"
+                        onClick={useDummyEwalletDetails}
+                      >
                         Use Dummy E-Wallet
                       </button>
                     </div>
@@ -2035,7 +2215,9 @@ useEffect(() => {
               <div className="summary-lines">
                 <div>
                   <span>Shipping cost</span>
-                  <span>{shipping === 0 ? "FREE" : formatCurrency(shipping)}</span>
+                  <span>
+                    {shipping === 0 ? "FREE" : formatCurrency(shipping)}
+                  </span>
                 </div>
                 <div>
                   <span>Discount</span>
@@ -2075,7 +2257,8 @@ useEffect(() => {
             <p className="servicing-eyebrow">Bike Care</p>
             <h2>Bike Servicing</h2>
             <p>
-              Book trusted maintenance and keep your ride smooth, safe, and road-ready.
+              Book trusted maintenance and keep your ride smooth, safe, and
+              road-ready.
             </p>
           </header>
 
@@ -2089,41 +2272,53 @@ useEffect(() => {
                 <select
                   value={serviceForm.priority}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, priority: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      priority: e.target.value,
+                    }))
                   }
                 >
                   <option value="normal">Normal Request</option>
-                  <option value="emergency">Emergency Breakdown (First Priority)</option>
+                  <option value="emergency">
+                    Emergency Breakdown (First Priority)
+                  </option>
                 </select>
               </label>
               {serviceForm.priority !== "emergency" && (
                 <label>
                   Package
                   <div className="servicing-package-row">
-                  <select
-                    value={serviceForm.packageType}
-                    onChange={(e) =>
-                      setServiceForm((prev) => ({ ...prev, packageType: e.target.value }))
-                    }
-                  >
-                    {servicePackages.map((pkg) => (
-                      <option key={pkg.value} value={pkg.value}>
-                        {pkg.label}
-                      </option>
-                    ))}
-                  </select>
+                    <select
+                      value={serviceForm.packageType}
+                      onChange={(e) =>
+                        setServiceForm((prev) => ({
+                          ...prev,
+                          packageType: e.target.value,
+                        }))
+                      }
+                    >
+                      {servicePackages.map((pkg) => (
+                        <option key={pkg.value} value={pkg.value}>
+                          {pkg.label}
+                        </option>
+                      ))}
+                    </select>
                     <span
                       className="servicing-info-icon"
                       tabIndex={0}
                       aria-label={`Package includes ${
-                        servicePackages.find((pkg) => pkg.value === serviceForm.packageType)?.includes.join(", ") || ""
+                        servicePackages
+                          .find((pkg) => pkg.value === serviceForm.packageType)
+                          ?.includes.join(", ") || ""
                       }`}
                     >
                       i
                       <span className="servicing-info-tooltip">
-                        {(servicePackages.find((pkg) => pkg.value === serviceForm.packageType)?.includes || []).join(
-                          " • "
-                        )}
+                        {(
+                          servicePackages.find(
+                            (pkg) => pkg.value === serviceForm.packageType,
+                          )?.includes || []
+                        ).join(" • ")}
                       </span>
                     </span>
                   </div>
@@ -2134,7 +2329,10 @@ useEffect(() => {
                 <select
                   value={serviceForm.bikeModel}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, bikeModel: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      bikeModel: e.target.value,
+                    }))
                   }
                 >
                   {SERVICE_BIKE_MODELS.map((model) => (
@@ -2151,7 +2349,10 @@ useEffect(() => {
                   value={serviceForm.preferredDate}
                   min={getTodayDateValue()}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, preferredDate: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      preferredDate: e.target.value,
+                    }))
                   }
                 />
               </label>
@@ -2161,7 +2362,10 @@ useEffect(() => {
                   type="time"
                   value={serviceForm.preferredTime}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, preferredTime: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      preferredTime: e.target.value,
+                    }))
                   }
                 />
               </label>
@@ -2170,7 +2374,10 @@ useEffect(() => {
                 <input
                   value={serviceForm.pickupAddress}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, pickupAddress: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      pickupAddress: e.target.value,
+                    }))
                   }
                   placeholder="Address for pickup/drop"
                 />
@@ -2182,16 +2389,24 @@ useEffect(() => {
                   onClick={captureServiceLocation}
                   disabled={serviceLocationLoading}
                 >
-                  {serviceLocationLoading ? "Capturing location..." : "Use My Current Location"}
+                  {serviceLocationLoading
+                    ? "Capturing location..."
+                    : "Use My Current Location"}
                 </button>
                 <p className="servicing-location-text">
-                  {Number.isFinite(Number(serviceForm.pickupLocation?.latitude)) &&
+                  {Number.isFinite(
+                    Number(serviceForm.pickupLocation?.latitude),
+                  ) &&
                   Number.isFinite(Number(serviceForm.pickupLocation?.longitude))
                     ? `Captured: ${serviceForm.pickupLocation.latitude}, ${serviceForm.pickupLocation.longitude} (${serviceForm.pickupLocation.accuracyMeters ?? "N/A"}m accuracy)`
                     : "No GPS location captured yet"}
                 </p>
-                {Number.isFinite(Number(serviceForm.pickupLocation?.latitude)) &&
-                  Number.isFinite(Number(serviceForm.pickupLocation?.longitude)) && (
+                {Number.isFinite(
+                  Number(serviceForm.pickupLocation?.latitude),
+                ) &&
+                  Number.isFinite(
+                    Number(serviceForm.pickupLocation?.longitude),
+                  ) && (
                     <div className="servicing-map-preview">
                       <a
                         href={`https://www.google.com/maps?q=${serviceForm.pickupLocation.latitude},${serviceForm.pickupLocation.longitude}`}
@@ -2214,7 +2429,10 @@ useEffect(() => {
                 <input
                   value={serviceForm.contactNumber}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, contactNumber: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      contactNumber: e.target.value,
+                    }))
                   }
                   placeholder="Phone number"
                 />
@@ -2226,7 +2444,10 @@ useEffect(() => {
                     rows={2}
                     value={serviceForm.breakdownIssue}
                     onChange={(e) =>
-                      setServiceForm((prev) => ({ ...prev, breakdownIssue: e.target.value }))
+                      setServiceForm((prev) => ({
+                        ...prev,
+                        breakdownIssue: e.target.value,
+                      }))
                     }
                     placeholder="Example: Bike not starting, chain snapped, brake failed"
                   />
@@ -2238,7 +2459,10 @@ useEffect(() => {
                   rows={3}
                   value={serviceForm.notes}
                   onChange={(e) =>
-                    setServiceForm((prev) => ({ ...prev, notes: e.target.value }))
+                    setServiceForm((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
                   }
                   placeholder="Any issues you want us to check"
                 />
@@ -2254,7 +2478,11 @@ useEffect(() => {
               >
                 {serviceSubmitting ? "Submitting..." : "Book Service"}
               </button>
-              <button type="button" className="primary" onClick={() => setView("shop")}>
+              <button
+                type="button"
+                className="primary"
+                onClick={() => setView("shop")}
+              >
                 Explore Products
               </button>
             </div>
@@ -2270,9 +2498,14 @@ useEffect(() => {
               {serviceRequests.map((request) => (
                 <article className="servicing-history-card" key={request._id}>
                   <p>
-                    <strong>{servicePackageLabels[request.packageType] || request.packageType}</strong>
+                    <strong>
+                      {servicePackageLabels[request.packageType] ||
+                        request.packageType}
+                    </strong>
                     {String(request.priority || "normal") === "emergency" && (
-                      <span className="servicing-emergency-chip">Emergency Priority</span>
+                      <span className="servicing-emergency-chip">
+                        Emergency Priority
+                      </span>
                     )}
                   </p>
                   <p>Bike: {request.bikeModel}</p>
@@ -2283,7 +2516,8 @@ useEffect(() => {
                   {request.pickupLocation?.latitude !== undefined &&
                     request.pickupLocation?.longitude !== undefined && (
                       <p>
-                        GPS: {request.pickupLocation.latitude}, {request.pickupLocation.longitude}{" "}
+                        GPS: {request.pickupLocation.latitude},{" "}
+                        {request.pickupLocation.longitude}{" "}
                         <a
                           href={`https://www.google.com/maps?q=${request.pickupLocation.latitude},${request.pickupLocation.longitude}`}
                           target="_blank"
@@ -2299,14 +2533,18 @@ useEffect(() => {
                   {request.assignedGarage?.garageProfile?.garageName && (
                     <p>
                       Assigned Garage:{" "}
-                      <strong>{request.assignedGarage.garageProfile.garageName}</strong>
+                      <strong>
+                        {request.assignedGarage.garageProfile.garageName}
+                      </strong>
                       {Number.isFinite(Number(request.assignedGarageDistanceKm))
                         ? ` (${Number(request.assignedGarageDistanceKm).toFixed(2)} km away)`
                         : ""}
                     </p>
                   )}
                   <p>Status: {getStatusLabel(request.status || "requested")}</p>
-                  {request.garageNote && <p>Garage Response: {request.garageNote}</p>}
+                  {request.garageNote && (
+                    <p>Garage Response: {request.garageNote}</p>
+                  )}
                 </article>
               ))}
             </div>
@@ -2396,9 +2634,13 @@ useEffect(() => {
               <div className="profile-content-card">
                 {ordersLoading && <p>Loading orders...</p>}
                 {ordersError && <p className="error-text">{ordersError}</p>}
-                {ratingMessage && <p className="success-text">{ratingMessage}</p>}
+                {ratingMessage && (
+                  <p className="success-text">{ratingMessage}</p>
+                )}
                 {ratingError && <p className="error-text">{ratingError}</p>}
-                {returnMessage && <p className="success-text">{returnMessage}</p>}
+                {returnMessage && (
+                  <p className="success-text">{returnMessage}</p>
+                )}
                 {returnError && <p className="error-text">{returnError}</p>}
 
                 {!ordersLoading && orderHistory.length === 0 && (
@@ -2410,130 +2652,167 @@ useEffect(() => {
                     <article className="order-card" key={order._id}>
                       <div className="order-card-header">
                         <p>
-                          Order: <strong>#{String(order._id).slice(-8).toUpperCase()}</strong>
+                          Order:{" "}
+                          <strong>
+                            #{String(order._id).slice(-8).toUpperCase()}
+                          </strong>
                         </p>
                         <p>{formatOrderDate(order.createdAt)}</p>
                       </div>
                       <div className="order-card-summary">
                         <span>Status: {getStatusLabel(order.status)}</span>
-                        <span>Payment: {(order.paymentMethod || "cod").toUpperCase()}</span>
                         <span>
-                          Payment Status: {getStatusLabel(order.paymentStatus || "pending")}
+                          Payment:{" "}
+                          {(order.paymentMethod || "cod").toUpperCase()}
+                        </span>
+                        <span>
+                          Payment Status:{" "}
+                          {getStatusLabel(order.paymentStatus || "pending")}
                         </span>
                         <span>Total: {formatCurrency(order.total)}</span>
                         <span>Items: {order.items?.length || 0}</span>
                         <span>
-                          Return: {getStatusLabel(order.returnRequest?.status || "none")}
+                          Return:{" "}
+                          {getStatusLabel(
+                            order.returnRequest?.status || "none",
+                          )}
                         </span>
                       </div>
 
-                      {String(order.returnRequest?.status || "none") === "none" &&
-                        String(order.status || "").toLowerCase() === "delivered" && (
-                        <div className="order-return-request-wrap">
-                          <textarea
-                            className="order-comment-input"
-                            placeholder="Reason for return"
-                            value={returnReasonByOrder[order._id] || ""}
-                            onChange={(e) =>
-                              setReturnReasonByOrder((prev) => ({
-                                ...prev,
-                                [order._id]: e.target.value
-                              }))
-                            }
-                          />
-                          <input
-                            type="file"
-                            accept="image/*,video/*"
-                            multiple
-                            onChange={(e) => handleReturnEvidenceChange(order._id, e)}
-                          />
-                          <p className="order-return-proof-hint">
-                            Upload defect proof (up to 4 files: images max 2MB, videos max 3MB)
-                          </p>
-                          {Array.isArray(returnEvidenceByOrder[order._id]) &&
-                            returnEvidenceByOrder[order._id].length > 0 && (
-                            <div className="order-return-proof-grid">
-                              {returnEvidenceByOrder[order._id].map((file, idx) =>
-                                file.type === "video" ? (
-                                  <video key={`${order._id}-proof-${idx}`} src={file.url} controls />
-                                ) : (
-                                  <img
-                                    key={`${order._id}-proof-${idx}`}
-                                    src={file.url}
-                                    alt={file.name || "Proof"}
-                                    onError={applyImageFallback}
-                                  />
-                                )
+                      {String(order.returnRequest?.status || "none") ===
+                        "none" &&
+                        String(order.status || "").toLowerCase() ===
+                          "delivered" && (
+                          <div className="order-return-request-wrap">
+                            <textarea
+                              className="order-comment-input"
+                              placeholder="Reason for return"
+                              value={returnReasonByOrder[order._id] || ""}
+                              onChange={(e) =>
+                                setReturnReasonByOrder((prev) => ({
+                                  ...prev,
+                                  [order._id]: e.target.value,
+                                }))
+                              }
+                            />
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              multiple
+                              onChange={(e) =>
+                                handleReturnEvidenceChange(order._id, e)
+                              }
+                            />
+                            <p className="order-return-proof-hint">
+                              Upload defect proof (up to 4 files: images max
+                              2MB, videos max 3MB)
+                            </p>
+                            {Array.isArray(returnEvidenceByOrder[order._id]) &&
+                              returnEvidenceByOrder[order._id].length > 0 && (
+                                <div className="order-return-proof-grid">
+                                  {returnEvidenceByOrder[order._id].map(
+                                    (file, idx) =>
+                                      file.type === "video" ? (
+                                        <video
+                                          key={`${order._id}-proof-${idx}`}
+                                          src={file.url}
+                                          controls
+                                        />
+                                      ) : (
+                                        <img
+                                          key={`${order._id}-proof-${idx}`}
+                                          src={file.url}
+                                          alt={file.name || "Proof"}
+                                          onError={applyImageFallback}
+                                        />
+                                      ),
+                                  )}
+                                </div>
                               )}
-                            </div>
-                          )}
-                          <button
-                            type="button"
-                            className="order-return-btn"
-                            onClick={() => requestReturnForOrder(order._id)}
-                            disabled={returnActionLoadingId === order._id}
-                          >
-                            {returnActionLoadingId === order._id
-                              ? "Submitting..."
-                              : "Request Return"}
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              type="button"
+                              className="order-return-btn"
+                              onClick={() => requestReturnForOrder(order._id)}
+                              disabled={returnActionLoadingId === order._id}
+                            >
+                              {returnActionLoadingId === order._id
+                                ? "Submitting..."
+                                : "Request Return"}
+                            </button>
+                          </div>
+                        )}
 
-                      {String(order.returnRequest?.status || "none") !== "none" && (
+                      {String(order.returnRequest?.status || "none") !==
+                        "none" && (
                         <div className="order-return-tracking-wrap">
                           <p className="order-return-title">
                             Return Tracking:{" "}
-                            <strong>{getStatusLabel(order.returnRequest?.status || "none")}</strong>
+                            <strong>
+                              {getStatusLabel(
+                                order.returnRequest?.status || "none",
+                              )}
+                            </strong>
                           </p>
                           <div className="order-return-line-wrap">
                             <div className="order-tracking-line" />
                             {returnTrackingSteps.map((step, stepIndex) => {
-                              const currentIndex = getReturnStatusIndex(order.returnRequest?.status);
+                              const currentIndex = getReturnStatusIndex(
+                                order.returnRequest?.status,
+                              );
                               const isDone = stepIndex <= currentIndex;
                               return (
                                 <div
-                                  className={isDone ? "track-step done" : "track-step"}
+                                  className={
+                                    isDone ? "track-step done" : "track-step"
+                                  }
                                   key={`${order._id}-return-${step}`}
                                 >
                                   <span className="track-dot" />
-                                  <span className="track-label">{getStatusLabel(step)}</span>
+                                  <span className="track-label">
+                                    {getStatusLabel(step)}
+                                  </span>
                                 </div>
                               );
                             })}
                           </div>
                           {Array.isArray(order.returnRequest?.timeline) &&
                             order.returnRequest.timeline.length > 0 && (
-                            <div className="order-return-events">
-                              {order.returnRequest.timeline
-                                .slice()
-                                .reverse()
-                                .slice(0, 4)
-                                .map((event, idx) => (
-                                  <p key={`${order._id}-event-${idx}`}>
-                                    {new Date(event.at).toLocaleString()} •{" "}
-                                    {getStatusLabel(event.status)} • {event.note || "Updated"}
-                                  </p>
-                                ))}
-                            </div>
-                          )}
+                              <div className="order-return-events">
+                                {order.returnRequest.timeline
+                                  .slice()
+                                  .reverse()
+                                  .slice(0, 4)
+                                  .map((event, idx) => (
+                                    <p key={`${order._id}-event-${idx}`}>
+                                      {new Date(event.at).toLocaleString()} •{" "}
+                                      {getStatusLabel(event.status)} •{" "}
+                                      {event.note || "Updated"}
+                                    </p>
+                                  ))}
+                              </div>
+                            )}
                           {Array.isArray(order.returnRequest?.evidence) &&
                             order.returnRequest.evidence.length > 0 && (
-                            <div className="order-return-proof-grid">
-                              {order.returnRequest.evidence.map((file, idx) =>
-                                file.type === "video" ? (
-                                  <video key={`${order._id}-saved-proof-${idx}`} src={file.url} controls />
-                                ) : (
-                                  <img
-                                    key={`${order._id}-saved-proof-${idx}`}
-                                    src={file.url}
-                                    alt={file.name || "Proof"}
-                                    onError={applyImageFallback}
-                                  />
-                                )
-                              )}
-                            </div>
-                          )}
+                              <div className="order-return-proof-grid">
+                                {order.returnRequest.evidence.map(
+                                  (file, idx) =>
+                                    file.type === "video" ? (
+                                      <video
+                                        key={`${order._id}-saved-proof-${idx}`}
+                                        src={file.url}
+                                        controls
+                                      />
+                                    ) : (
+                                      <img
+                                        key={`${order._id}-saved-proof-${idx}`}
+                                        src={file.url}
+                                        alt={file.name || "Proof"}
+                                        onError={applyImageFallback}
+                                      />
+                                    ),
+                                )}
+                              </div>
+                            )}
                         </div>
                       )}
 
@@ -2544,7 +2823,9 @@ useEffect(() => {
                           const isDone = stepIndex <= currentIndex;
                           return (
                             <div
-                              className={isDone ? "track-step done" : "track-step"}
+                              className={
+                                isDone ? "track-step done" : "track-step"
+                              }
                               key={`${order._id}-${step}`}
                             >
                               <span className="track-dot" />
@@ -2558,9 +2839,13 @@ useEffect(() => {
 
                       <div className="order-items">
                         {(order.items || []).map((item, index) => {
-                          const productKey = normalizeProductKey(item.productId);
+                          const productKey = normalizeProductKey(
+                            item.productId,
+                          );
                           const preview =
-                            ratingHover[productKey] || ratingInputs[productKey] || 0;
+                            ratingHover[productKey] ||
+                            ratingInputs[productKey] ||
+                            0;
                           return (
                             <div
                               className="order-item-row"
@@ -2591,7 +2876,8 @@ useEffect(() => {
                                 <div className="star-rating-row">
                                   {[1, 2, 3, 4, 5].map((star) => {
                                     const isFull = star <= preview;
-                                    const isHalf = !isFull && star - 0.5 === preview;
+                                    const isHalf =
+                                      !isFull && star - 0.5 === preview;
                                     return (
                                       <button
                                         key={star}
@@ -2600,31 +2886,39 @@ useEffect(() => {
                                           const rect =
                                             e.currentTarget.getBoundingClientRect();
                                           const isLeftHalf =
-                                            e.clientX - rect.left < rect.width / 2;
-                                          const nextValue = isLeftHalf ? star - 0.5 : star;
+                                            e.clientX - rect.left <
+                                            rect.width / 2;
+                                          const nextValue = isLeftHalf
+                                            ? star - 0.5
+                                            : star;
                                           setRatingHover((prevState) => ({
                                             ...prevState,
-                                            [productKey]: nextValue
+                                            [productKey]: nextValue,
                                           }));
                                         }}
                                         onMouseLeave={() =>
                                           setRatingHover((prevState) => ({
                                             ...prevState,
-                                            [productKey]: 0
+                                            [productKey]: 0,
                                           }))
                                         }
                                         onClick={(e) => {
                                           const rect =
                                             e.currentTarget.getBoundingClientRect();
                                           const isLeftHalf =
-                                            e.clientX - rect.left < rect.width / 2;
-                                          const nextValue = isLeftHalf ? star - 0.5 : star;
+                                            e.clientX - rect.left <
+                                            rect.width / 2;
+                                          const nextValue = isLeftHalf
+                                            ? star - 0.5
+                                            : star;
                                           setRatingInputs((prevState) => ({
                                             ...prevState,
-                                            [productKey]: nextValue
+                                            [productKey]: nextValue,
                                           }));
                                         }}
-                                        disabled={ratingLoadingId === productKey}
+                                        disabled={
+                                          ratingLoadingId === productKey
+                                        }
                                         type="button"
                                       >
                                         ★
@@ -2640,7 +2934,7 @@ useEffect(() => {
                                   onChange={(e) =>
                                     setRatingComments((prevState) => ({
                                       ...prevState,
-                                      [productKey]: e.target.value
+                                      [productKey]: e.target.value,
                                     }))
                                   }
                                 />
@@ -2651,7 +2945,7 @@ useEffect(() => {
                                     submitRating(
                                       productKey,
                                       ratingInputs[productKey],
-                                      ratingComments[productKey] || ""
+                                      ratingComments[productKey] || "",
                                     )
                                   }
                                   disabled={
@@ -2719,7 +3013,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setProfileForm((prev) => ({
                           ...prev,
-                          name: e.target.value
+                          name: e.target.value,
                         }))
                       }
                       placeholder="Your full name"
@@ -2736,7 +3030,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setProfileForm((prev) => ({
                           ...prev,
-                          contactNumber: e.target.value
+                          contactNumber: e.target.value,
                         }))
                       }
                       placeholder="+1 555 000 0000"
@@ -2749,7 +3043,7 @@ useEffect(() => {
                       onChange={(e) =>
                         setProfileForm((prev) => ({
                           ...prev,
-                          deliveryAddress: e.target.value
+                          deliveryAddress: e.target.value,
                         }))
                       }
                       placeholder="Street, City, State, ZIP"
@@ -2775,7 +3069,9 @@ useEffect(() => {
                   </div>
                 </div>
 
-                {profileMessage && <p className="success-text">{profileMessage}</p>}
+                {profileMessage && (
+                  <p className="success-text">{profileMessage}</p>
+                )}
                 {profileError && <p className="error-text">{profileError}</p>}
               </div>
             </div>

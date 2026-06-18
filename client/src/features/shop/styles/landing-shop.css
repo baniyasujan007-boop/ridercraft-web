@@ -955,3 +955,42 @@
   border-radius: 20px;
   object-fit: cover;
 }
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin: 32px 0;
+}
+
+.category-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .3s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
+}
+
+.category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+}
+
+.category-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.category-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
