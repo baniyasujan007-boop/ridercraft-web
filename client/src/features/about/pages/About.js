@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import api from "../services/api";
-import "../styles/pages/about.css";
-import { applyImageFallback, DEFAULT_FALLBACK_IMAGE } from "../utils/fallbackImage";
+import api from "../../../services/api";
+import "../styles/about.css";
+import { applyImageFallback, DEFAULT_FALLBACK_IMAGE } from "../../../utils/fallbackImage";
 
 const toNumber = (value) => {
   const parsed = Number(value);

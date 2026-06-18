@@ -1,4 +1,4 @@
-import { applyImageFallback } from "../../utils/fallbackImage";
+import { applyImageFallback } from "../../../utils/fallbackImage";
 
 export default function RelatedProducts({ products, fallbackImage, onOpenProduct }) {
   return (

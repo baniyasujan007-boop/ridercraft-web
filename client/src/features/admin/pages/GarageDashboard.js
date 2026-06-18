@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import "../../styles/pages/garage-dashboard.css";
+import "../styles/garage-dashboard.css";
 
 const STATUS_OPTIONS = ["requested", "confirmed", "in_progress", "completed", "cancelled"];
 

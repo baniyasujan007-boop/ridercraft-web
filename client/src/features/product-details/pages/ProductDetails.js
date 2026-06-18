@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import ProductGallery from "../components/product-details/ProductGallery";
-import ProductSummary from "../components/product-details/ProductSummary";
-import RelatedProducts from "../components/product-details/RelatedProducts";
-import { useCart } from "../context";
-import "../styles/pages/product-details.css";
-import { DEFAULT_FALLBACK_IMAGE } from "../utils/fallbackImage";
+import ProductGallery from "../components/ProductGallery";
+import ProductSummary from "../components/ProductSummary";
+import RelatedProducts from "../components/RelatedProducts";
+import { useCart } from "../../../context";
+import "../styles/product-details.css";
+import { DEFAULT_FALLBACK_IMAGE } from "../../../utils/fallbackImage";
 
 function mapApiProductToUi(product) {
   const image = product.image || "";

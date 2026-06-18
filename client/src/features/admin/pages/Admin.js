@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import AdminSectionContent from "./AdminSectionContent";
-import "../../styles/pages/admin.css";
+import "../styles/admin.css";
 
 const initialForm = {
   name: "Sample Product",

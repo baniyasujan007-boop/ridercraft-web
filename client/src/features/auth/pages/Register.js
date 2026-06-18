@@ -1,9 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "../../components/layout/AuthLayout";
-import GoogleAuthButton from "../../components/layout/GoogleAuthButton";
-import api from "../../services/api";
+import AuthLayout from "../components/AuthLayout";
+import GoogleAuthButton from "../components/GoogleAuthButton";
+import api from "../../../services/api";
 
 export default function Register() {
   const [form, setForm] = useState({

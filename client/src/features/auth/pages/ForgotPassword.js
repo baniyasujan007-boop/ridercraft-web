@@ -2,8 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import AuthLayout from "../../components/layout/AuthLayout";
-import AuthInput from "../../components/layout/AuthInput";
+import AuthLayout from "../components/AuthLayout";
+import AuthInput from "../components/AuthInput";
 
 export default function ForgotPassword() {
   const [form, setForm] = useState({

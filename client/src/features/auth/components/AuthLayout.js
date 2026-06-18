@@ -1,4 +1,4 @@
-import "../../styles/pages/auth.css";
+import "../styles/auth.css";
 
 export default function AuthLayout({ children, type }) {
   return (

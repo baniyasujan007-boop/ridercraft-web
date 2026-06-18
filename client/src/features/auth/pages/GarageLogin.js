@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import AuthLayout from "../../components/layout/AuthLayout";
+import AuthLayout from "../components/AuthLayout";
 
 export default function GarageLogin() {
   const [form, setForm] = useState({ email: "", password: "" });

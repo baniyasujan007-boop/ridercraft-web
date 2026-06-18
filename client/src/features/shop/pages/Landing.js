@@ -3,15 +3,15 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Navbar from "../components/layout/Navbar";
-import { useCart } from "../context";
-import "../styles/pages/landing-base.css";
-import "../styles/pages/landing-nav.css";
-import "../styles/pages/landing-shop.css";
-import "../styles/pages/landing-cart.css";
-import "../styles/pages/landing-profile.css";
-import "../styles/pages/landing-service.css";
-import { applyImageFallback } from "../utils/fallbackImage";
+import Navbar from "../../../components/layout/Navbar";
+import { useCart } from "../../../context";
+import "../styles/landing-base.css";
+import "../styles/landing-nav.css";
+import "../styles/landing-shop.css";
+import "../styles/landing-cart.css";
+import "../styles/landing-profile.css";
+import "../styles/landing-service.css";
+import { applyImageFallback } from "../../../utils/fallbackImage";
 
 const SERVICE_BIKE_MODELS = [
   "Hero Xpulse 200",

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import AuthLayout from "../../components/layout/AuthLayout";
-import GoogleAuthButton from "../../components/layout/GoogleAuthButton";
+import AuthLayout from "../components/AuthLayout";
+import GoogleAuthButton from "../components/GoogleAuthButton";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });

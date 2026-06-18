@@ -1,4 +1,4 @@
-import { applyImageFallback } from "../../utils/fallbackImage";
+import { applyImageFallback } from "../../../../utils/fallbackImage";
 
 function formatCurrency(value) {
   return `$${Number(value).toLocaleString()}`;

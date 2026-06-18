@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import OrdersSidebar from "../../components/admin-orders/OrdersSidebar";
-import OrdersHeader from "../../components/admin-orders/OrdersHeader";
-import OrdersTable from "../../components/admin-orders/OrdersTable";
-import OrderDetailsDrawer from "../../components/admin-orders/OrderDetailsDrawer";
-import "../../styles/pages/admin-orders-dashboard.css";
+import OrdersSidebar from "../components/orders/OrdersSidebar";
+import OrdersHeader from "../components/orders/OrdersHeader";
+import OrdersTable from "../components/orders/OrdersTable";
+import OrderDetailsDrawer from "../components/orders/OrderDetailsDrawer";
+import "../styles/admin-orders-dashboard.css";
 
 function matchPriceRange(total, range) {
   if (range === "all") return true;
