@@ -881,3 +881,15 @@
     grid-template-columns: 1fr;
   }
 }
+.filter-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+.filter-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
