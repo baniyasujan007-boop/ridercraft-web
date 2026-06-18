@@ -13,7 +13,6 @@ import "../styles/landing-profile.css";
 import "../styles/landing-service.css";
 import { applyImageFallback } from "../../../utils/fallbackImage";
 
-const [shopQuery, setShopQuery] = useState("");
 const SERVICE_BIKE_MODELS = [
   "Hero Xpulse 200",
   "Royal Enfield Classic 350",
@@ -82,7 +81,6 @@ export default function Landing() {
   const [activePromos, setActivePromos] = useState([]);
   const [featuredSectionsData, setFeaturedSectionsData] = useState([]);
   const [productsError, setProductsError] = useState("");
-  const [shopQuery, setShopQuery] = useState("");
   const [categoryQuery, setCategoryQuery] = useState("");
   const [activeTag, setActiveTag] = useState("All");
   const [activeBrand, setActiveBrand] = useState("All");
@@ -1888,12 +1886,6 @@ export default function Landing() {
 
             <div className="shop-results">
               <div className="shop-toolbar">
-                <input
-                  className="shop-search"
-                  placeholder="What are you looking for?"
-                  value={shopQuery}
-                  onChange={(e) => setShopQuery(e.target.value)}
-                />
                 <select
                   className="shop-sort"
                   value={sortBy}

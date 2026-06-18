@@ -15,7 +15,6 @@ export default function Navbar({
   setSearchQuery,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotifications, setReadNotifications] = useState([]);
   const notificationRef = useRef(null);
