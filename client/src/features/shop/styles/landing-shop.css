@@ -398,6 +398,34 @@
   color: #0f172a;
 }
 
+/* Featured brands section styles */
+.brands-section {
+  margin: 50px 0;
+}
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.brand-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.brand-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
 .shop-results {
   min-width: 0;
 }

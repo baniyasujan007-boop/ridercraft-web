@@ -16,7 +16,6 @@ export default function Navbar({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [readNotifications, setReadNotifications] = useState([]);
   const notificationRef = useRef(null);
 
   useEffect(() => {
