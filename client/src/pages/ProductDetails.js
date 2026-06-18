@@ -19,7 +19,7 @@ function mapApiProductToUi(product) {
     gray: "#6b7280",
     grey: "#6b7280",
     yellow: "#eab308",
-    orange: "#f97316"
+    orange: "#f97316",
   };
 
   return {
@@ -30,28 +30,26 @@ function mapApiProductToUi(product) {
     price: Number(product.price || 0),
     rating: Number(product.ratingAverage || 0),
     soldCount: Number(product.ratingCount || 0),
+    stock: Number(product.stock || 0),
     reviews: Array.isArray(product.ratings)
       ? product.ratings
           .map((entry, index) => ({
             id: `${product._id}-${index}`,
             user: "Customer",
             value: Number(entry.value || 0),
-            comment: String(entry.comment || "").trim()
+            comment: String(entry.comment || "").trim(),
           }))
           .sort((a, b) => b.value - a.value)
       : [],
-    description:
-  product.description || "",
-   images: product.images?.length ? product.images : [image],
-colors: Array.isArray(product.colors)
-  ? product.colors.map((color) => ({
-      name: color,
-      value:
-        colorMap[String(color).trim().toLowerCase()] ||
-        "#1f1f1f"
-    }))
-  : [],
-   sizes: []
+    description: product.description || "",
+    images: product.images?.length ? product.images : [image],
+    colors: Array.isArray(product.colors)
+      ? product.colors.map((color) => ({
+          name: color,
+          value: colorMap[String(color).trim().toLowerCase()] || "#1f1f1f",
+        }))
+      : [],
+    sizes: Array.isArray(product.sizes) ? product.sizes : [],
   };
 }
 
@@ -76,7 +74,7 @@ export default function ProductDetails() {
 
         const [productResult, productsResult] = await Promise.allSettled([
           axios.get(`https://ridercraft-api.onrender.com/products/${id}`),
-          axios.get("https://ridercraft-api.onrender.com/products")
+          axios.get("https://ridercraft-api.onrender.com/products"),
         ]);
 
         if (productResult.status === "fulfilled") {
@@ -86,9 +84,16 @@ export default function ProductDetails() {
           setError("Could not load selected product.");
         }
 
-        if (productsResult.status === "fulfilled") {
+        if (
+          productsResult.status === "fulfilled" &&
+          productResult.status === "fulfilled"
+        ) {
+          const currentProduct = productResult.value.data;
+
           const related = productsResult.value.data
-            .filter((item) => item._id !== id)
+            .filter(
+              (item) => item._id !== id && item.tag === currentProduct.tag,
+            )
             .slice(0, 4)
             .map((item) => mapApiProductToUi(item));
           setRelatedProducts(related);
@@ -110,20 +115,24 @@ export default function ProductDetails() {
     if (!product) return;
     setActiveImage(0);
     setIsExpanded(false);
-  setSelectedColor(product.colors[0] || null);
-setSelectedSize(product.sizes[0] || "");
+    setSelectedColor(product.colors[0] || null);
+    setSelectedSize(product.sizes[0] || "");
   }, [product]);
 
   const fallbackImage = DEFAULT_FALLBACK_IMAGE;
 
   const handlePrevImage = () => {
     if (!product) return;
-    setActiveImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+    setActiveImage((prev) =>
+      prev === 0 ? product.images.length - 1 : prev - 1,
+    );
   };
 
   const handleNextImage = () => {
     if (!product) return;
-    setActiveImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
+    setActiveImage((prev) =>
+      prev === product.images.length - 1 ? 0 : prev + 1,
+    );
   };
 
   const handleAddToCart = () => {
@@ -147,13 +156,19 @@ setSelectedSize(product.sizes[0] || "");
   return (
     <main className="pdp-page">
       <div className="pdp-shell">
-        <button className="pdp-back-btn" onClick={() => navigate("/landing")} type="button">
+        <button
+          className="pdp-back-btn"
+          onClick={() => navigate("/landing")}
+          type="button"
+        >
           Back to Shop
         </button>
         {loading && <p className="pdp-state">Loading product...</p>}
-        {!loading && error && <p className="pdp-state pdp-state-error">{error}</p>}
+        {!loading && error && (
+          <p className="pdp-state pdp-state-error">{error}</p>
+        )}
 
-       {!loading && product && (
+        {!loading && product && (
           <>
             <section className="pdp-top-grid">
               <ProductGallery
@@ -183,13 +198,15 @@ setSelectedSize(product.sizes[0] || "");
               <div className="pdp-reviews-head">
                 <h2>Ratings & Reviews</h2>
                 <p>
-                  {product.rating.toFixed(1)} / 5 from {product.soldCount} ratings
+                  {product.rating.toFixed(1)} / 5 from {product.soldCount}{" "}
+                  ratings
                 </p>
               </div>
 
               {product.reviews.length === 0 && (
                 <p className="pdp-reviews-empty">
-                  No reviews yet. Purchase this product to leave a rating from your orders.
+                  No reviews yet. Purchase this product to leave a rating from
+                  your orders.
                 </p>
               )}
 
