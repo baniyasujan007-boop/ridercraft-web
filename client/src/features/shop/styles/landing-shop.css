@@ -4,7 +4,7 @@
   background: #f7f9fc;
   border-radius: 14px;
   border: 1px solid #d9e0ea;
-  overflow: hidden;
+  overflow: visible;
   color: #1e293b;
 }
 
@@ -232,6 +232,7 @@
   grid-template-columns: 260px 1fr;
   gap: 16px;
   padding: 16px;
+  align-items: start;
 }
 
 .shop-content.no-filters {
@@ -243,12 +244,13 @@
   border: 1px solid #dfe5ee;
   border-radius: 12px;
   padding: 14px;
-  height: fit-content;
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   position: sticky;
   top: 12px;
+  align-self: start;
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 #eef2f7;
 }
