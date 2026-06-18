@@ -82,7 +82,7 @@ export default function Landing() {
   const [featuredSectionsData, setFeaturedSectionsData] = useState([]);
   const [productsError, setProductsError] = useState("");
   const [categoryQuery, setCategoryQuery] = useState("");
-     const [shopQuery, setShopQuery] = useState("");
+  const [shopQuery, setShopQuery] = useState("");
 
   const [activeTag, setActiveTag] = useState("All");
   const [activeBrand, setActiveBrand] = useState("All");
