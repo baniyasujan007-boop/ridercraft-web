@@ -32,15 +32,17 @@ export default function SiteHeader({
         </Link>
 
         <div className="site-header-search">
-          <input
-            type="text"
-            placeholder="Search helmets, gloves, riding gear..."
-            value={searchQuery}
-            onChange={(e) =>
-              setSearchQuery(e.target.value)
-            }
-          />
-        </div>
+  <input
+    type="text"
+    placeholder="Search helmets, gloves, riding gear..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+  />
+
+  <button className="header-search-btn">
+    🔍
+  </button>
+</div>
       </div>
     </header>
   );
