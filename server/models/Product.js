@@ -38,6 +38,15 @@ const productSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    isFlashSale: {
+      type: Boolean,
+      default: false,
+    },
+
+    flashSaleEndsAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

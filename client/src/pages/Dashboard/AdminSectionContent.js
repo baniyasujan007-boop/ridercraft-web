@@ -120,15 +120,15 @@ export default function AdminSectionContent({ vm }) {
               }
             />
             <textarea
-  placeholder="Product Description"
-  value={form.description}
-  onChange={(e) =>
-    setForm((prev) => ({
-      ...prev,
-      description: e.target.value,
-    }))
-  }
-/>
+              placeholder="Product Description"
+              value={form.description}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+            />
             <input
               type="text"
               placeholder="Sizes (S,M,L,XL)"
@@ -158,23 +158,23 @@ export default function AdminSectionContent({ vm }) {
               value={form.image}
               onChange={handleProductImageUrlChange}
             />
-          <input
-  placeholder="Paste product URL"
-  value={productUrl}
-  onChange={(e) => {
-    console.log("Input value:", e.target.value);
-    setProductUrl(e.target.value);
-  }}
-/>
+            <input
+              placeholder="Paste product URL"
+              value={productUrl}
+              onChange={(e) => {
+                console.log("Input value:", e.target.value);
+                setProductUrl(e.target.value);
+              }}
+            />
 
-<button
-  onClick={() => {
-    console.log("Button clicked. productUrl =", productUrl);
-    fetchProductFromUrl();
-  }}
->
-  Fetch Product
-</button>
+            <button
+              onClick={() => {
+                console.log("Button clicked. productUrl =", productUrl);
+                fetchProductFromUrl();
+              }}
+            >
+              Fetch Product
+            </button>
             <input
               type="number"
               min="0"
@@ -183,6 +183,30 @@ export default function AdminSectionContent({ vm }) {
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, stock: e.target.value }))
               }
+            />
+            <label className="admin-checkbox">
+              <input
+                type="checkbox"
+                checked={form.isFlashSale}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isFlashSale: e.target.checked,
+                  }))
+                }
+              />
+              Flash Sale Product
+            </label>
+            <input
+              type="datetime-local"
+              value={form.flashSaleEndsAt}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  flashSaleEndsAt: e.target.value,
+                }))
+              }
+              placeholder="Flash Sale End Time"
             />
             <input
               type="file"

@@ -14,6 +14,8 @@ const initialForm = {
   colors: "",
   image: "",
   description: "",
+  isFlashSale: false,
+  flashSaleEndsAt: "",
 };
 const initialPromoForm = {
   code: "",
@@ -702,26 +704,25 @@ export default function Admin() {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-console.log("Sending URL:", productUrl);
-    const res = await axios.post(
-  "https://ridercraft-api.onrender.com/products/fetch-url",
-  { url: productUrl },
-  { headers }
-);
+      console.log("Sending URL:", productUrl);
+      const res = await axios.post(
+        "https://ridercraft-api.onrender.com/products/fetch-url",
+        { url: productUrl },
+        { headers },
+      );
 
-console.log("FETCH RESPONSE:", res.data);
+      console.log("FETCH RESPONSE:", res.data);
 
-
-setForm((prev) => ({
-  ...prev,
-  name: res.data.name || "",
-  price: String(res.data.price || ""),
-  brand: res.data.brand || "",
-  image: res.data.image || "",
-  description: res.data.description || "",
-  sizes: (res.data.sizes || []).join(", "),
-  colors: (res.data.colors || []).join(", ")
-}));
+      setForm((prev) => ({
+        ...prev,
+        name: res.data.name || "",
+        price: String(res.data.price || ""),
+        brand: res.data.brand || "",
+        image: res.data.image || "",
+        description: res.data.description || "",
+        sizes: (res.data.sizes || []).join(", "),
+        colors: (res.data.colors || []).join(", "),
+      }));
     } catch (err) {
       setError(err.response?.data?.error || "Failed to fetch product");
     }
@@ -748,25 +749,23 @@ setForm((prev) => ({
         return;
       }
 
-     const payload = {
-  name: form.name.trim(),
-  price: Number(form.price),
-  tag: form.tag.trim() || "General",
-  brand: form.brand.trim() || "Generic",
-  colorFamily: form.colorFamily.trim() || "Neutral",
-  description: form.description || "",
+      const payload = {
+        name: form.name.trim(),
+        price: Number(form.price),
+        tag: form.tag.trim() || "General",
+        brand: form.brand.trim() || "Generic",
+        colorFamily: form.colorFamily.trim() || "Neutral",
+        description: form.description || "",
 
-  sizes: form.sizes
-    ? form.sizes.split(",").map((s) => s.trim())
-    : [],
+        sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
 
-  colors: form.colors
-    ? form.colors.split(",").map((c) => c.trim())
-    : [],
+        colors: form.colors ? form.colors.split(",").map((c) => c.trim()) : [],
 
-  stock: Number(form.stock || 0),
-  image: imageSource,
-};
+        stock: Number(form.stock || 0),
+        image: imageSource,
+        isFlashSale: form.isFlashSale,
+        flashSaleEndsAt: form.flashSaleEndsAt || null,
+      };
       const headers = { Authorization: `Bearer ${token}` };
 
       if (editingId) {
@@ -794,24 +793,22 @@ setForm((prev) => ({
 
   const startEdit = (product) => {
     setEditingId(product._id);
-  setForm({
-  name: product.name || "",
-  price: String(product.price ?? ""),
-  tag: product.tag || "",
-  brand: product.brand || "",
-  colorFamily: product.colorFamily || "",
+    setForm({
+      name: product.name || "",
+      price: String(product.price ?? ""),
+      tag: product.tag || "",
+      brand: product.brand || "",
+      colorFamily: product.colorFamily || "",
 
-  sizes: Array.isArray(product.sizes)
-    ? product.sizes.join(",")
-    : "",
+      sizes: Array.isArray(product.sizes) ? product.sizes.join(",") : "",
 
-  colors: Array.isArray(product.colors)
-    ? product.colors.join(",")
-    : "",
+      colors: Array.isArray(product.colors) ? product.colors.join(",") : "",
 
-  stock: String(product.stock ?? "25"),
-  image: product.image|| "",
-});
+      stock: String(product.stock ?? "25"),
+      image: product.image || "",
+      isFlashSale: product.isFlashSale || false,
+      flashSaleEndsAt: product.flashSaleEndsAt || "",
+    });
   };
 
   const removeProduct = async (id) => {
