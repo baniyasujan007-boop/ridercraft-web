@@ -40,6 +40,11 @@ export default function ProductSummary({
   return (
     <section className="pdp-summary">
       <p className="pdp-brand">{product.brand}</p>
+
+      {product.isFlashSale && (
+        <div className="flash-sale-badge">🔥 FLASH SALE</div>
+      )}
+
       <h1 className="pdp-title">{product.title}</h1>
       <p className="pdp-brand-name">Brand: {product.brand}</p>
       <p className="pdp-stock">

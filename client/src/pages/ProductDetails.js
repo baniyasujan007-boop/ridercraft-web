@@ -26,6 +26,7 @@ function mapApiProductToUi(product) {
     id: product._id,
     brand: product.brand || "Generic",
     title: product.name || "Product",
+    isFlashSale: product.isFlashSale || false,
     oldPrice: null,
     price: Number(product.price || 0),
     rating: Number(product.ratingAverage || 0),
