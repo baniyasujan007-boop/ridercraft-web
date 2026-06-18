@@ -40,6 +40,7 @@ const initialFeaturedSectionForm = {
   title: "🔥 Trending Products",
   productIds: [],
   sortOrder: "1",
+  countdownEndsAt: "",
   isActive: true,
 };
 
@@ -965,6 +966,7 @@ export default function Admin() {
         title: featuredSectionForm.title.trim(),
         products: featuredSectionForm.productIds,
         sortOrder: Number(featuredSectionForm.sortOrder || 0),
+        countdownEndsAt: featuredSectionForm.countdownEndsAt || null,
         isActive: Boolean(featuredSectionForm.isActive),
       };
       if (editingFeaturedSectionId) {
@@ -997,6 +999,7 @@ export default function Admin() {
         ? sectionRow.products.map((item) => item._id || item)
         : [],
       sortOrder: String(sectionRow.sortOrder ?? "0"),
+      countdownEndsAt: toDateTimeInputValue(sectionRow.countdownEndsAt),
       isActive: Boolean(sectionRow.isActive),
     });
   };

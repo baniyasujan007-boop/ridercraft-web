@@ -1,5 +1,11 @@
 import FeaturedSection, { SECTION_KEYS } from "../models/FeaturedSection.js";
 
+const parseCountdownEndsAt = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : null;
+};
+
 export const listPublicFeaturedSections = async (_req, res) => {
   try {
     const sections = await FeaturedSection.find({ isActive: true })
@@ -24,7 +30,7 @@ export const listAdminFeaturedSections = async (_req, res) => {
 
 export const createFeaturedSection = async (req, res) => {
   try {
-    const { key, title, products, sortOrder, isActive } = req.body;
+    const { key, title, products, sortOrder, countdownEndsAt, isActive } = req.body;
     const nextKey = String(key || "").trim();
     const nextTitle = String(title || "").trim();
     if (!SECTION_KEYS.includes(nextKey)) {
@@ -39,6 +45,7 @@ export const createFeaturedSection = async (req, res) => {
       title: nextTitle,
       products: Array.isArray(products) ? products : [],
       sortOrder: Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : 0,
+      countdownEndsAt: parseCountdownEndsAt(countdownEndsAt),
       isActive: isActive !== undefined ? Boolean(isActive) : true
     });
 
@@ -84,6 +91,10 @@ export const updateFeaturedSection = async (req, res) => {
     if (req.body.sortOrder !== undefined) {
       const nextSort = Number(req.body.sortOrder);
       section.sortOrder = Number.isFinite(nextSort) ? nextSort : section.sortOrder;
+    }
+
+    if (req.body.countdownEndsAt !== undefined) {
+      section.countdownEndsAt = parseCountdownEndsAt(req.body.countdownEndsAt);
     }
 
     if (req.body.isActive !== undefined) {

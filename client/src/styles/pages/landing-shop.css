@@ -611,12 +611,28 @@
 
 .featured-head {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .featured-head h3 {
   margin: 0;
   font-size: 18px;
   color: #0f172a;
+}
+
+.featured-countdown {
+  border: 1px solid #fecaca;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  white-space: nowrap;
 }
 
 .featured-grid {

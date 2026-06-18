@@ -1668,6 +1668,17 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             />
+            <input
+              type="datetime-local"
+              value={featuredSectionForm.countdownEndsAt}
+              onChange={(e) =>
+                setFeaturedSectionForm((prev) => ({
+                  ...prev,
+                  countdownEndsAt: e.target.value,
+                }))
+              }
+              aria-label="Countdown end time"
+            />
             <select
               value={featuredSectionForm.isActive ? "active" : "inactive"}
               onChange={(e) =>
@@ -1734,6 +1745,7 @@ export default function AdminSectionContent({ vm }) {
                 <th>Title</th>
                 <th>Products</th>
                 <th>Sort</th>
+                <th>Countdown</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1747,6 +1759,11 @@ export default function AdminSectionContent({ vm }) {
                     {Array.isArray(row.products) ? row.products.length : 0}
                   </td>
                   <td>{row.sortOrder}</td>
+                  <td>
+                    {row.countdownEndsAt
+                      ? new Date(row.countdownEndsAt).toLocaleString()
+                      : "Not set"}
+                  </td>
                   <td>{row.isActive ? "active" : "inactive"}</td>
                   <td>
                     <div className="row-actions">
@@ -1768,7 +1785,7 @@ export default function AdminSectionContent({ vm }) {
               ))}
               {featuredSections.length === 0 && (
                 <tr>
-                  <td colSpan="6">No featured sections added yet.</td>
+                  <td colSpan="7">No featured sections added yet.</td>
                 </tr>
               )}
             </tbody>

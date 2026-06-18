@@ -1386,6 +1386,11 @@ useEffect(() => {
               <section className="featured-block" key={section._id || section.key}>
                 <div className="featured-head">
                   <h3>{section.title}</h3>
+                  {section.countdownEndsAt && (
+                    <span className="featured-countdown">
+                      Ends in {formatCountdown(section.countdownEndsAt)}
+                    </span>
+                  )}
                 </div>
                 <div className="featured-grid">
                   {(section.products || []).map((product) => (
