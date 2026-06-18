@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
-
 export default function Navbar({
   view,
   setView,
@@ -11,32 +10,28 @@ export default function Navbar({
   notifications,
   profile,
   isAdmin,
-  logout
+  logout,
 }) {
-  
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [readNotifications, setReadNotifications] = useState([]);
-const notificationRef = useRef(null);
+  const notificationRef = useRef(null);
 
-useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (
-      notificationRef.current &&
-      !notificationRef.current.contains(event.target)
-    ) {
-      setShowNotifications(false);
-    }
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
-  return () =>
-    document.removeEventListener(
-      "mousedown",
-      handleClickOutside
-    );
-}, []);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const goToView = (nextView) => {
     setView(nextView);
@@ -52,36 +47,36 @@ useEffect(() => {
     setMenuOpen(false);
     logout();
   };
-const getNotificationIcon = (title = "") => {
-  const text = title.toLowerCase();
+  const getNotificationIcon = (title = "") => {
+    const text = title.toLowerCase();
 
-  if (text.includes("order")) return "📦";
-  if (text.includes("service")) return "🔧";
-  if (text.includes("coupon")) return "🎟️";
-  if (text.includes("payment")) return "💳";
-  if (text.includes("profile")) return "👤";
+    if (text.includes("order")) return "📦";
+    if (text.includes("service")) return "🔧";
+    if (text.includes("coupon")) return "🎟️";
+    if (text.includes("payment")) return "💳";
+    if (text.includes("profile")) return "👤";
 
-  return "🔔";
-};
-const markNotificationRead = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
+    return "🔔";
+  };
+  const markNotificationRead = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    await axios.put(
-      `https://ridercraft-api.onrender.com/notifications/${id}/read`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+      await axios.put(
+        `https://ridercraft-api.onrender.com/notifications/${id}/read`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    window.location.reload();
-  } catch (err) {
-    console.error(err);
-  }
-};
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
   return (
     <nav className="landing-nav">
       <div className="nav-frame">
@@ -129,11 +124,8 @@ const markNotificationRead = async (id) => {
             <span className="nav-chip chip-sky" />
             <span>Bike Servicing</span>
           </button>
-        
-          <button
-            className="nav-btn"
-            onClick={() => goToPath("/about")}
-          >
+
+          <button className="nav-btn" onClick={() => goToPath("/about")}>
             <span className="nav-chip chip-white" />
             <span>About</span>
           </button>
@@ -149,104 +141,109 @@ const markNotificationRead = async (id) => {
             <span className="nav-user-name">{profile.name || "User"}</span>
           </button>
           {isAdmin && (
-            <button
-              className="nav-btn"
-              onClick={() => goToPath("/admin")}
-            >
+            <button className="nav-btn" onClick={() => goToPath("/admin")}>
+              <div className="navbar-search">
+                <input
+                  type="text"
+                  placeholder="Search helmets, gloves, accessories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               <span className="nav-chip chip-amber" />
               <span>Admin Panel</span>
             </button>
           )}
           <div ref={notificationRef} className="notification-wrapper">
-  <button
-    className="notification-btn"
-    onClick={() => setShowNotifications(!showNotifications)}
-  >
-    <span>🔔</span>
+            <button
+              className="notification-btn"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              <span>🔔</span>
 
-    {notificationCount > 0 && (
-      <span className="notification-badge">
-        {notificationCount}
-      </span>
-    )}
-  </button>
+              {notificationCount > 0 && (
+                <span className="notification-badge">{notificationCount}</span>
+              )}
+            </button>
 
-  {showNotifications && (
-    <div className="notification-dropdown">
-     <div className="notification-header">
-  <span>Notifications</span>
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <span>Notifications</span>
 
- <button
-  className="mark-read-btn"
- onClick={async () => {
-  try {
-    const token = localStorage.getItem("token");
+                  <button
+                    className="mark-read-btn"
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("token");
 
-    await axios.put(
-      "https://ridercraft-api.onrender.com/notifications/read-all",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+                        await axios.put(
+                          "https://ridercraft-api.onrender.com/notifications/read-all",
+                          {},
+                          {
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                          },
+                        );
 
-    window.location.reload();
-  } catch (err) {
-    console.error(err);
-  }
-}}
->
-  Mark all read
-</button>
-</div>
+                        window.location.reload();
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                  >
+                    Mark all read
+                  </button>
+                </div>
 
-      {notifications?.length > 0 ? (
-        notifications.slice(0, 5).map((item, index) => (
-         <div
-  key={item._id}
-  className="notification-item"
-  onClick={() => markNotificationRead(item._id)}
->
-           <div>
-<div className="notification-content">
-  <strong>
-    {getNotificationIcon(item.title)} {item.title}
-  </strong>
+                {notifications?.length > 0 ? (
+                  notifications.slice(0, 5).map((item, index) => (
+                    <div
+                      key={item._id}
+                      className="notification-item"
+                      onClick={() => markNotificationRead(item._id)}
+                    >
+                      <div>
+                        <div className="notification-content">
+                          <strong>
+                            {getNotificationIcon(item.title)} {item.title}
+                          </strong>
 
-  <p>{item.body}</p>
+                          <p>{item.body}</p>
 
-  <small>{item.time || "Just now"}</small>
-</div>
+                          <small>{item.time || "Just now"}</small>
+                        </div>
 
-{!item.isRead && (
-  <div className="notification-unread"></div>
-)}
-</div>
+                        {!item.isRead && (
+                          <div className="notification-unread"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="notification-item">
+                    <p>No notifications yet.</p>
+                  </div>
+                )}
+
+                <button
+                  className="view-all-btn"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    goToView("notifications");
+                  }}
+                >
+                  View All Notifications
+                </button>
+              </div>
+            )}
           </div>
-        ))
-      ) : (
-        <div className="notification-item">
-          <p>No notifications yet.</p>
-        </div>
-      )}
 
-      <button
-        className="view-all-btn"
-        onClick={() => {
-          setShowNotifications(false);
-          goToView("notifications");
-        }}
-      >
-        View All Notifications
-      </button>
-    </div>
-  )}
-</div>
-
-
-          <button onClick={handleLogout} className="logout-btn nav-logout-mobile">
+          <button
+            onClick={handleLogout}
+            className="logout-btn nav-logout-mobile"
+          >
             Logout
           </button>
         </div>
