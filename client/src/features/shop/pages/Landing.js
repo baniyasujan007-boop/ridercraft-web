@@ -252,6 +252,29 @@ export default function Landing() {
     sortBy,
     minRating,
   ]);
+
+  // Debug: log shopQuery changes and filteredProducts updates
+  useEffect(() => {
+    console.log("Landing: shopQuery changed:", shopQuery);
+  }, [shopQuery]);
+
+  useEffect(() => {
+    console.log("Landing: filteredProducts count:", filteredProducts.length);
+  }, [filteredProducts.length]);
+
+  // Listen for global shopQueryChange events emitted by SiteHeader when it
+  // isn't wired up via props. This preserves existing business logic while
+  // allowing the moved search input to still update the Landing filter.
+  useEffect(() => {
+    const onShopQueryChange = (e) => {
+      const v = e?.detail ?? (typeof e === "string" ? e : undefined);
+      console.log("Landing: received shopQueryChange event:", v);
+      if (typeof v === "string") setShopQuery(v);
+    };
+
+    window.addEventListener("shopQueryChange", onShopQueryChange);
+    return () => window.removeEventListener("shopQueryChange", onShopQueryChange);
+  }, []);
   const featuredSections = useMemo(
     () =>
       featuredSectionsData
