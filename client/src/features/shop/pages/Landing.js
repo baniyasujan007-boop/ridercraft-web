@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import SiteHeader from "../../../components/layout/SiteHeader";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -1451,8 +1452,14 @@ export default function Landing() {
   };
 
   return (
-    <div className="shop-wrapper">
-      <Navbar
+  <div className="shop-wrapper">
+
+    <SiteHeader
+      searchQuery={shopQuery}
+      setSearchQuery={setShopQuery}
+    />
+
+    <Navbar
         view={view}
         setView={setView}
         totalItems={totalItems}
