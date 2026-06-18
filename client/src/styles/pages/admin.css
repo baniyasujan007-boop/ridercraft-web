@@ -572,6 +572,19 @@
   padding: 10px 12px;
 }
 
+.admin-field-label {
+  display: grid;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-form-grid .admin-field-label input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .admin-multi-select {
   min-height: 150px;
 }

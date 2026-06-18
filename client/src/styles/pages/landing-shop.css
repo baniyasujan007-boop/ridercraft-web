@@ -244,6 +244,27 @@
   border-radius: 12px;
   padding: 14px;
   height: fit-content;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: sticky;
+  top: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #eef2f7;
+}
+
+.shop-filters::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shop-filters::-webkit-scrollbar-track {
+  background: #eef2f7;
+  border-radius: 999px;
+}
+
+.shop-filters::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
 }
 
 .shop-filters-head {
@@ -710,6 +731,8 @@
 
   .shop-filters {
     order: 2;
+    max-height: 420px;
+    position: static;
   }
 
   .shop-results {
@@ -808,6 +831,7 @@
 
   .shop-filters {
     padding: 10px;
+    max-height: 360px;
   }
 
   .products-grid {

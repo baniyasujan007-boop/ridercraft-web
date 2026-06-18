@@ -1,10 +1,13 @@
 import FeaturedSection, { SECTION_KEYS } from "../models/FeaturedSection.js";
 
-const parseCountdownEndsAt = (value) => {
+const parseOptionalDate = (value) => {
   if (!value) return null;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
 };
+
+const hasInvalidCountdownWindow = (startsAt, endsAt) =>
+  startsAt && endsAt && startsAt.getTime() > endsAt.getTime();
 
 export const listPublicFeaturedSections = async (_req, res) => {
   try {
@@ -30,14 +33,27 @@ export const listAdminFeaturedSections = async (_req, res) => {
 
 export const createFeaturedSection = async (req, res) => {
   try {
-    const { key, title, products, sortOrder, countdownEndsAt, isActive } = req.body;
+    const {
+      key,
+      title,
+      products,
+      sortOrder,
+      countdownStartsAt,
+      countdownEndsAt,
+      isActive
+    } = req.body;
     const nextKey = String(key || "").trim();
     const nextTitle = String(title || "").trim();
+    const nextCountdownStartsAt = parseOptionalDate(countdownStartsAt);
+    const nextCountdownEndsAt = parseOptionalDate(countdownEndsAt);
     if (!SECTION_KEYS.includes(nextKey)) {
       return res.status(400).json({ error: "Invalid section key" });
     }
     if (!nextTitle) {
       return res.status(400).json({ error: "Section title is required" });
+    }
+    if (hasInvalidCountdownWindow(nextCountdownStartsAt, nextCountdownEndsAt)) {
+      return res.status(400).json({ error: "Countdown end must be after start" });
     }
 
     const section = await FeaturedSection.create({
@@ -45,7 +61,8 @@ export const createFeaturedSection = async (req, res) => {
       title: nextTitle,
       products: Array.isArray(products) ? products : [],
       sortOrder: Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : 0,
-      countdownEndsAt: parseCountdownEndsAt(countdownEndsAt),
+      countdownStartsAt: nextCountdownStartsAt,
+      countdownEndsAt: nextCountdownEndsAt,
       isActive: isActive !== undefined ? Boolean(isActive) : true
     });
 
@@ -93,8 +110,25 @@ export const updateFeaturedSection = async (req, res) => {
       section.sortOrder = Number.isFinite(nextSort) ? nextSort : section.sortOrder;
     }
 
+    const nextCountdownStartsAt =
+      req.body.countdownStartsAt !== undefined
+        ? parseOptionalDate(req.body.countdownStartsAt)
+        : section.countdownStartsAt;
+    const nextCountdownEndsAt =
+      req.body.countdownEndsAt !== undefined
+        ? parseOptionalDate(req.body.countdownEndsAt)
+        : section.countdownEndsAt;
+
+    if (hasInvalidCountdownWindow(nextCountdownStartsAt, nextCountdownEndsAt)) {
+      return res.status(400).json({ error: "Countdown end must be after start" });
+    }
+
+    if (req.body.countdownStartsAt !== undefined) {
+      section.countdownStartsAt = nextCountdownStartsAt;
+    }
+
     if (req.body.countdownEndsAt !== undefined) {
-      section.countdownEndsAt = parseCountdownEndsAt(req.body.countdownEndsAt);
+      section.countdownEndsAt = nextCountdownEndsAt;
     }
 
     if (req.body.isActive !== undefined) {

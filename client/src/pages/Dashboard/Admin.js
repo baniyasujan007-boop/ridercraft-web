@@ -40,6 +40,7 @@ const initialFeaturedSectionForm = {
   title: "🔥 Trending Products",
   productIds: [],
   sortOrder: "1",
+  countdownStartsAt: "",
   countdownEndsAt: "",
   isActive: true,
 };
@@ -959,6 +960,15 @@ export default function Admin() {
       setError("Select at least one product");
       return;
     }
+    if (
+      featuredSectionForm.countdownStartsAt &&
+      featuredSectionForm.countdownEndsAt &&
+      new Date(featuredSectionForm.countdownStartsAt).getTime() >
+        new Date(featuredSectionForm.countdownEndsAt).getTime()
+    ) {
+      setError("Countdown end must be after start");
+      return;
+    }
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const payload = {
@@ -966,6 +976,7 @@ export default function Admin() {
         title: featuredSectionForm.title.trim(),
         products: featuredSectionForm.productIds,
         sortOrder: Number(featuredSectionForm.sortOrder || 0),
+        countdownStartsAt: featuredSectionForm.countdownStartsAt || null,
         countdownEndsAt: featuredSectionForm.countdownEndsAt || null,
         isActive: Boolean(featuredSectionForm.isActive),
       };
@@ -999,6 +1010,7 @@ export default function Admin() {
         ? sectionRow.products.map((item) => item._id || item)
         : [],
       sortOrder: String(sectionRow.sortOrder ?? "0"),
+      countdownStartsAt: toDateTimeInputValue(sectionRow.countdownStartsAt),
       countdownEndsAt: toDateTimeInputValue(sectionRow.countdownEndsAt),
       isActive: Boolean(sectionRow.isActive),
     });

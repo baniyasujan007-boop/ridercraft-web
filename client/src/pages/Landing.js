@@ -502,12 +502,38 @@ useEffect(() => {
   };
   const formatCountdown = (targetDate) => {
     if (!targetDate) return "";
-    const remaining = Math.max(0, new Date(targetDate).getTime() - offerNow);
+    const targetTime = new Date(targetDate).getTime();
+    if (!Number.isFinite(targetTime)) return "";
+    const remaining = Math.max(0, targetTime - offerNow);
     const hours = Math.floor(remaining / (1000 * 60 * 60));
     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
     const pad = (num) => String(num).padStart(2, "0");
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  };
+  const getFeaturedCountdown = (featuredSection) => {
+    const startTime = featuredSection.countdownStartsAt
+      ? new Date(featuredSection.countdownStartsAt).getTime()
+      : null;
+    const endTime = featuredSection.countdownEndsAt
+      ? new Date(featuredSection.countdownEndsAt).getTime()
+      : null;
+
+    if (Number.isFinite(startTime) && offerNow < startTime) {
+      return {
+        label: "Starts in",
+        value: formatCountdown(featuredSection.countdownStartsAt)
+      };
+    }
+
+    if (Number.isFinite(endTime) && offerNow <= endTime) {
+      return {
+        label: "Ends in",
+        value: formatCountdown(featuredSection.countdownEndsAt)
+      };
+    }
+
+    return null;
   };
   const formatOrderDate = (value) =>
     new Date(value).toLocaleDateString(undefined, {
@@ -1382,55 +1408,58 @@ useEffect(() => {
           </section>
 
           <div className="featured-sections">
-            {featuredSections.map((section) => (
-              <section className="featured-block" key={section._id || section.key}>
-                <div className="featured-head">
-                  <h3>{section.title}</h3>
-                  {section.countdownEndsAt && (
-                    <span className="featured-countdown">
-                      Ends in {formatCountdown(section.countdownEndsAt)}
-                    </span>
-                  )}
-                </div>
-                <div className="featured-grid">
-                  {(section.products || []).map((product) => (
-                    <article
-                      className="featured-card"
-                      key={`${section._id}-${product._id}`}
-                      onClick={() => navigate(`/products/${product._id}`)}
-                    >
-                      <div className="featured-image-wrap">
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="featured-image"
-                            onError={applyImageFallback}
-                          />
-                        ) : (
-                          <div className="product-card-image-placeholder">No image</div>
-                        )}
-                      </div>
-                      <p className="featured-name">{product.name}</p>
-                      <p className="featured-price">${Number(product.price || 0).toFixed(2)}</p>
-                      <button
-                        type="button"
-                        className="featured-add-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart(product);
-                        }}
+            {featuredSections.map((section) => {
+              const featuredCountdown = getFeaturedCountdown(section);
+              return (
+                <section className="featured-block" key={section._id || section.key}>
+                  <div className="featured-head">
+                    <h3>{section.title}</h3>
+                    {featuredCountdown && (
+                      <span className="featured-countdown">
+                        {featuredCountdown.label} {featuredCountdown.value}
+                      </span>
+                    )}
+                  </div>
+                  <div className="featured-grid">
+                    {(section.products || []).map((product) => (
+                      <article
+                        className="featured-card"
+                        key={`${section._id}-${product._id}`}
+                        onClick={() => navigate(`/products/${product._id}`)}
                       >
-                        Add
-                      </button>
-                    </article>
-                  ))}
-                </div>
-                {(!section.products || section.products.length === 0) && (
-                  <p className="empty">No products assigned by admin for this section yet.</p>
-                )}
-              </section>
-            ))}
+                        <div className="featured-image-wrap">
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="featured-image"
+                              onError={applyImageFallback}
+                            />
+                          ) : (
+                            <div className="product-card-image-placeholder">No image</div>
+                          )}
+                        </div>
+                        <p className="featured-name">{product.name}</p>
+                        <p className="featured-price">${Number(product.price || 0).toFixed(2)}</p>
+                        <button
+                          type="button"
+                          className="featured-add-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
+                        >
+                          Add
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                  {(!section.products || section.products.length === 0) && (
+                    <p className="empty">No products assigned by admin for this section yet.</p>
+                  )}
+                </section>
+              );
+            })}
           </div>
 
           <div className="shop-hero-banner">

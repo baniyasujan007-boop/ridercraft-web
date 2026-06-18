@@ -15,6 +15,7 @@ const featuredSectionSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true, maxlength: 80 },
     products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     sortOrder: { type: Number, default: 0 },
+    countdownStartsAt: { type: Date, default: null },
     countdownEndsAt: { type: Date, default: null },
     isActive: { type: Boolean, default: true }
   },

@@ -1668,17 +1668,32 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             />
-            <input
-              type="datetime-local"
-              value={featuredSectionForm.countdownEndsAt}
-              onChange={(e) =>
-                setFeaturedSectionForm((prev) => ({
-                  ...prev,
-                  countdownEndsAt: e.target.value,
-                }))
-              }
-              aria-label="Countdown end time"
-            />
+            <label className="admin-field-label">
+              Countdown start
+              <input
+                type="datetime-local"
+                value={featuredSectionForm.countdownStartsAt}
+                onChange={(e) =>
+                  setFeaturedSectionForm((prev) => ({
+                    ...prev,
+                    countdownStartsAt: e.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="admin-field-label">
+              Countdown end
+              <input
+                type="datetime-local"
+                value={featuredSectionForm.countdownEndsAt}
+                onChange={(e) =>
+                  setFeaturedSectionForm((prev) => ({
+                    ...prev,
+                    countdownEndsAt: e.target.value,
+                  }))
+                }
+              />
+            </label>
             <select
               value={featuredSectionForm.isActive ? "active" : "inactive"}
               onChange={(e) =>
@@ -1745,7 +1760,8 @@ export default function AdminSectionContent({ vm }) {
                 <th>Title</th>
                 <th>Products</th>
                 <th>Sort</th>
-                <th>Countdown</th>
+                <th>Countdown Start</th>
+                <th>Countdown End</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -1759,6 +1775,11 @@ export default function AdminSectionContent({ vm }) {
                     {Array.isArray(row.products) ? row.products.length : 0}
                   </td>
                   <td>{row.sortOrder}</td>
+                  <td>
+                    {row.countdownStartsAt
+                      ? new Date(row.countdownStartsAt).toLocaleString()
+                      : "Not set"}
+                  </td>
                   <td>
                     {row.countdownEndsAt
                       ? new Date(row.countdownEndsAt).toLocaleString()
@@ -1785,7 +1806,7 @@ export default function AdminSectionContent({ vm }) {
               ))}
               {featuredSections.length === 0 && (
                 <tr>
-                  <td colSpan="7">No featured sections added yet.</td>
+                  <td colSpan="8">No featured sections added yet.</td>
                 </tr>
               )}
             </tbody>
