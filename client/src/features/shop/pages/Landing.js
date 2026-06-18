@@ -1459,21 +1459,21 @@ export default function Landing() {
       setSearchQuery={setShopQuery}
     />
 
-    <Navbar
-        view={view}
-        setView={setView}
-        totalItems={totalItems}
-        totalOrders={orderHistory.length}
-        notifications={dbNotifications}
-        notificationCount={
-          dbNotifications.filter((item) => !item.isRead).length
-        }
-        profile={profile}
-        isAdmin={isAdmin}
-        logout={logout}
-        searchQuery={shopQuery}
-        setSearchQuery={setShopQuery}
-      />
+  <Navbar
+  view={view}
+  setView={setView}
+  totalItems={totalItems}
+  totalOrders={orderHistory.length}
+  notifications={dbNotifications}
+  notificationCount={
+    dbNotifications.filter((item) => !item.isRead).length
+  }
+  profile={profile}
+  isAdmin={isAdmin}
+  logout={logout}
+  searchQuery={shopQuery}
+  setSearchQuery={setShopQuery}
+/>
 
       {view === "home" && (
         <section className="hero">
