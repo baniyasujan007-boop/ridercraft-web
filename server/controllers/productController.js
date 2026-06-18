@@ -33,6 +33,7 @@ export const createProduct = async (req, res) => {
       tag,
       brand,
       colorFamily,
+      description,
       sizes,
       colors,
       stock,
@@ -55,6 +56,7 @@ export const createProduct = async (req, res) => {
       tag: tag ? String(tag).trim() : "General",
       brand: brand ? String(brand).trim() : "Generic",
       colorFamily: colorFamily ? String(colorFamily).trim() : "Neutral",
+      description: description || "",
       sizes: Array.isArray(sizes) ? sizes : [],
       colors: Array.isArray(colors) ? colors : [],
       stock:
@@ -62,6 +64,7 @@ export const createProduct = async (req, res) => {
           ? Number(stock)
           : 25,
       image: image ? String(image) : "",
+      
     });
 
     res.status(201).json(product);
@@ -255,11 +258,11 @@ export const fetchProductFromUrl = async (req, res) => {
     const image = $('meta[property="og:image"]').attr("content") || "";
 
     const brand = name?.split(" ")[0] || "Generic";
-     const description =
-  $('meta[property="og:description"]').attr("content") || "";
+    const description =
+      $('meta[property="og:description"]').attr("content") || "";
 
-let sizes = [];
-let colors = [];
+    let sizes = [];
+    let colors = [];
 
     $("option").each((_, el) => {
       const text = $(el).text().trim();
@@ -292,7 +295,7 @@ let colors = [];
 
     sizes = [...new Set(sizes)];
     colors = [...new Set(colors)];
-   
+
     res.json({
       name,
       brand,

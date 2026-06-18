@@ -22,6 +22,10 @@ const productSchema = new mongoose.Schema(
     colorFamily: { type: String, default: "Neutral", trim: true },
     stock: { type: Number, default: 25, min: 0 },
     image: { type: String, default: "" },
+    description: {
+      type: String,
+      default: "",
+    },
     ratings: { type: [productRatingSchema], default: [] },
     ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0, min: 0 },
