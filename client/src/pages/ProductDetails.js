@@ -21,9 +21,7 @@ function mapApiProductToUi(product) {
     yellow: "#eab308",
     orange: "#f97316"
   };
-   const colorName = String(
-    product.colorFamily || ""
-  ).toLowerCase();
+
   return {
     id: product._id,
     brand: product.brand || "Generic",
@@ -45,16 +43,13 @@ function mapApiProductToUi(product) {
     description:
   product.description || "",
    images: product.images?.length ? product.images : [image],
-colors: product.colorFamily
-  ? [
-      {
-        name: product.colorFamily,
-        value:
-          product.colorHex ||
-          colorMap[colorName] ||
-          "#1f1f1f"
-      }
-    ]
+colors: Array.isArray(product.colors)
+  ? product.colors.map((color) => ({
+      name: color,
+      value:
+        colorMap[String(color).trim().toLowerCase()] ||
+        "#1f1f1f"
+    }))
   : [],
    sizes: []
   };
