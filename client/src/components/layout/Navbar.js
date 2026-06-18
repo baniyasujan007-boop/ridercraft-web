@@ -140,16 +140,17 @@ export default function Navbar({
             <span className="nav-chip chip-violet" />
             <span className="nav-user-name">{profile.name || "User"}</span>
           </button>
+          <div className="navbar-search">
+            <input
+              type="text"
+              placeholder="Search helmets, gloves, accessories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
           {isAdmin && (
             <button className="nav-btn" onClick={() => goToPath("/admin")}>
-              <div className="navbar-search">
-                <input
-                  type="text"
-                  placeholder="Search helmets, gloves, accessories..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
               <span className="nav-chip chip-amber" />
               <span>Admin Panel</span>
             </button>
