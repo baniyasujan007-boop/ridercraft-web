@@ -66,7 +66,7 @@ export const createProduct = async (req, res) => {
       image: image ? String(image) : "",
       
     });
-
+console.log("PRODUCT SAVED:", product._id);
     res.status(201).json(product);
   } catch {
     res.status(500).json({ error: "Failed to create product" });
