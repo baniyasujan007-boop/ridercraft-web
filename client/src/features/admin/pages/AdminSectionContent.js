@@ -1705,20 +1705,36 @@ export default function AdminSectionContent({ vm }) {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-            <select
-              multiple
-              className="admin-multi-select"
-              value={featuredSectionForm.productIds}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(
-                  (opt) => opt.value,
-                );
-                setFeaturedSectionForm((prev) => ({
-                  ...prev,
-                  productIds: selected,
-                }));
-              }}
-            >
+           <div className="featured-products-list">
+  {products.map((product) => (
+    <label
+      key={product._id}
+      className="featured-product-checkbox"
+    >
+      <input
+        type="checkbox"
+        checked={featuredSectionForm.productIds.includes(product._id)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setFeaturedSectionForm((prev) => ({
+              ...prev,
+              productIds: [...prev.productIds, product._id],
+            }));
+          } else {
+            setFeaturedSectionForm((prev) => ({
+              ...prev,
+              productIds: prev.productIds.filter(
+                (id) => id !== product._id
+              ),
+            }));
+          }
+        }}
+      />
+
+      <span>{product.name}</span>
+    </label>
+  ))}
+</div>
               {products.map((product) => (
                 <option key={product._id} value={product._id}>
                   {product.name} (${Number(product.price || 0).toFixed(2)})
