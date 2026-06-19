@@ -1735,12 +1735,6 @@ export default function AdminSectionContent({ vm }) {
     </label>
   ))}
 </div>
-              {products.map((product) => (
-                <option key={product._id} value={product._id}>
-                  {product.name} (${Number(product.price || 0).toFixed(2)})
-                </option>
-              ))}
-            </select>
           </div>
           <p className="admin-hint">
             Hold Ctrl/Cmd to select multiple products.
