@@ -262,17 +262,17 @@ export default function Landing() {
         .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
     [featuredSectionsData],
   );
-  const flashDealsSection = useMemo(
-    () =>
-      featuredSectionsData.find(
-        (section) => section.key === "deals-of-day",
-      ) || {
-        key: "deals-of-day",
-        title: "Flash Sale Section",
-        products: [],
-      },
-    [featuredSectionsData],
-  );
+ const flashDealsSection = useMemo(
+  () =>
+    featuredSectionsData.find(
+      (section) => section.key === "new-arrivals",
+    ) || {
+      key: "new-arrivals",
+      title: "Flash Sale Section",
+      products: [],
+    },
+  [featuredSectionsData],
+);
   const flashSaleProducts = useMemo(() => {
     if (
       !Array.isArray(flashDealsSection.products) ||
