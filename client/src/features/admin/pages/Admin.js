@@ -36,8 +36,8 @@ const initialHeroOfferForm = {
   isActive: true,
 };
 const initialFeaturedSectionForm = {
-  key: "trending",
-  title: "🔥 Trending Products",
+  key: "flash-sale",
+  title: "⚡ Flash Sale",
   productIds: [],
   sortOrder: "1",
   countdownStartsAt: "",

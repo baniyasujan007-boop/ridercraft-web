@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
 
 const SECTION_KEYS = [
+  "flash-sale",
   "trending",
   "new-arrivals",
   "best-sellers",
-  "deals-of-day",
-  "top-electronics",
-  "top-fashion"
+  "recommended"
 ];
 
 const featuredSectionSchema = new mongoose.Schema(
