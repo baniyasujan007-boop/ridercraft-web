@@ -1639,6 +1639,7 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             >
+              <option value="flash-sale">⚡ Flash Sale</option>
               <option value="trending">🔥 Trending Products</option>
               <option value="new-arrivals">🆕 New Arrivals</option>
               <option value="best-sellers">💎 Best Sellers</option>

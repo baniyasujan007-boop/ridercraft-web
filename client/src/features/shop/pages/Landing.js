@@ -265,13 +265,13 @@ export default function Landing() {
  const flashDealsSection = useMemo(
   () =>
     featuredSectionsData.find(
-      (section) => section.key === "new-arrivals",
+      (section) => section.key === "flash-sale"
     ) || {
-      key: "new-arrivals",
-      title: "Flash Sale Section",
+      key: "flash-sale",
+      title: "⚡ Flash Sale",
       products: [],
     },
-  [featuredSectionsData],
+  [featuredSectionsData]
 );
   const flashSaleProducts = useMemo(() => {
     if (
