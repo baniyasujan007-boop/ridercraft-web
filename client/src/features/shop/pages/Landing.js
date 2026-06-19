@@ -1790,6 +1790,16 @@ export default function Landing() {
               Search Results ({filteredProducts.length})
             </div>
           )}
+          {shopQuery.trim().length > 0 && (
+  <div className="search-results-header">
+    <h2>Search Results</h2>
+    <p>
+      Showing {filteredProducts.length} product
+      {filteredProducts.length !== 1 ? "s" : ""}
+      for "{shopQuery}"
+    </p>
+  </div>
+)}
           <div
             className={showFilters ? "shop-content" : "shop-content no-filters"}
           >
