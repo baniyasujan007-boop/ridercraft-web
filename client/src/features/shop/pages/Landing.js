@@ -1485,6 +1485,45 @@ export default function Landing() {
           </button>
         </section>
       )}
+       {!isSearching && (
+            <section className="ridercraft-hero">
+              <div className="hero-content">
+                <span className="hero-badge">
+                  🏍 Premium Motorcycle Marketplace
+                </span>
+
+                <h1>
+                  PREMIUM GEAR
+                  <br />
+                  FOR EVERY RIDER
+                </h1>
+
+                <p>
+                  Discover premium helmets, riding gear, bike accessories,
+                  servicing packages and exclusive RiderCraft deals.
+                </p>
+
+                <div className="hero-actions">
+                  <button className="hero-primary-btn">Shop Now</button>
+
+                  <button className="hero-secondary-btn">Book Service</button>
+                </div>
+
+                <div className="hero-trust">
+                  <span>✓ Genuine Products</span>
+                  <span>✓ Fast Delivery</span>
+                  <span>✓ Expert Service</span>
+                </div>
+              </div>
+
+              <div className="ridercraft-hero-image">
+                <img
+                  src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
+                  alt="Motorcycle Rider"
+                />
+              </div>
+            </section>
+          )}
 
       {view === "shop" && (
         <section className="shop-experience">
@@ -1618,97 +1657,8 @@ export default function Landing() {
               })}
             </div>
           )}
-
-          {/* <div className="shop-hero-banner">
-            <div>
-              <p className="shop-hero-eyebrow">New Season Collection</p>
-              <h2>Discover premium picks for your everyday lifestyle</h2>
-              <p className="shop-hero-text">
-                Curated essentials with top-rated quality, fast delivery, and exclusive deals.
-              </p>
-              {flashHeroOffer && (
-                <p className="shop-hero-flash">
-                  {flashHeroOffer.title}
-                  {flashHeroOffer.endsAt
-                    ? ` (Ends in ${formatCountdown(flashHeroOffer.endsAt)})`
-                    : ""}
-                </p>
-              )}
-              {!flashHeroOffer && (
-                <p className="shop-hero-flash">No active flash sale configured by admin.</p>
-              )}
-              <div className="shop-hero-tags">
-                {tagHeroOffers.map((offer) => (
-                  <button
-                    type="button"
-                    key={offer._id}
-                    className="shop-hero-tag-btn"
-                    onClick={() => setShopQuery(offer.ctaQuery || offer.title)}
-                  >
-                    {offer.title}
-                  </button>
-                ))}
-                {tagHeroOffers.length === 0 && (
-                  <p className="shop-hero-empty">No active hero offers configured by admin.</p>
-                )}
-              </div>
-            </div>
-            <div className="shop-hero-actions">
-              <button
-                type="button"
-                className="shop-hero-btn-primary"
-                onClick={() => setShopQuery("top rated")}
-              >
-                Explore Top Rated
-              </button>
-              <button
-                type="button"
-                className="shop-hero-btn-outline"
-                onClick={() => setSortBy("price-low")}
-              >
-                Shop Deals
-              </button>
-            </div>
-          </div> */}
-          {!isSearching && (
-            <section className="ridercraft-hero">
-              <div className="hero-content">
-                <span className="hero-badge">
-                  🏍 Premium Motorcycle Marketplace
-                </span>
-
-                <h1>
-                  PREMIUM GEAR
-                  <br />
-                  FOR EVERY RIDER
-                </h1>
-
-                <p>
-                  Discover premium helmets, riding gear, bike accessories,
-                  servicing packages and exclusive RiderCraft deals.
-                </p>
-
-                <div className="hero-actions">
-                  <button className="hero-primary-btn">Shop Now</button>
-
-                  <button className="hero-secondary-btn">Book Service</button>
-                </div>
-
-                <div className="hero-trust">
-                  <span>✓ Genuine Products</span>
-                  <span>✓ Fast Delivery</span>
-                  <span>✓ Expert Service</span>
-                </div>
-              </div>
-
-              <div className="ridercraft-hero-image">
-                <img
-                  src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-                  alt="Motorcycle Rider"
-                />
-              </div>
-            </section>
-          )}
+          
+         
           {!isSearching && (
             <section className="category-grid">
               <div
