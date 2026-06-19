@@ -22,7 +22,7 @@ import "./styles/layout/inquiry-chatbot.css";
 function AppShell() {
   return (
     <>
-      <SiteHeader />
+     
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
