@@ -211,7 +211,7 @@ export default function Landing() {
   const isSearching = shopQuery.trim().length > 0;
   const filteredProducts = useMemo(() => {
     const query = shopQuery.trim().toLowerCase();
-    
+
     const filtered = products.filter((item) => {
       const matchesTag =
         activeTag === "All" || (item.tag || "General") === activeTag;
@@ -1672,34 +1672,32 @@ export default function Landing() {
           </div> */}
           {!isSearching && (
             <section className="ridercraft-hero">
-              <div className="ridercraft-hero-content">
-                <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
+              <div className="hero-content">
+                <span className="hero-badge">
+                  🏍 Premium Motorcycle Marketplace
+                </span>
 
                 <h1>
-                  Ride Better.
+                  PREMIUM GEAR
                   <br />
-                  Ride Safer.
+                  FOR EVERY RIDER
                 </h1>
 
                 <p>
-                  Premium helmets, riding gear, bike accessories, servicing and
-                  exclusive flash sale deals.
+                  Discover premium helmets, riding gear, bike accessories,
+                  servicing packages and exclusive RiderCraft deals.
                 </p>
 
-                <div className="hero-buttons">
-                  <button
-                    className="hero-primary-btn"
-                    onClick={() => setShopQuery("")}
-                  >
-                    Shop Now
-                  </button>
+                <div className="hero-actions">
+                  <button className="hero-primary-btn">Shop Now</button>
 
-                  <button
-                    className="hero-secondary-btn"
-                    onClick={() => setView("servicing")}
-                  >
-                    Book Service
-                  </button>
+                  <button className="hero-secondary-btn">Book Service</button>
+                </div>
+
+                <div className="hero-trust">
+                  <span>✓ Genuine Products</span>
+                  <span>✓ Fast Delivery</span>
+                  <span>✓ Expert Service</span>
                 </div>
               </div>
 
@@ -1791,15 +1789,15 @@ export default function Landing() {
             </div>
           )}
           {shopQuery.trim().length > 0 && (
-  <div className="search-results-header">
-    <h2>Search Results</h2>
-    <p>
-      Showing {filteredProducts.length} product
-      {filteredProducts.length !== 1 ? "s" : ""}
-      for "{shopQuery}"
-    </p>
-  </div>
-)}
+            <div className="search-results-header">
+              <h2>Search Results</h2>
+              <p>
+                Showing {filteredProducts.length} product
+                {filteredProducts.length !== 1 ? "s" : ""}
+                for "{shopQuery}"
+              </p>
+            </div>
+          )}
           <div
             className={showFilters ? "shop-content" : "shop-content no-filters"}
           >
