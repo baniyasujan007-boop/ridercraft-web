@@ -210,6 +210,7 @@ export default function Landing() {
   const showFilters = shopQuery.trim().length > 0;
   const filteredProducts = useMemo(() => {
     const query = shopQuery.trim().toLowerCase();
+    const isSearching = shopQuery.trim().length > 0;
     const filtered = products.filter((item) => {
       const matchesTag =
         activeTag === "All" || (item.tag || "General") === activeTag;
@@ -1452,28 +1453,24 @@ export default function Landing() {
   };
 
   return (
-  <div className="shop-wrapper">
+    <div className="shop-wrapper">
+      <SiteHeader searchQuery={shopQuery} setSearchQuery={setShopQuery} />
 
-    <SiteHeader
-      searchQuery={shopQuery}
-      setSearchQuery={setShopQuery}
-    />
-
-  <Navbar
-  view={view}
-  setView={setView}
-  totalItems={totalItems}
-  totalOrders={orderHistory.length}
-  notifications={dbNotifications}
-  notificationCount={
-    dbNotifications.filter((item) => !item.isRead).length
-  }
-  profile={profile}
-  isAdmin={isAdmin}
-  logout={logout}
-  searchQuery={shopQuery}
-  setSearchQuery={setShopQuery}
-/>
+      <Navbar
+        view={view}
+        setView={setView}
+        totalItems={totalItems}
+        totalOrders={orderHistory.length}
+        notifications={dbNotifications}
+        notificationCount={
+          dbNotifications.filter((item) => !item.isRead).length
+        }
+        profile={profile}
+        isAdmin={isAdmin}
+        logout={logout}
+        searchQuery={shopQuery}
+        setSearchQuery={setShopQuery}
+      />
 
       {view === "home" && (
         <section className="hero">
@@ -1490,133 +1487,136 @@ export default function Landing() {
 
       {view === "shop" && (
         <section className="shop-experience">
-          <section className="flash-sale-banner">
-            <div className="flash-sale-head">
-              <h3>⚡ {flashDealsSection.title || "Flash Sale Section"}</h3>
-              <p>Limited-time offers</p>
-            </div>
-            <p className="flash-sale-countdown">
-              {flashHeroOffer?.endsAt
-                ? `Ends in ${formatCountdown(flashHeroOffer.endsAt)}`
-                : "No flash countdown configured by admin"}
-            </p>
-            <div className="flash-sale-grid">
-              {flashSaleProducts.map((product) => {
-                const stock = Math.max(0, Number(product.stock ?? 0));
-                const maxStockBase = 20;
-                const soldProgress = Math.min(
-                  100,
-                  Math.max(0, ((maxStockBase - stock) / maxStockBase) * 100),
-                );
-                return (
-                  <article
-                    className="flash-sale-card"
-                    key={`flash-${product._id}`}
-                    onClick={() => navigate(`/products/${product._id}`)}
-                  >
-                    <div className="flash-sale-card-top">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="flash-sale-image"
-                          onError={applyImageFallback}
-                        />
-                      ) : (
-                        <div className="flash-sale-image flash-sale-image-placeholder">
-                          No image
+          {!isSearching && (
+            <section className="flash-sale-banner">
+              <div className="flash-sale-head">
+                <h3>⚡ {flashDealsSection.title || "Flash Sale Section"}</h3>
+                <p>Limited-time offers</p>
+              </div>
+              <p className="flash-sale-countdown">
+                {flashHeroOffer?.endsAt
+                  ? `Ends in ${formatCountdown(flashHeroOffer.endsAt)}`
+                  : "No flash countdown configured by admin"}
+              </p>
+              <div className="flash-sale-grid">
+                {flashSaleProducts.map((product) => {
+                  const stock = Math.max(0, Number(product.stock ?? 0));
+                  const maxStockBase = 20;
+                  const soldProgress = Math.min(
+                    100,
+                    Math.max(0, ((maxStockBase - stock) / maxStockBase) * 100),
+                  );
+                  return (
+                    <article
+                      className="flash-sale-card"
+                      key={`flash-${product._id}`}
+                      onClick={() => navigate(`/products/${product._id}`)}
+                    >
+                      <div className="flash-sale-card-top">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="flash-sale-image"
+                            onError={applyImageFallback}
+                          />
+                        ) : (
+                          <div className="flash-sale-image flash-sale-image-placeholder">
+                            No image
+                          </div>
+                        )}
+                        <div>
+                          <p className="flash-sale-name">{product.name}</p>
+                          <p className="flash-sale-price">
+                            ${Number(product.price || 0).toFixed(2)}
+                          </p>
                         </div>
-                      )}
-                      <div>
-                        <p className="flash-sale-name">{product.name}</p>
-                        <p className="flash-sale-price">
-                          ${Number(product.price || 0).toFixed(2)}
-                        </p>
                       </div>
+                      <p className="flash-sale-stock">
+                        {stock > 0 ? `Only ${stock} left!` : "Out of stock"}
+                      </p>
+                      <div className="flash-sale-progress-track">
+                        <span
+                          className="flash-sale-progress-fill"
+                          style={{ width: `${soldProgress}%` }}
+                        />
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              {flashSaleProducts.length === 0 && (
+                <p className="shop-hero-empty">
+                  No flash sale products assigned by admin yet.
+                </p>
+              )}
+            </section>
+          )}
+          {!isSearching && (
+            <div className="featured-sections">
+              {featuredSections.map((section) => {
+                const featuredCountdown = getFeaturedCountdown(section);
+                return (
+                  <section
+                    className="featured-block"
+                    key={section._id || section.key}
+                  >
+                    <div className="featured-head">
+                      <h3>{section.title}</h3>
+                      {featuredCountdown && (
+                        <span className="featured-countdown">
+                          {featuredCountdown.label} {featuredCountdown.value}
+                        </span>
+                      )}
                     </div>
-                    <p className="flash-sale-stock">
-                      {stock > 0 ? `Only ${stock} left!` : "Out of stock"}
-                    </p>
-                    <div className="flash-sale-progress-track">
-                      <span
-                        className="flash-sale-progress-fill"
-                        style={{ width: `${soldProgress}%` }}
-                      />
+                    <div className="featured-grid">
+                      {(section.products || []).map((product) => (
+                        <article
+                          className="featured-card"
+                          key={`${section._id}-${product._id}`}
+                          onClick={() => navigate(`/products/${product._id}`)}
+                        >
+                          <div className="featured-image-wrap">
+                            {product.image ? (
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="featured-image"
+                                onError={applyImageFallback}
+                              />
+                            ) : (
+                              <div className="product-card-image-placeholder">
+                                No image
+                              </div>
+                            )}
+                          </div>
+                          <p className="featured-name">{product.name}</p>
+                          <p className="featured-price">
+                            ${Number(product.price || 0).toFixed(2)}
+                          </p>
+                          <button
+                            type="button"
+                            className="featured-add-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product);
+                            }}
+                          >
+                            Add
+                          </button>
+                        </article>
+                      ))}
                     </div>
-                  </article>
+                    {(!section.products || section.products.length === 0) && (
+                      <p className="empty">
+                        No products assigned by admin for this section yet.
+                      </p>
+                    )}
+                  </section>
                 );
               })}
             </div>
-            {flashSaleProducts.length === 0 && (
-              <p className="shop-hero-empty">
-                No flash sale products assigned by admin yet.
-              </p>
-            )}
-          </section>
-
-          <div className="featured-sections">
-            {featuredSections.map((section) => {
-              const featuredCountdown = getFeaturedCountdown(section);
-              return (
-                <section
-                  className="featured-block"
-                  key={section._id || section.key}
-                >
-                  <div className="featured-head">
-                    <h3>{section.title}</h3>
-                    {featuredCountdown && (
-                      <span className="featured-countdown">
-                        {featuredCountdown.label} {featuredCountdown.value}
-                      </span>
-                    )}
-                  </div>
-                  <div className="featured-grid">
-                    {(section.products || []).map((product) => (
-                      <article
-                        className="featured-card"
-                        key={`${section._id}-${product._id}`}
-                        onClick={() => navigate(`/products/${product._id}`)}
-                      >
-                        <div className="featured-image-wrap">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="featured-image"
-                              onError={applyImageFallback}
-                            />
-                          ) : (
-                            <div className="product-card-image-placeholder">
-                              No image
-                            </div>
-                          )}
-                        </div>
-                        <p className="featured-name">{product.name}</p>
-                        <p className="featured-price">
-                          ${Number(product.price || 0).toFixed(2)}
-                        </p>
-                        <button
-                          type="button"
-                          className="featured-add-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(product);
-                          }}
-                        >
-                          Add
-                        </button>
-                      </article>
-                    ))}
-                  </div>
-                  {(!section.products || section.products.length === 0) && (
-                    <p className="empty">
-                      No products assigned by admin for this section yet.
-                    </p>
-                  )}
-                </section>
-              );
-            })}
-          </div>
+          )}
 
           {/* <div className="shop-hero-banner">
             <div>
@@ -1669,115 +1669,126 @@ export default function Landing() {
               </button>
             </div>
           </div> */}
-          <section className="ridercraft-hero">
-            <div className="ridercraft-hero-content">
-              <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
+          {!isSearching && (
+            <section className="ridercraft-hero">
+              <div className="ridercraft-hero-content">
+                <p className="hero-badge">🏍 Premium Motorcycle Marketplace</p>
 
-              <h1>
-                Ride Better.
-                <br />
-                Ride Safer.
-              </h1>
+                <h1>
+                  Ride Better.
+                  <br />
+                  Ride Safer.
+                </h1>
 
-              <p>
-                Premium helmets, riding gear, bike accessories, servicing and
-                exclusive flash sale deals.
-              </p>
+                <p>
+                  Premium helmets, riding gear, bike accessories, servicing and
+                  exclusive flash sale deals.
+                </p>
 
-              <div className="hero-buttons">
-                <button
-                  className="hero-primary-btn"
-                  onClick={() => setShopQuery("")}
-                >
-                  Shop Now
-                </button>
+                <div className="hero-buttons">
+                  <button
+                    className="hero-primary-btn"
+                    onClick={() => setShopQuery("")}
+                  >
+                    Shop Now
+                  </button>
 
-                <button
-                  className="hero-secondary-btn"
-                  onClick={() => setView("servicing")}
-                >
-                  Book Service
-                </button>
+                  <button
+                    className="hero-secondary-btn"
+                    onClick={() => setView("servicing")}
+                  >
+                    Book Service
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="ridercraft-hero-image">
-              <img
-                src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-                alt="Motorcycle Rider"
-              />
-            </div>
-          </section>
+              <div className="ridercraft-hero-image">
+                <img
+                  src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
+                  alt="Motorcycle Rider"
+                />
+              </div>
+            </section>
+          )}
+          {!isSearching && (
+            <section className="category-grid">
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("All")}
+              >
+                <span className="category-icon">🏍</span>
+                <h3>All product</h3>
+              </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Helmet")}
+              >
+                <span className="category-icon">🪖</span>
+                <h3>Helmets</h3>
+              </div>
 
-          <section className="category-grid">
-            <div className="category-card" onClick={() => setActiveTag("All")}>
-              <span className="category-icon">🏍</span>
-              <h3>All product</h3>
-            </div>
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Helmet")}
-            >
-              <span className="category-icon">🪖</span>
-              <h3>Helmets</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Gloves")}
+              >
+                <span className="category-icon">🧤</span>
+                <h3>Gloves</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Gloves")}
-            >
-              <span className="category-icon">🧤</span>
-              <h3>Gloves</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Riding Gear")}
+              >
+                <span className="category-icon">🛡️</span>
+                <h3>Riding Gear</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Riding Gear")}
-            >
-              <span className="category-icon">🛡️</span>
-              <h3>Riding Gear</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Lights")}
+              >
+                <span className="category-icon">💡</span>
+                <h3>Lights</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Lights")}
-            >
-              <span className="category-icon">💡</span>
-              <h3>Lights</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Luggage")}
+              >
+                <span className="category-icon">🎒</span>
+                <h3>Luggage</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Luggage")}
-            >
-              <span className="category-icon">🎒</span>
-              <h3>Luggage</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Mobile Holder")}
+              >
+                <span className="category-icon">📱</span>
+                <h3>Mobile Holders</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Mobile Holder")}
-            >
-              <span className="category-icon">📱</span>
-              <h3>Mobile Holders</h3>
-            </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Bike Parts")}
+              >
+                <span className="category-icon">🔧</span>
+                <h3>Bike Parts</h3>
+              </div>
 
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Bike Parts")}
-            >
-              <span className="category-icon">🔧</span>
-              <h3>Bike Parts</h3>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Maintenance")}
+              >
+                <span className="category-icon">⚙️</span>
+                <h3>Maintenance</h3>
+              </div>
+            </section>
+          )}
+          {isSearching && (
+            <div className="search-results-header">
+              Search Results ({filteredProducts.length})
             </div>
-
-            <div
-              className="category-card"
-              onClick={() => setActiveTag("Maintenance")}
-            >
-              <span className="category-icon">⚙️</span>
-              <h3>Maintenance</h3>
-            </div>
-          </section>
+          )}
           <div
             className={showFilters ? "shop-content" : "shop-content no-filters"}
           >
