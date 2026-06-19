@@ -208,9 +208,10 @@ export default function Landing() {
     return availableTags.filter((tag) => tag.toLowerCase().includes(query));
   }, [availableTags, categoryQuery]);
   const showFilters = shopQuery.trim().length > 0;
+  const isSearching = shopQuery.trim().length > 0;
   const filteredProducts = useMemo(() => {
     const query = shopQuery.trim().toLowerCase();
-    const isSearching = shopQuery.trim().length > 0;
+    
     const filtered = products.filter((item) => {
       const matchesTag =
         activeTag === "All" || (item.tag || "General") === activeTag;
