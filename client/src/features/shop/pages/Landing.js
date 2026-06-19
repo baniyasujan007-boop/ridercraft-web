@@ -1514,6 +1514,22 @@ export default function Landing() {
                   <span>✓ Fast Delivery</span>
                   <span>✓ Expert Service</span>
                 </div>
+                <div className="hero-stats">
+  <div>
+    <h3>500+</h3>
+    <span>Products</span>
+  </div>
+
+  <div>
+    <h3>10K+</h3>
+    <span>Riders Served</span>
+  </div>
+
+  <div>
+    <h3>4.9★</h3>
+    <span>Customer Rating</span>
+  </div>
+</div>
               </div>
 
               <div className="ridercraft-hero-image">
