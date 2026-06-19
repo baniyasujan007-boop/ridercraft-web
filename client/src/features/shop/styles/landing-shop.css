@@ -1146,3 +1146,9 @@
 .hero-image:hover img {
   transform: scale(1.03);
 }
+.site-header {
+  padding: 8px 0;
+}
+.site-header-search input {
+  height: 48px;
+}

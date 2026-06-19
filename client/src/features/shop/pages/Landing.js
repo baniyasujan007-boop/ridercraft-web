@@ -1468,6 +1468,7 @@ export default function Landing() {
         }
         profile={profile}
         isAdmin={isAdmin}
+
         logout={logout}
         searchQuery={shopQuery}
         setSearchQuery={setShopQuery}
@@ -1540,6 +1541,80 @@ export default function Landing() {
                   src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
                   alt="Motorcycle Rider"
                 />
+              </div>
+            </section>
+          )}
+           {!isSearching && (
+            <section className="category-grid">
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("All")}
+              >
+                <span className="category-icon">🏍</span>
+                <h3>All product</h3>
+              </div>
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Helmet")}
+              >
+                <span className="category-icon">🪖</span>
+                <h3>Helmets</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Gloves")}
+              >
+                <span className="category-icon">🧤</span>
+                <h3>Gloves</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Riding Gear")}
+              >
+                <span className="category-icon">🛡️</span>
+                <h3>Riding Gear</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Lights")}
+              >
+                <span className="category-icon">💡</span>
+                <h3>Lights</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Luggage")}
+              >
+                <span className="category-icon">🎒</span>
+                <h3>Luggage</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Mobile Holder")}
+              >
+                <span className="category-icon">📱</span>
+                <h3>Mobile Holders</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Bike Parts")}
+              >
+                <span className="category-icon">🔧</span>
+                <h3>Bike Parts</h3>
+              </div>
+
+              <div
+                className="category-card"
+                onClick={() => setActiveTag("Maintenance")}
+              >
+                <span className="category-icon">⚙️</span>
+                <h3>Maintenance</h3>
               </div>
             </section>
           )}
@@ -1675,80 +1750,7 @@ export default function Landing() {
             </div>
           )}
 
-          {!isSearching && (
-            <section className="category-grid">
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("All")}
-              >
-                <span className="category-icon">🏍</span>
-                <h3>All product</h3>
-              </div>
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Helmet")}
-              >
-                <span className="category-icon">🪖</span>
-                <h3>Helmets</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Gloves")}
-              >
-                <span className="category-icon">🧤</span>
-                <h3>Gloves</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Riding Gear")}
-              >
-                <span className="category-icon">🛡️</span>
-                <h3>Riding Gear</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Lights")}
-              >
-                <span className="category-icon">💡</span>
-                <h3>Lights</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Luggage")}
-              >
-                <span className="category-icon">🎒</span>
-                <h3>Luggage</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Mobile Holder")}
-              >
-                <span className="category-icon">📱</span>
-                <h3>Mobile Holders</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Bike Parts")}
-              >
-                <span className="category-icon">🔧</span>
-                <h3>Bike Parts</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Maintenance")}
-              >
-                <span className="category-icon">⚙️</span>
-                <h3>Maintenance</h3>
-              </div>
-            </section>
-          )}
+         
           {isSearching && (
             <div className="search-results-header">
               Search Results ({filteredProducts.length})
