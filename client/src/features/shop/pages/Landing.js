@@ -1485,7 +1485,10 @@ export default function Landing() {
           </button>
         </section>
       )}
-       {!isSearching && (
+
+      {view === "shop" && (
+        <section className="shop-experience">
+          {!isSearching && (
             <section className="ridercraft-hero">
               <div className="hero-content">
                 <span className="hero-badge">
@@ -1515,21 +1518,21 @@ export default function Landing() {
                   <span>✓ Expert Service</span>
                 </div>
                 <div className="hero-stats">
-  <div>
-    <h3>500+</h3>
-    <span>Products</span>
-  </div>
+                  <div>
+                    <h3>500+</h3>
+                    <span>Products</span>
+                  </div>
 
-  <div>
-    <h3>10K+</h3>
-    <span>Riders Served</span>
-  </div>
+                  <div>
+                    <h3>10K+</h3>
+                    <span>Riders Served</span>
+                  </div>
 
-  <div>
-    <h3>4.9★</h3>
-    <span>Customer Rating</span>
-  </div>
-</div>
+                  <div>
+                    <h3>4.9★</h3>
+                    <span>Customer Rating</span>
+                  </div>
+                </div>
               </div>
 
               <div className="ridercraft-hero-image">
@@ -1541,8 +1544,6 @@ export default function Landing() {
             </section>
           )}
 
-      {view === "shop" && (
-        <section className="shop-experience">
           {!isSearching && (
             <section className="flash-sale-banner">
               <div className="flash-sale-head">
@@ -1673,8 +1674,7 @@ export default function Landing() {
               })}
             </div>
           )}
-          
-         
+
           {!isSearching && (
             <section className="category-grid">
               <div
