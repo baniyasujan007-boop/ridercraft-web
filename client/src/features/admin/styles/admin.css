@@ -588,14 +588,6 @@
 .admin-multi-select {
   min-height: 150px;
 }
-.featured-products-list {
-  max-height: 320px;
-  overflow-y: auto;
-  border: 1px solid #dbe2ea;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-}
 
 .featured-product-checkbox {
   display: flex;
@@ -1155,4 +1147,32 @@
   .admin-side-btn {
     white-space: nowrap;
   }
+}
+.featured-products-list {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.featured-product-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.featured-product-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.featured-product-item input {
+  width: 18px;
+  height: 18px;
 }

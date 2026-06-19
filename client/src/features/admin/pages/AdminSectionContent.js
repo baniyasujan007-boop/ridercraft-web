@@ -1705,36 +1705,35 @@ export default function AdminSectionContent({ vm }) {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-           <div className="featured-products-list">
-  {products.map((product) => (
-    <label
-      key={product._id}
-      className="featured-product-checkbox"
-    >
-      <input
-        type="checkbox"
-        checked={featuredSectionForm.productIds.includes(product._id)}
-        onChange={(e) => {
-          if (e.target.checked) {
-            setFeaturedSectionForm((prev) => ({
-              ...prev,
-              productIds: [...prev.productIds, product._id],
-            }));
-          } else {
-            setFeaturedSectionForm((prev) => ({
-              ...prev,
-              productIds: prev.productIds.filter(
-                (id) => id !== product._id
-              ),
-            }));
-          }
-        }}
-      />
+            <div className="featured-products-list">
+              {products.map((product) => (
+                <label key={product._id} className="featured-product-item">
+                  <input
+                    type="checkbox"
+                    checked={featuredSectionForm.productIds.includes(
+                      product._id,
+                    )}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFeaturedSectionForm((prev) => ({
+                          ...prev,
+                          productIds: [...prev.productIds, product._id],
+                        }));
+                      } else {
+                        setFeaturedSectionForm((prev) => ({
+                          ...prev,
+                          productIds: prev.productIds.filter(
+                            (id) => id !== product._id,
+                          ),
+                        }));
+                      }
+                    }}
+                  />
 
-      <span>{product.name}</span>
-    </label>
-  ))}
-</div>
+                  <span>{product.name}</span>
+                </label>
+              ))}
+            </div>
           </div>
           <p className="admin-hint">
             Hold Ctrl/Cmd to select multiple products.
