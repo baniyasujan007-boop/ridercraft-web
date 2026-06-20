@@ -321,10 +321,17 @@ export default function Landing() {
       })
       .sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
   }, [heroOffers, offerNow]);
-  const flashHeroOffer = useMemo(
-    () => activeHeroOffers.find((offer) => offer.offerType === "flash"),
-    [activeHeroOffers],
-  );
+  const isFlashSaleScheduleActive = useMemo(() => {
+    const startsAt = flashDealsSection.countdownStartsAt
+      ? new Date(flashDealsSection.countdownStartsAt).getTime()
+      : null;
+    const endsAt = flashDealsSection.countdownEndsAt
+      ? new Date(flashDealsSection.countdownEndsAt).getTime()
+      : null;
+    const hasStarted = !Number.isFinite(startsAt) || offerNow >= startsAt;
+    const hasNotEnded = !Number.isFinite(endsAt) || offerNow <= endsAt;
+    return hasStarted && hasNotEnded;
+  }, [flashDealsSection, offerNow]);
   const tax = useMemo(
     () => Number((totalPrice * 0.08).toFixed(2)),
     [totalPrice],
@@ -1581,7 +1588,7 @@ export default function Landing() {
             </section>
           )}
 
-          {!isSearching && (
+          {!isSearching && isFlashSaleScheduleActive && (
             <section className="flash-sale-banner">
               <div className="flash-sale-head">
                 <div>
@@ -1591,8 +1598,8 @@ export default function Landing() {
                 <div className="flash-sale-countdown">
                   <span>Ends in</span>
                   <strong>
-                    {flashHeroOffer?.endsAt
-                      ? formatCountdown(flashHeroOffer.endsAt)
+                    {flashDealsSection?.countdownEndsAt
+                      ? formatCountdown(flashDealsSection.countdownEndsAt)
                       : "00:00:00"}
                   </strong>
                 </div>

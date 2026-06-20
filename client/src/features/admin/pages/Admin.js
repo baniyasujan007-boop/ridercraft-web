@@ -36,8 +36,8 @@ const initialHeroOfferForm = {
   isActive: true,
 };
 const initialFeaturedSectionForm = {
-  key: "flash-sale",
-  title: "⚡ Flash Sale",
+  key: "trending",
+  title: "🔥 Trending Products",
   productIds: [],
   sortOrder: "1",
   countdownStartsAt: "",
@@ -83,6 +83,10 @@ export default function Admin() {
   const [editingFeaturedSectionId, setEditingFeaturedSectionId] =
     useState(null);
   const [flashSaleProductIds, setFlashSaleProductIds] = useState([]);
+  const [flashSaleSchedule, setFlashSaleSchedule] = useState({
+    startsAt: "",
+    endsAt: "",
+  });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedCustomerEmail, setSelectedCustomerEmail] = useState("");
@@ -334,8 +338,8 @@ export default function Admin() {
       ),
     [serviceRequests],
   );
-  const dealsSection = useMemo(
-    () => featuredSections.find((row) => row.key === "deals-of-day") || null,
+  const flashSaleSection = useMemo(
+    () => featuredSections.find((row) => row.key === "flash-sale") || null,
     [featuredSections],
   );
   const inventoryInsights = useMemo(() => {
@@ -632,15 +636,20 @@ export default function Admin() {
   }, [selectedServiceRequest]);
 
   useEffect(() => {
-    if (!dealsSection) {
+    if (!flashSaleSection) {
       setFlashSaleProductIds([]);
+      setFlashSaleSchedule({ startsAt: "", endsAt: "" });
       return;
     }
-    const selected = Array.isArray(dealsSection.products)
-      ? dealsSection.products.map((item) => String(item?._id || item))
+    const selected = Array.isArray(flashSaleSection.products)
+      ? flashSaleSection.products.map((item) => String(item?._id || item))
       : [];
     setFlashSaleProductIds(selected);
-  }, [dealsSection]);
+    setFlashSaleSchedule({
+      startsAt: toDateTimeInputValue(flashSaleSection.countdownStartsAt),
+      endsAt: toDateTimeInputValue(flashSaleSection.countdownEndsAt),
+    });
+  }, [flashSaleSection]);
 
   const toggleFlashSaleProduct = (productId) => {
     const id = String(productId);
@@ -1040,18 +1049,31 @@ export default function Admin() {
       setError("Select at least one product for flash sale");
       return;
     }
+    if (!flashSaleSchedule.startsAt || !flashSaleSchedule.endsAt) {
+      setError("Select both the Flash Sale start and end date/time");
+      return;
+    }
+    if (
+      new Date(flashSaleSchedule.startsAt).getTime() >=
+      new Date(flashSaleSchedule.endsAt).getTime()
+    ) {
+      setError("Flash Sale end date/time must be after its start");
+      return;
+    }
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const payload = {
-        key: "deals-of-day",
-        title: "💰 Deals of the Day",
+        key: "flash-sale",
+        title: flashSaleSection?.title || "⚡ Flash Sale",
         products: flashSaleProductIds,
-        sortOrder: 4,
+        sortOrder: Number(flashSaleSection?.sortOrder ?? 1),
+        countdownStartsAt: flashSaleSchedule.startsAt,
+        countdownEndsAt: flashSaleSchedule.endsAt,
         isActive: true,
       };
-      if (dealsSection?._id) {
+      if (flashSaleSection?._id) {
         await axios.put(
-          `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
+          `https://ridercraft-api.onrender.com/featured-sections/admin/${flashSaleSection._id}`,
           payload,
           { headers },
         );
@@ -1082,15 +1104,17 @@ export default function Admin() {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const payload = {
-        key: "deals-of-day",
-        title: "💰 Deals of the Day",
+        key: "flash-sale",
+        title: flashSaleSection?.title || "⚡ Flash Sale",
         products: nextProductIds,
-        sortOrder: 4,
+        sortOrder: Number(flashSaleSection?.sortOrder ?? 1),
+        countdownStartsAt: flashSaleSchedule.startsAt || null,
+        countdownEndsAt: flashSaleSchedule.endsAt || null,
         isActive: true,
       };
-      if (dealsSection?._id) {
+      if (flashSaleSection?._id) {
         await axios.put(
-          `https://ridercraft-api.onrender.com/featured-sections/admin/${dealsSection._id}`,
+          `https://ridercraft-api.onrender.com/featured-sections/admin/${flashSaleSection._id}`,
           payload,
           { headers },
         );
@@ -1266,6 +1290,8 @@ export default function Admin() {
             removeHeroOffer,
             products,
             flashSaleProductIds,
+            flashSaleSchedule,
+            setFlashSaleSchedule,
             startEdit,
             toggleProductFlashSale,
             removeProduct,

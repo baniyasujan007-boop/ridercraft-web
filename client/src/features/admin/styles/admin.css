@@ -637,6 +637,15 @@
   gap: 10px;
 }
 
+.admin-flash-schedule {
+  max-width: 620px;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  border-radius: 10px;
+  background: rgba(124, 45, 18, 0.14);
+}
+
 .admin-flash-product-card {
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 10px;
