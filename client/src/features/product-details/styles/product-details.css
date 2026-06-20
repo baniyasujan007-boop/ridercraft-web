@@ -668,3 +668,25 @@
   font-weight: 700;
   cursor: pointer;
 }
+.pdp-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: rgba(255,255,255,.7);
+}
+
+.pdp-breadcrumbs span {
+  cursor: pointer;
+}
+
+.pdp-breadcrumbs .active {
+  color: #f97316;
+  font-weight: 600;
+}
+
+.pdp-breadcrumb-separator {
+  opacity: .6;
+}

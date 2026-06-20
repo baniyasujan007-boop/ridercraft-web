@@ -157,6 +157,21 @@ export default function ProductDetails() {
   return (
     <main className="pdp-page">
       <div className="pdp-shell">
+        <div className="pdp-breadcrumbs">
+          <span onClick={() => navigate("/landing")}>Home</span>
+
+          <span className="pdp-breadcrumb-separator">›</span>
+
+          <span>Shop</span>
+
+          <span className="pdp-breadcrumb-separator">›</span>
+
+          <span>{product?.brand || "Product"}</span>
+
+          <span className="pdp-breadcrumb-separator">›</span>
+
+          <span className="active">{product?.title}</span>
+        </div>
         <button
           className="pdp-back-btn"
           onClick={() => navigate("/landing")}
