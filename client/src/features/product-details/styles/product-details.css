@@ -3,8 +3,8 @@
 .pdp-page {
   min-height: 100dvh;
   font-family: "Inter", sans-serif;
-  background: #f5f6f8;
-  color: #131313;
+  background: linear-gradient(180deg, #071426 0%, #0b2740 100%);
+  color: #ffffff;
   padding: 28px 16px 42px;
 }
 
@@ -71,11 +71,10 @@
 .pdp-gallery,
 .pdp-summary {
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 14px 32px rgba(17, 24, 39, 0.07);
-  padding: 18px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  padding: 24px;
 }
-
 .pdp-main-image-wrap {
   position: relative;
   border-radius: 8px;
@@ -169,8 +168,10 @@
 
 .pdp-title {
   margin: 8px 0 14px;
-  font-size: clamp(24px, 3.4vw, 34px);
-  line-height: 1.2;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #111827;
 }
 
 .pdp-price-row {
@@ -187,10 +188,9 @@
 }
 
 .pdp-new-price {
-  margin: 0;
-  color: #111;
-  font-size: clamp(30px, 4vw, 38px);
-  font-weight: 700;
+  color: #f97316;
+  font-size: 42px;
+  font-weight: 800;
 }
 
 .pdp-meta-row {
@@ -340,23 +340,24 @@
 }
 
 .pdp-btn-primary {
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
+  border: none;
+  background: #f97316;
+  color: white;
 }
 
 .pdp-btn-primary:hover {
-  background: #000;
+  background: #ea580c;
+  transform: translateY(-2px);
 }
 
 .pdp-btn-outline {
-  border: 1px solid #111;
-  background: #fff;
-  color: #111;
+  background: #071426;
+  color: white;
+  border: none;
 }
 
 .pdp-btn-outline:hover {
-  background: #f7f7f7;
+  background: #0b2740;
 }
 
 .pdp-related {
