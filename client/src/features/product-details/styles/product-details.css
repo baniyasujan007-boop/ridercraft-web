@@ -68,7 +68,12 @@
   margin-bottom: 34px;
 }
 
-.pdp-gallery,
+.pdp-gallery {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.12);
+  padding: 24px;
+}
 .pdp-summary {
   background: #ffffff;
   border-radius: 20px;
@@ -77,25 +82,23 @@
 }
 .pdp-main-image-wrap {
   position: relative;
-  border-radius: 8px;
+  border-radius: 18px;
   overflow: hidden;
-  background: #f2f2f2;
-  margin-bottom: 12px;
-  height: clamp(340px, 58vw, 620px);
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  height: clamp(420px, 58vw, 650px);
 }
 
 .pdp-main-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center;
-  display: block;
-  transition: transform 0.3s ease;
-  background: #ffffff;
+  transition: transform .4s ease;
 }
 
 .pdp-main-image-wrap:hover .pdp-main-image {
-  transform: scale(1.02);
+  transform: scale(1.08);
 }
 
 .pdp-arrow {
@@ -129,8 +132,8 @@
 
 .pdp-thumbnails {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
 .pdp-thumb {
@@ -151,11 +154,13 @@
 }
 
 .pdp-thumb.active {
-  border-color: #111;
+  border: 2px solid #f97316;
+  box-shadow: 0 0 0 4px rgba(249,115,22,.15);
 }
 
 .pdp-thumb:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: #f97316;
 }
 
 .pdp-brand {
