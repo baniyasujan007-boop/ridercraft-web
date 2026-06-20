@@ -99,7 +99,7 @@ export default function Navbar({
             onClick={() => goToView("shop")}
           >
             <span className="nav-chip chip-green" />
-            <span>Shop</span>
+            <span>Shop by Category</span>
           </button>
           <button
             className={view === "cart" ? "nav-btn active" : "nav-btn"}
@@ -121,6 +121,11 @@ export default function Navbar({
           >
             <span className="nav-chip chip-sky" />
             <span>Bike Servicing</span>
+          </button>
+
+          <button className="nav-btn nav-deals-btn" onClick={() => goToView("shop")}>
+            <span className="nav-chip chip-rose" />
+            <span>Deals</span>
           </button>
 
           <button className="nav-btn" onClick={() => goToPath("/about")}>
@@ -150,6 +155,8 @@ export default function Navbar({
             <button
               className="notification-btn"
               onClick={() => setShowNotifications(!showNotifications)}
+              aria-label="Open notifications"
+              aria-expanded={showNotifications}
             >
               <span>🔔</span>
 

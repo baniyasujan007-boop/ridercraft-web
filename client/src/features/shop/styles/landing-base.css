@@ -11,8 +11,8 @@
   --line: rgba(148, 163, 184, 0.2);
   --line-strong: rgba(148, 163, 184, 0.34);
   --text-soft: #b7c6db;
-  --accent: #22d3ee;
-  --accent-strong: #0ea5e9;
+  --accent: #ff7a1a;
+  --accent-strong: #e65400;
   --ok: #34d399;
   --danger: #fb7185;
 }
@@ -25,13 +25,13 @@
   padding: 10px 18px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.28);
+  box-shadow: 0 8px 20px rgba(230, 84, 0, 0.24);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(14, 165, 233, 0.34);
+  box-shadow: 0 12px 24px rgba(230, 84, 0, 0.3);
 }
 
 .success-text {

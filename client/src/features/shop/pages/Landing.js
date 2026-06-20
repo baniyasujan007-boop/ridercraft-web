@@ -45,6 +45,25 @@ const DUMMY_EWALLET = {
 
 const CUSTOMER_NOTIFICATION_STORAGE_KEY = "ridercraft_customer_notifications";
 
+const SHOP_CATEGORIES = [
+  { label: "All Products", tag: "All", icon: "🏍" },
+  { label: "Helmets", tag: "Helmet", icon: "🪖" },
+  { label: "Gloves", tag: "Gloves", icon: "🧤" },
+  { label: "Riding Gear", tag: "Riding Gear", icon: "🧥" },
+  { label: "Lights", tag: "Lights", icon: "💡" },
+  { label: "Luggage", tag: "Luggage", icon: "🎒" },
+  { label: "Accessories", tag: "Mobile Holder", icon: "📱" },
+  { label: "Bike Parts", tag: "Bike Parts", icon: "⚙" },
+  { label: "Maintenance", tag: "Maintenance", icon: "🔧" },
+];
+
+const FEATURED_SECTION_ICONS = {
+  trending: "🔥",
+  recommended: "✦",
+  "best-sellers": "🏆",
+  "new-arrivals": "◆",
+};
+
 export default function Landing() {
   const [dbNotifications, setDbNotifications] = useState([]);
 
@@ -258,7 +277,12 @@ export default function Landing() {
   const featuredSections = useMemo(
     () =>
       featuredSectionsData
-        .filter((section) => section.isActive && section.key !== "deals-of-day")
+        .filter(
+          (section) =>
+            section.isActive &&
+            section.key !== "deals-of-day" &&
+            section.key !== "flash-sale",
+        )
         .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
     [featuredSectionsData],
   );
@@ -280,7 +304,7 @@ export default function Landing() {
     ) {
       return [];
     }
-    return flashDealsSection.products.slice(0, 4);
+    return flashDealsSection.products.slice(0, 6);
   }, [flashDealsSection]);
   const activeHeroOffers = useMemo(() => {
     const now = offerNow;
@@ -299,10 +323,6 @@ export default function Landing() {
   }, [heroOffers, offerNow]);
   const flashHeroOffer = useMemo(
     () => activeHeroOffers.find((offer) => offer.offerType === "flash"),
-    [activeHeroOffers],
-  );
-  const tagHeroOffers = useMemo(
-    () => activeHeroOffers.filter((offer) => offer.offerType !== "flash"),
     [activeHeroOffers],
   );
   const tax = useMemo(
@@ -1453,9 +1473,25 @@ export default function Landing() {
     }
   };
 
+  const browseCategory = (tag = "All") => {
+    setActiveTag(tag);
+    requestAnimationFrame(() => {
+      document.getElementById("all-products")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
   return (
     <div className="shop-wrapper">
-      <SiteHeader searchQuery={shopQuery} setSearchQuery={setShopQuery} />
+      <SiteHeader
+        searchQuery={shopQuery}
+        setSearchQuery={setShopQuery}
+        setView={setView}
+        totalItems={totalItems}
+        profile={profile}
+      />
 
       <Navbar
         view={view}
@@ -1492,25 +1528,26 @@ export default function Landing() {
           {!isSearching && (
             <section className="ridercraft-hero">
               <div className="hero-content">
-                <span className="hero-badge">
-                  🏍 Premium Motorcycle Marketplace
-                </span>
+                <span className="hero-badge">Gear up. Ride safe. Live free.</span>
 
                 <h1>
-                  PREMIUM GEAR
-                  <br />
-                  FOR EVERY RIDER
+                  Premium gear for
+                  <span> every rider</span>
                 </h1>
 
                 <p>
-                  Discover premium helmets, riding gear, bike accessories,
-                  servicing packages and exclusive RiderCraft deals.
+                  Helmets, riding gear, accessories and expert bike servicing—
+                  everything your next ride deserves.
                 </p>
 
                 <div className="hero-actions">
-                  <button className="hero-primary-btn">Shop Now</button>
+                  <button className="hero-primary-btn" onClick={() => browseCategory("All")}>
+                    Shop Now
+                  </button>
 
-                  <button className="hero-secondary-btn">Book Service</button>
+                  <button className="hero-secondary-btn" onClick={() => setView("servicing")}>
+                    Book Service
+                  </button>
                 </div>
 
                 <div className="hero-trust">
@@ -1518,118 +1555,51 @@ export default function Landing() {
                   <span>✓ Fast Delivery</span>
                   <span>✓ Expert Service</span>
                 </div>
-                <div className="hero-stats">
-                  <div>
-                    <h3>500+</h3>
-                    <span>Products</span>
-                  </div>
-
-                  <div>
-                    <h3>10K+</h3>
-                    <span>Riders Served</span>
-                  </div>
-
-                  <div>
-                    <h3>4.9★</h3>
-                    <span>Customer Rating</span>
-                  </div>
-                </div>
               </div>
 
               <div className="ridercraft-hero-image">
                 <img
                   src="https://images.unsplash.com/photo-1558981806-ec527fa84c39"
-                  alt="Motorcycle Rider"
+                  alt="Motorcycle rider on an open road"
                 />
               </div>
             </section>
           )}
-           {!isSearching && (
+          {!isSearching && (
             <section className="category-grid">
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("All")}
-              >
-                <span className="category-icon">🏍</span>
-                <h3>All product</h3>
-              </div>
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Helmet")}
-              >
-                <span className="category-icon">🪖</span>
-                <h3>Helmets</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Gloves")}
-              >
-                <span className="category-icon">🧤</span>
-                <h3>Gloves</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Riding Gear")}
-              >
-                <span className="category-icon">🛡️</span>
-                <h3>Riding Gear</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Lights")}
-              >
-                <span className="category-icon">💡</span>
-                <h3>Lights</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Luggage")}
-              >
-                <span className="category-icon">🎒</span>
-                <h3>Luggage</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Mobile Holder")}
-              >
-                <span className="category-icon">📱</span>
-                <h3>Mobile Holders</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Bike Parts")}
-              >
-                <span className="category-icon">🔧</span>
-                <h3>Bike Parts</h3>
-              </div>
-
-              <div
-                className="category-card"
-                onClick={() => setActiveTag("Maintenance")}
-              >
-                <span className="category-icon">⚙️</span>
-                <h3>Maintenance</h3>
-              </div>
+              {SHOP_CATEGORIES.map((category) => (
+                <button
+                  type="button"
+                  className={`category-card${activeTag === category.tag ? " active" : ""}`}
+                  onClick={() => browseCategory(category.tag)}
+                  key={category.label}
+                >
+                  <span className="category-icon" aria-hidden="true">{category.icon}</span>
+                  <span>{category.label}</span>
+                </button>
+              ))}
             </section>
           )}
 
           {!isSearching && (
             <section className="flash-sale-banner">
               <div className="flash-sale-head">
-                <h3>⚡ {flashDealsSection.title || "Flash Sale Section"}</h3>
-                <p>Limited-time offers</p>
+                <div>
+                  <h3>⚡ {flashDealsSection.title || "Flash Sale"}</h3>
+                  <p>Hurry! Limited-time offers on top riding gear.</p>
+                </div>
+                <div className="flash-sale-countdown">
+                  <span>Ends in</span>
+                  <strong>
+                    {flashHeroOffer?.endsAt
+                      ? formatCountdown(flashHeroOffer.endsAt)
+                      : "00:00:00"}
+                  </strong>
+                </div>
+                <button type="button" className="flash-view-btn" onClick={() => browseCategory("All")}>
+                  View all deals
+                </button>
               </div>
-              <p className="flash-sale-countdown">
-                {flashHeroOffer?.endsAt
-                  ? `Ends in ${formatCountdown(flashHeroOffer.endsAt)}`
-                  : "No flash countdown configured by admin"}
-              </p>
               <div className="flash-sale-grid">
                 {flashSaleProducts.map((product) => {
                   const stock = Math.max(0, Number(product.stock ?? 0));
@@ -1659,6 +1629,10 @@ export default function Landing() {
                         )}
                         <div>
                           <p className="flash-sale-name">{product.name}</p>
+                          <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
+                            {renderRatingStars(product.ratingAverage)}
+                            <small>({product.ratingCount || 0})</small>
+                          </div>
                           <p className="flash-sale-price">
                             ${Number(product.price || 0).toFixed(2)}
                           </p>
@@ -1673,6 +1647,17 @@ export default function Landing() {
                           style={{ width: `${soldProgress}%` }}
                         />
                       </div>
+                      <button
+                        type="button"
+                        className="flash-add-btn"
+                        disabled={stock <= 0}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          addToCart(product);
+                        }}
+                      >
+                        {stock > 0 ? "Add to cart" : "Out of stock"}
+                      </button>
                     </article>
                   );
                 })}
@@ -1694,7 +1679,10 @@ export default function Landing() {
                     key={section._id || section.key}
                   >
                     <div className="featured-head">
-                      <h3>{section.title}</h3>
+                      <h3>
+                        <span aria-hidden="true">{FEATURED_SECTION_ICONS[section.key] || "◆"}</span>
+                        {section.title}
+                      </h3>
                       {featuredCountdown && (
                         <span className="featured-countdown">
                           {featuredCountdown.label} {featuredCountdown.value}
@@ -1723,6 +1711,10 @@ export default function Landing() {
                             )}
                           </div>
                           <p className="featured-name">{product.name}</p>
+                          <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
+                            {renderRatingStars(product.ratingAverage)}
+                            <small>({product.ratingCount || 0})</small>
+                          </div>
                           <p className="featured-price">
                             ${Number(product.price || 0).toFixed(2)}
                           </p>
@@ -1734,7 +1726,7 @@ export default function Landing() {
                               addToCart(product);
                             }}
                           >
-                            Add
+                            Add to cart
                           </button>
                         </article>
                       ))}
@@ -1767,6 +1759,7 @@ export default function Landing() {
             </div>
           )}
           <div
+            id="all-products"
             className={showFilters ? "shop-content" : "shop-content no-filters"}
           >
             {showFilters && (
@@ -1883,6 +1876,10 @@ export default function Landing() {
 
             <div className="shop-results">
               <div className="shop-toolbar">
+                <div>
+                  <p className="shop-section-kicker">Explore the collection</p>
+                  <h2>{activeTag === "All" ? "All Products" : activeTag}</h2>
+                </div>
                 <select
                   className="shop-sort"
                   value={sortBy}
@@ -1938,9 +1935,6 @@ export default function Landing() {
                         {product.ratingCount || 0} ratings
                       </p>
                     </div>
-                    <p className="your-rating-text">
-                      Buy this product to leave a rating from your orders.
-                    </p>
                     <button
                       className="primary"
                       onClick={(e) => {

@@ -12,7 +12,6 @@ import Login from "./features/auth/pages/Login";
 import ProductDetails from "./features/product-details/pages/ProductDetails";
 import Register from "./features/auth/pages/Register";
 import SiteFooter from "./components/layout/SiteFooter";
-import SiteHeader from "./components/layout/SiteHeader";
 import InquiryChatbot from "./components/layout/InquiryChatbot";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
