@@ -70,13 +70,14 @@
 }
 
 .pdp-gallery {
-    min-height: 700px;
   background: #ffffff;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,.08);
   box-shadow: 0 20px 40px rgba(0,0,0,.12);
   padding: 24px;
-}
+  height: fit-content;
+}  
+
 .pdp-summary {
   background: #ffffff;
   border: 1px solid rgba(255,255,255,.08);
@@ -88,7 +89,12 @@
   top: 20px;
   align-self: start;
 }
-
+.pdp-gallery-layout {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 18px;
+  align-items: start;
+}
 @media (max-width: 980px) {
   .pdp-summary {
     position: static;
