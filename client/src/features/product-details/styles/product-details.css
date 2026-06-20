@@ -608,3 +608,21 @@
     grid-template-columns: 1fr;
   }
 }
+.pdp-stock-badge {
+  width: fit-content;
+  margin: 12px 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pdp-stock-badge.in-stock {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+.pdp-stock-badge.out-stock {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}

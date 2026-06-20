@@ -1,4 +1,3 @@
-
 function formatSoldCount(count) {
   if (count >= 1000) return `${(count / 1000).toFixed(1)}k sold`;
   return `${count} sold`;
@@ -22,7 +21,6 @@ function renderRatingStars(value) {
 }
 
 export default function ProductSummary({
-  
   product,
   expanded,
   onToggleDescription,
@@ -43,13 +41,17 @@ export default function ProductSummary({
     <section className="pdp-summary">
       <p className="pdp-brand">{product.brand}</p>
 
-
       <h1 className="pdp-title">{product.title}</h1>
       <p className="pdp-brand-name">Brand: {product.brand}</p>
-      <p className="pdp-stock">
-        {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-      </p>
-    
+      <div
+        className={
+          product.stock > 0
+            ? "pdp-stock-badge in-stock"
+            : "pdp-stock-badge out-stock"
+        }
+      >
+        {product.stock > 0 ? `✓ In Stock (${product.stock})` : "✕ Out of Stock"}
+      </div>
 
       <div className="pdp-price-row">
         {product.oldPrice && (
@@ -155,22 +157,14 @@ export default function ProductSummary({
         </button>
       </div>
       <div className="pdp-trust">
-  <div className="pdp-trust-item">
-    🔒 Secure Checkout
-  </div>
+        <div className="pdp-trust-item">🔒 Secure Checkout</div>
 
-  <div className="pdp-trust-item">
-    🚚 Fast Delivery
-  </div>
+        <div className="pdp-trust-item">🚚 Fast Delivery</div>
 
-  <div className="pdp-trust-item">
-    ✅ Genuine Products
-  </div>
+        <div className="pdp-trust-item">✅ Genuine Products</div>
 
-  <div className="pdp-trust-item">
-    ↩️ Easy Returns
-  </div>
-</div>
+        <div className="pdp-trust-item">↩️ Easy Returns</div>
+      </div>
     </section>
   );
 }
