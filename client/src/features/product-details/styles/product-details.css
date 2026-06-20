@@ -179,24 +179,7 @@
   color: #111827;
 }
 
-.pdp-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
 
-.pdp-old-price {
-  margin: 0;
-  color: #8b8b8b;
-  text-decoration: line-through;
-  font-size: 18px;
-}
-
-.pdp-new-price {
-  color: #f97316;
-  font-size: 42px;
-  font-weight: 800;
-}
 
 .pdp-meta-row {
   margin-top: 8px;
@@ -562,9 +545,6 @@
     margin-bottom: 10px;
   }
 
-  .pdp-new-price {
-    font-size: 30px;
-  }
 
   .pdp-meta-row {
     flex-direction: column;
@@ -630,4 +610,45 @@
 .pdp-stock-badge.out-stock {
   background: rgba(239, 68, 68, 0.15);
   color: #dc2626;
+}
+.pdp-price-card {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(249,115,22,.08),
+    rgba(249,115,22,.02)
+  );
+  border: 1px solid rgba(249,115,22,.2);
+}
+
+.pdp-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdp-old-price {
+  font-size: 20px;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.pdp-new-price {
+  font-size: 42px;
+  font-weight: 800;
+  color: #f97316;
+}
+
+.pdp-discount-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f97316;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
 }

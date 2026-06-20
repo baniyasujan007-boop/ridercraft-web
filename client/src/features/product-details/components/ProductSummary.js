@@ -53,16 +53,31 @@ export default function ProductSummary({
         {product.stock > 0 ? `✓ In Stock (${product.stock})` : "✕ Out of Stock"}
       </div>
 
-      <div className="pdp-price-row">
-        {product.oldPrice && (
-          <p className="pdp-old-price">
-            ₹{Number(product.oldPrice).toLocaleString("en-IN")}
-          </p>
-        )}{" "}
-        <p className="pdp-new-price">
-          ₹{Number(product.price).toLocaleString("en-IN")}
-        </p>
-      </div>
+     <div className="pdp-price-card">
+  <div className="pdp-price-row">
+    {product.oldPrice && (
+      <p className="pdp-old-price">
+        ${product.oldPrice.toFixed(2)}
+      </p>
+    )}
+
+    <p className="pdp-new-price">
+      ${product.price.toFixed(2)}
+    </p>
+  </div>
+
+  {product.oldPrice && (
+    <div className="pdp-discount-badge">
+      Save{" "}
+      {Math.round(
+        ((product.oldPrice - product.price) /
+          product.oldPrice) *
+          100
+      )}
+      %
+    </div>
+  )}
+</div>
 
       <div className="pdp-meta-row">
         <span
