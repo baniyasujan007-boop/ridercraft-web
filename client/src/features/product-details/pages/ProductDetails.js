@@ -218,6 +218,36 @@ export default function ProductDetails() {
                   ratings
                 </p>
               </div>
+              <div className="pdp-review-summary">
+                <div className="pdp-review-score">
+                  <h3>{product.rating.toFixed(1)}</h3>
+                  <p>★★★★★</p>
+                  <span>{product.soldCount} ratings</span>
+                </div>
+
+                <div className="pdp-review-bars">
+                  <div className="pdp-review-bar">
+                    <span>5★</span>
+                    <div className="pdp-bar-track">
+                      <div className="pdp-bar-fill" style={{ width: "80%" }} />
+                    </div>
+                  </div>
+
+                  <div className="pdp-review-bar">
+                    <span>4★</span>
+                    <div className="pdp-bar-track">
+                      <div className="pdp-bar-fill" style={{ width: "15%" }} />
+                    </div>
+                  </div>
+
+                  <div className="pdp-review-bar">
+                    <span>3★</span>
+                    <div className="pdp-bar-track">
+                      <div className="pdp-bar-fill" style={{ width: "5%" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {product.reviews.length === 0 && (
                 <p className="pdp-reviews-empty">
