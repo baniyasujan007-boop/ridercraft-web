@@ -218,6 +218,7 @@ export default function ProductDetails() {
                   ratings
                 </p>
               </div>
+              {product.soldCount > 0 && (
               <div className="pdp-review-summary">
                 <div className="pdp-review-score">
                   <h3>{product.rating.toFixed(1)}</h3>
@@ -248,6 +249,7 @@ export default function ProductDetails() {
                   </div>
                 </div>
               </div>
+              )}
 
               {product.reviews.length === 0 && (
                 <p className="pdp-reviews-empty">

@@ -34,6 +34,7 @@ export default function RelatedProducts({
 
             <p className="pdp-related-price">
               ₹{Number(item.price).toLocaleString("en-IN")}
+              
             </p>
 
             <button

@@ -98,7 +98,8 @@
   background: #f8fafc;
   border: 1px solid #e5e7eb;
   margin-bottom: 16px;
-  height: clamp(420px, 58vw, 650px);
+  min-height: 700px;
+  height: 700px;
 }
 
 .pdp-main-image {
@@ -311,10 +312,10 @@
 
 
 .pdp-actions {
-  position: sticky;
-  bottom: 0;
-  background: #fff;
-  padding-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .pdp-btn {
@@ -827,6 +828,14 @@
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #e5e7eb;
+}
+.pdp-spec-row span {
+  color: #64748b;
+}
+
+.pdp-spec-row strong {
+  color: #111827;
+  font-weight: 600;
 }
 
 .pdp-spec-row:last-child {
