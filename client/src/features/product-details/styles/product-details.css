@@ -75,9 +75,19 @@
   padding: 24px;
 }
 .pdp-summary {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.15);
+  padding: 24px;
+
   position: sticky;
   top: 20px;
   align-self: start;
+}
+@media (max-width: 980px) {
+  .pdp-summary {
+    position: static;
+  }
 }
 .pdp-main-image-wrap {
   position: relative;
@@ -299,10 +309,10 @@
 
 
 .pdp-actions {
-  margin-top: 22px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding-top: 12px;
 }
 
 .pdp-btn {
