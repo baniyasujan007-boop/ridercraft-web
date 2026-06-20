@@ -154,6 +154,23 @@ export default function ProductSummary({
           Checkout Now
         </button>
       </div>
+      <div className="pdp-trust">
+  <div className="pdp-trust-item">
+    🔒 Secure Checkout
+  </div>
+
+  <div className="pdp-trust-item">
+    🚚 Fast Delivery
+  </div>
+
+  <div className="pdp-trust-item">
+    ✅ Genuine Products
+  </div>
+
+  <div className="pdp-trust-item">
+    ↩️ Easy Returns
+  </div>
+</div>
     </section>
   );
 }
