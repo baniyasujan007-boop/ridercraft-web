@@ -183,21 +183,29 @@ export default function ProductSummary({
       </div>
 
       <div className="pdp-actions">
-        <button
-          className="pdp-btn pdp-btn-primary"
-          type="button"
-          onClick={onAddToCart}
-        >
-          Add to Cart
-        </button>
-        <button
-          className="pdp-btn pdp-btn-outline"
-          type="button"
-          onClick={onCheckoutNow}
-        >
-          Checkout Now
-        </button>
-      </div>
+  <button
+    className="pdp-btn pdp-btn-wishlist"
+    type="button"
+  >
+    ❤️ Wishlist
+  </button>
+
+  <button
+    className="pdp-btn pdp-btn-primary"
+    type="button"
+    onClick={onAddToCart}
+  >
+    Add to Cart
+  </button>
+
+  <button
+    className="pdp-btn pdp-btn-outline"
+    type="button"
+    onClick={onCheckoutNow}
+  >
+    Checkout Now
+  </button>
+</div>
     </section>
   );
 }
