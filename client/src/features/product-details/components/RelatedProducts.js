@@ -32,10 +32,7 @@ export default function RelatedProducts({
               ⭐ {item.rating?.toFixed(1) || "0.0"}
             </div>
 
-            <p className="pdp-related-price">
-              ₹{Number(item.price).toLocaleString("en-IN")}
-              
-            </p>
+            <p className="pdp-related-price">₹{item.price.toLocaleString()}</p>
 
             <button
               className="pdp-related-btn"

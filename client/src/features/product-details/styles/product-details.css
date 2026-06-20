@@ -73,11 +73,13 @@
     min-height: 700px;
   background: #ffffff;
   border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.08);
   box-shadow: 0 20px 40px rgba(0,0,0,.12);
   padding: 24px;
 }
 .pdp-summary {
   background: #ffffff;
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0,0,0,.15);
   padding: 24px;
@@ -86,11 +88,15 @@
   top: 20px;
   align-self: start;
 }
+
 @media (max-width: 980px) {
   .pdp-summary {
     position: static;
   }
 }
+
+
+
 .pdp-main-image-wrap {
   position: relative;
   border-radius: 18px;
@@ -98,8 +104,8 @@
   background: #f8fafc;
   border: 1px solid #e5e7eb;
   margin-bottom: 16px;
-  min-height: 700px;
-  height: 700px;
+  min-height: 560px;
+  height: 560px;
 }
 
 .pdp-main-image {
@@ -185,9 +191,9 @@
 
 .pdp-title {
   margin: 8px 0 14px;
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.2;
   color: #111827;
 }
 
