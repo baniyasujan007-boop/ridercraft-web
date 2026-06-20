@@ -109,7 +109,29 @@ export default function ProductSummary({
           )}
         </div>
       )}
+      <div className="pdp-specs">
+        <h3>Product Details</h3>
 
+        <div className="pdp-spec-row">
+          <span>Brand</span>
+          <strong>{product.brand}</strong>
+        </div>
+
+        <div className="pdp-spec-row">
+          <span>Stock</span>
+          <strong>{product.stock}</strong>
+        </div>
+
+        <div className="pdp-spec-row">
+          <span>Rating</span>
+          <strong>{product.rating.toFixed(1)} / 5</strong>
+        </div>
+
+        <div className="pdp-spec-row">
+          <span>Reviews</span>
+          <strong>{product.soldCount}</strong>
+        </div>
+      </div>
       <div className="pdp-options">
         {product.colors.length > 0 && (
           <div className="pdp-option-group">
