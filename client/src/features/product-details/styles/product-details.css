@@ -773,3 +773,26 @@
   border-color: #f97316;
   transform: translateY(-2px);
 }
+.pdp-highlights {
+  margin: 18px 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pdp-highlight-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .pdp-highlights {
+    grid-template-columns: 1fr;
+  }
+}

@@ -53,31 +53,34 @@ export default function ProductSummary({
         {product.stock > 0 ? `✓ In Stock (${product.stock})` : "✕ Out of Stock"}
       </div>
 
-     <div className="pdp-price-card">
-  <div className="pdp-price-row">
-    {product.oldPrice && (
-      <p className="pdp-old-price">
-        ${product.oldPrice.toFixed(2)}
-      </p>
-    )}
+      <div className="pdp-price-card">
+        <div className="pdp-price-row">
+          {product.oldPrice && (
+            <p className="pdp-old-price">${product.oldPrice.toFixed(2)}</p>
+          )}
 
-    <p className="pdp-new-price">
-      ${product.price.toFixed(2)}
-    </p>
-  </div>
+          <p className="pdp-new-price">${product.price.toFixed(2)}</p>
+        </div>
 
-  {product.oldPrice && (
-    <div className="pdp-discount-badge">
-      Save{" "}
-      {Math.round(
-        ((product.oldPrice - product.price) /
-          product.oldPrice) *
-          100
-      )}
-      %
-    </div>
-  )}
-</div>
+        {product.oldPrice && (
+          <div className="pdp-discount-badge">
+            Save{" "}
+            {Math.round(
+              ((product.oldPrice - product.price) / product.oldPrice) * 100,
+            )}
+            %
+          </div>
+        )}
+      </div>
+      <div className="pdp-highlights">
+        <div className="pdp-highlight-item">✅ Genuine Product</div>
+
+        <div className="pdp-highlight-item">🚚 Fast Delivery</div>
+
+        <div className="pdp-highlight-item">🔒 Secure Payment</div>
+
+        <div className="pdp-highlight-item">↩ Easy Returns</div>
+      </div>
 
       <div className="pdp-meta-row">
         <span
@@ -133,8 +136,7 @@ export default function ProductSummary({
 
         {product.sizes.length > 0 && (
           <div className="pdp-option-group">
-            <p className="pdp-option-title">Size</p>
-
+            <p className="pdp-option-title">Size: {selectedSize}</p>
             <div className="pdp-size-grid">
               {product.sizes.map((size) => (
                 <button
@@ -170,15 +172,6 @@ export default function ProductSummary({
         >
           Checkout Now
         </button>
-      </div>
-      <div className="pdp-trust">
-        <div className="pdp-trust-item">🔒 Secure Checkout</div>
-
-        <div className="pdp-trust-item">🚚 Fast Delivery</div>
-
-        <div className="pdp-trust-item">✅ Genuine Products</div>
-
-        <div className="pdp-trust-item">↩️ Easy Returns</div>
       </div>
     </section>
   );
