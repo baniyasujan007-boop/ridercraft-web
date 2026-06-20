@@ -42,6 +42,9 @@ export default function ProductSummary({
       <p className="pdp-brand">{product.brand}</p>
 
       <h1 className="pdp-title">{product.title}</h1>
+      {product.isFlashSale && (
+        <div className="pdp-flash-badge">⚡ Flash Sale</div>
+      )}
       <p className="pdp-brand-name">Brand: {product.brand}</p>
       <div
         className={

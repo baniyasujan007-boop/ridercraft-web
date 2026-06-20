@@ -819,3 +819,14 @@
 .pdp-spec-row:last-child {
   border-bottom: none;
 }
+.pdp-flash-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 10px 0;
+}
