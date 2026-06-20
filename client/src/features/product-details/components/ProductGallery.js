@@ -12,22 +12,8 @@ export default function ProductGallery({
   const currentImage = images[activeImage] || fallbackImage;
 
   return (
-    <section className="pdp-gallery">
-      <div className="pdp-main-image-wrap">
-        <button className="pdp-arrow pdp-arrow-left" onClick={onPrev} type="button">
-          ‹
-        </button>
-        <img
-          src={currentImage}
-          alt={title}
-          className="pdp-main-image"
-          onError={(e) => applyImageFallback(e, fallbackImage)}
-        />
-        <button className="pdp-arrow pdp-arrow-right" onClick={onNext} type="button">
-          ›
-        </button>
-      </div>
-
+  <section className="pdp-gallery">
+    <div className="pdp-gallery-layout">
       <div className="pdp-thumbnails">
         {images.map((src, index) => (
           <button
@@ -44,6 +30,32 @@ export default function ProductGallery({
           </button>
         ))}
       </div>
-    </section>
-  );
+
+      <div className="pdp-main-image-wrap">
+        <button
+          className="pdp-arrow pdp-arrow-left"
+          onClick={onPrev}
+          type="button"
+        >
+          ‹
+        </button>
+
+        <img
+          src={currentImage}
+          alt={title}
+          className="pdp-main-image"
+          onError={(e) => applyImageFallback(e, fallbackImage)}
+        />
+
+        <button
+          className="pdp-arrow pdp-arrow-right"
+          onClick={onNext}
+          type="button"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  </section>
+);
 }
