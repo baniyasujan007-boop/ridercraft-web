@@ -348,9 +348,6 @@
   background: #0b2740;
 }
 
-.pdp-related {
-  margin-top: 8px;
-}
 
 .pdp-reviews {
   background: #ffffff;
@@ -429,58 +426,6 @@
   line-height: 1.6;
 }
 
-.pdp-related-head h2 {
-  margin: 0 0 14px;
-  font-size: 24px;
-}
-
-.pdp-related-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.pdp-related-card {
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #ececec;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
-}
-
-.pdp-related-card:hover {
-  transform: translateY(-3px);
-}
-
-.pdp-related-image-wrap {
-  overflow: hidden;
-}
-
-.pdp-related-image {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.pdp-related-card:hover .pdp-related-image {
-  transform: scale(1.08);
-}
-
-.pdp-related-name {
-  margin: 10px 10px 4px;
-  font-size: 14px;
-  color: #2d2d2d;
-}
-
-.pdp-related-price {
-  margin: 0 10px 12px;
-  font-size: 18px;
-  font-weight: 700;
-}
 
 @media (max-width: 980px) {
   .pdp-top-grid {
@@ -651,4 +596,75 @@
   color: white;
   font-size: 12px;
   font-weight: 700;
+}
+.pdp-related {
+  margin-top: 40px;
+}
+
+.pdp-related-head h2 {
+  font-size: 28px;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.pdp-related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.pdp-related-card {
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all .25s ease;
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+}
+
+.pdp-related-card:hover {
+  transform: translateY(-6px);
+}
+
+.pdp-related-image-wrap {
+  height: 220px;
+  background: #f8fafc;
+}
+
+.pdp-related-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pdp-related-name {
+  padding: 12px 14px 0;
+  min-height: 52px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pdp-related-rating {
+  padding: 0 14px;
+  color: #f59e0b;
+  font-size: 14px;
+}
+
+.pdp-related-price {
+  padding: 8px 14px;
+  color: #f97316;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.pdp-related-btn {
+  width: calc(100% - 28px);
+  margin: 0 14px 14px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: #f97316;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
 }

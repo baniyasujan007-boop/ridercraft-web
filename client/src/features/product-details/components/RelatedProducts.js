@@ -1,6 +1,10 @@
 import { applyImageFallback } from "../../../utils/fallbackImage";
 
-export default function RelatedProducts({ products, fallbackImage, onOpenProduct }) {
+export default function RelatedProducts({
+  products,
+  fallbackImage,
+  onOpenProduct,
+}) {
   return (
     <section className="pdp-related">
       <div className="pdp-related-head">
@@ -23,7 +27,24 @@ export default function RelatedProducts({ products, fallbackImage, onOpenProduct
               />
             </div>
             <p className="pdp-related-name">{item.title}</p>
-            <p className="pdp-related-price">${item.price}</p>
+
+            <div className="pdp-related-rating">
+              ⭐ {item.rating?.toFixed(1) || "0.0"}
+            </div>
+
+            <p className="pdp-related-price">
+              ₹{Number(item.price).toLocaleString("en-IN")}
+            </p>
+
+            <button
+              className="pdp-related-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenProduct(item.id);
+              }}
+            >
+              View Product
+            </button>
           </article>
         ))}
       </div>
