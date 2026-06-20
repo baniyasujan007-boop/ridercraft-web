@@ -65,8 +65,9 @@
 
 .pdp-top-grid {
   display: grid;
-  grid-template-columns: 120px 1fr 620px;
-  gap: 36px;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 40px;
+  align-items: start;
 }
 
 .pdp-gallery,
@@ -80,7 +81,6 @@
   display: grid;
   grid-template-columns: 90px 1fr;
   gap: 18px;
-  align-items: start;
 }
 @media (max-width: 980px) {
   .pdp-summary {
@@ -882,57 +882,58 @@
   }
 }
 /* ==========================================
-   PREMIUM PRODUCT PAGE OVERRIDES
+   RIDERCRAFT PRODUCT PAGE OVERRIDES
    ========================================== */
+
+.pdp-top-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 36px;
+  align-items: start;
+}
 
 .pdp-gallery,
 .pdp-summary,
 .pdp-reviews {
   background: rgba(255,255,255,.03);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(18px);
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 24px;
 }
 
-.pdp-summary,
-.pdp-reviews {
-  padding: 32px;
+.pdp-gallery {
+  padding: 18px;
+}
+
+.pdp-summary {
+  padding: 28px;
+  position: sticky;
+  top: 20px;
 }
 
 .pdp-title {
-  color: #ffffff;
-  font-size: 48px;
-  line-height: 1.15;
+  font-size: 28px;
+  line-height: 1.3;
+  color: #fff;
   font-weight: 800;
 }
 
 .pdp-brand,
-.pdp-brand-name {
-  color: rgba(255,255,255,.75);
-}
-
+.pdp-brand-name,
+.pdp-description p,
 .pdp-meta-row {
-  color: rgba(255,255,255,.7);
+  color: rgba(255,255,255,.75);
 }
 
 .pdp-rating strong {
-  color: #ffffff;
-}
-
-.pdp-option-title {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.pdp-description p {
-  color: rgba(255,255,255,.75);
+  color: #fff;
 }
 
 .pdp-main-image-wrap {
+  height: 650px;
+  min-height: 650px;
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.08);
-  min-height: 680px;
-  height: 680px;
 }
 
 .pdp-main-image {
@@ -940,27 +941,27 @@
 }
 
 .pdp-price-card {
-  background: linear-gradient(
-    135deg,
-    rgba(249,115,22,.12),
-    rgba(249,115,22,.04)
-  );
+  background: rgba(249,115,22,.08);
   border: 1px solid rgba(249,115,22,.25);
 }
 
 .pdp-new-price {
-  color: #ffffff;
-  font-size: 56px;
+  font-size: 24px;
   font-weight: 800;
+  color: #ffffff;
 }
 
 .pdp-old-price {
   color: rgba(255,255,255,.4);
 }
 
+.pdp-option-title {
+  color: #ffffff;
+}
+
 .pdp-size-btn {
   background: transparent;
-  color: white;
+  color: #ffffff;
   border: 1px solid rgba(255,255,255,.15);
 }
 
@@ -969,21 +970,23 @@
   border-color: #f97316;
 }
 
+.pdp-color-swatch.active {
+  box-shadow: 0 0 0 4px rgba(249,115,22,.25);
+}
+
 .pdp-trust {
-  margin-top: 20px;
-  padding: 18px;
-  border-radius: 16px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.08);
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px;
 }
 
 .pdp-trust-item {
-  background: transparent;
-  border: none;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
   color: rgba(255,255,255,.9);
+  padding: 14px;
 }
 
 .pdp-specs {
@@ -993,7 +996,7 @@
 
 .pdp-specs h3,
 .pdp-spec-row strong {
-  color: #ffffff;
+  color: #fff;
 }
 
 .pdp-spec-row span {
@@ -1002,16 +1005,18 @@
 
 .pdp-reviews {
   margin-top: 32px;
-}
-
-.pdp-reviews-head h2,
-.pdp-review-score h3 {
-  color: #ffffff;
+  padding: 28px;
+  width: 100%;
 }
 
 .pdp-review-summary {
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.08);
+}
+
+.pdp-review-score h3,
+.pdp-reviews-head h2 {
+  color: #fff;
 }
 
 .pdp-reviews-empty,
@@ -1024,12 +1029,12 @@
 }
 
 .pdp-related-card {
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.08);
 }
 
 .pdp-related-name {
-  color: white;
+  color: #fff;
 }
 
 .pdp-related-price {
@@ -1037,16 +1042,35 @@
 }
 
 @media (max-width: 980px) {
-  .pdp-main-image-wrap {
-    height: 520px;
-    min-height: 520px;
+  .pdp-top-grid {
+    grid-template-columns: 1fr;
   }
 
-  .pdp-title {
-    font-size: 34px;
+  .pdp-summary {
+    position: static;
+  }
+
+  .pdp-main-image-wrap {
+    height: 500px;
+    min-height: 500px;
   }
 
   .pdp-trust {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pdp-trust {
+    grid-template-columns: 1fr;
+  }
+
+  .pdp-main-image-wrap {
+    height: 350px;
+    min-height: 350px;
+  }
+
+  .pdp-title {
+    font-size: 24px;
   }
 }
