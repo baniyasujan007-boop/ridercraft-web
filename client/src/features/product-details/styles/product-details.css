@@ -62,7 +62,7 @@
   color: #a00f0f;
 }
 
-.pdp-top-grid {
+/* .pdp-top-grid {
   display: flex;
   gap: 32px;
   align-items: flex-start;
@@ -89,6 +89,19 @@
   top: 20px;
   align-self: start;
     flex: 0.9;
+} */
+ .pdp-top-grid {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.pdp-gallery {
+  flex: 1.3;
+}
+
+.pdp-summary {
+  flex: 0.9;
 }
 .pdp-gallery-layout {
   display: grid;
