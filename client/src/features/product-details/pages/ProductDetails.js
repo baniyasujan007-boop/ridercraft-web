@@ -269,6 +269,9 @@ const totalReviews = reviewCounts.reduce(
                 <p className="pdp-reviews-empty">
                   No reviews yet. Purchase this product to leave a rating from
                   your orders.
+                  <button className="pdp-review-btn">
+  Write a Review
+</button>
                 </p>
               )}
 

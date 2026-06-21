@@ -39,6 +39,10 @@ export default function ProductSummary({
 
   return (
     <section className="pdp-summary">
+      <div className="pdp-top-actions">
+        <button>♡</button>
+        <button>↗</button>
+      </div>
       <p className="pdp-brand">{product.brand}</p>
 
       <h1 className="pdp-title">{product.title}</h1>
@@ -62,7 +66,9 @@ export default function ProductSummary({
             <p className="pdp-old-price">${product.oldPrice.toFixed(2)}</p>
           )}
 
-          <p className="pdp-new-price">${product.price.toFixed(2)}</p>
+          <p className="pdp-new-price">
+            ₹{product.price.toLocaleString("en-IN")}
+          </p>
         </div>
 
         {product.oldPrice && (
@@ -112,29 +118,6 @@ export default function ProductSummary({
           )}
         </div>
       )}
-      <div className="pdp-specs">
-        <h3>Product Details</h3>
-
-        <div className="pdp-spec-row">
-          <span>Brand</span>
-          <strong>{product.brand}</strong>
-        </div>
-
-        <div className="pdp-spec-row">
-          <span>Stock</span>
-          <strong>{product.stock}</strong>
-        </div>
-
-        <div className="pdp-spec-row">
-          <span>Rating</span>
-          <strong>{product.rating.toFixed(1)} / 5</strong>
-        </div>
-
-        <div className="pdp-spec-row">
-          <span>Reviews</span>
-          <strong>{product.soldCount}</strong>
-        </div>
-      </div>
       <div className="pdp-options">
         {product.colors.length > 0 && (
           <div className="pdp-option-group">
@@ -181,31 +164,12 @@ export default function ProductSummary({
           </div>
         )}
       </div>
-
-      <div className="pdp-actions">
-  <button
-    className="pdp-btn pdp-btn-wishlist"
-    type="button"
-  >
-    ❤️ Wishlist
-  </button>
-
-  <button
-    className="pdp-btn pdp-btn-primary"
-    type="button"
-    onClick={onAddToCart}
-  >
-    Add to Cart
-  </button>
-
-  <button
-    className="pdp-btn pdp-btn-outline"
-    type="button"
-    onClick={onCheckoutNow}
-  >
-    Checkout Now
-  </button>
-</div>
+      <div className="pdp-trust-bar">
+        <div>🛡 100% Genuine</div>
+        <div>🚚 Free Shipping</div>
+        <div>↩ Easy Returns</div>
+        <div>💳 Secure Payment</div>
+      </div>
     </section>
   );
 }

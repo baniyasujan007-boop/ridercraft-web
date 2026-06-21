@@ -1136,3 +1136,102 @@
 .pdp-review-bar strong {
   color: #ffffff;
 }
+.pdp-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:24px;
+}
+
+.pdp-btn-primary{
+  height:56px;
+  border:none;
+  border-radius:12px;
+  background:#ff5a00;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+}
+
+.pdp-btn-outline{
+  height:56px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.3);
+  background:transparent;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+}
+
+.pdp-trust-bar{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.pdp-trust-bar div{
+  padding:14px;
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  text-align:center;
+  color:#fff;
+  font-size:13px;
+}
+
+@media(max-width:768px){
+  .pdp-trust-bar{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+.pdp-top-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.pdp-top-actions button{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+}
+.pdp-title{
+  font-size:52px;
+  line-height:1.1;
+  max-width:700px;
+}
+.pdp-main-image-wrap{
+  height:700px;
+  min-height:700px;
+}
+.pdp-thumb{
+  width:100px;
+  height:100px;
+}
+.pdp-reviews{
+  margin-top:40px;
+  padding:32px;
+  border-radius:24px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+}
+.pdp-review-btn{
+  margin-top:16px;
+  height:50px;
+  padding:0 24px;
+  border-radius:12px;
+  border:1px solid #f97316;
+  background:transparent;
+  color:#f97316;
+  font-weight:700;
+  cursor:pointer;
+}
+.pdp-shell{
+  max-width:1600px;
+}
