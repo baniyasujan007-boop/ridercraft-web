@@ -154,6 +154,20 @@ export default function ProductDetails() {
     return `${"★".repeat(full)}${hasHalf ? "☆" : ""}${"·".repeat(5 - full - (hasHalf ? 1 : 0))}`;
   };
 
+const reviewCounts = product
+  ? [5, 4, 3, 2, 1].map(
+      (star) =>
+        (product.reviews || []).filter(
+          (review) => Math.round(review.value) === star
+        ).length
+    )
+  : [0, 0, 0, 0, 0];
+
+const totalReviews = reviewCounts.reduce(
+  (sum, count) => sum + count,
+  0
+);
+
   return (
     <main className="pdp-page">
       <div className="pdp-shell">
@@ -218,37 +232,37 @@ export default function ProductDetails() {
                   ratings
                 </p>
               </div>
-              {product.soldCount > 0 && (
-              <div className="pdp-review-summary">
-                <div className="pdp-review-score">
-                  <h3>{product.rating.toFixed(1)}</h3>
-                  <p>★★★★★</p>
-                  <span>{product.soldCount} ratings</span>
+
+              {totalReviews > 0 && (
+                <div className="pdp-review-summary">
+                  <div className="pdp-review-score">
+                    <h3>{product.rating.toFixed(1)}</h3>
+                    <p>★★★★★</p>
+                    <span>{totalReviews} reviews</span>
+                  </div>
+
+                  <div className="pdp-review-bars">
+                    {[5, 4, 3, 2, 1].map((star, index) => {
+                      const count = reviewCounts[index];
+                      const width =
+                        totalReviews > 0
+                          ? `${(count / totalReviews) * 100}%`
+                          : "0%";
+
+                      return (
+                        <div className="pdp-review-bar" key={star}>
+                          <span>{star}★</span>
+
+                          <div className="pdp-bar-track">
+                            <div className="pdp-bar-fill" style={{ width }} />
+                          </div>
+
+                          <strong>{count}</strong>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-
-                <div className="pdp-review-bars">
-                  <div className="pdp-review-bar">
-                    <span>5★</span>
-                    <div className="pdp-bar-track">
-                      <div className="pdp-bar-fill" style={{ width: "80%" }} />
-                    </div>
-                  </div>
-
-                  <div className="pdp-review-bar">
-                    <span>4★</span>
-                    <div className="pdp-bar-track">
-                      <div className="pdp-bar-fill" style={{ width: "15%" }} />
-                    </div>
-                  </div>
-
-                  <div className="pdp-review-bar">
-                    <span>3★</span>
-                    <div className="pdp-bar-track">
-                      <div className="pdp-bar-fill" style={{ width: "5%" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
               )}
 
               {product.reviews.length === 0 && (

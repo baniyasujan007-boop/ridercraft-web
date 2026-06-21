@@ -25,6 +25,7 @@ export default function RelatedProducts({
                 className="pdp-related-image"
                 onError={(e) => applyImageFallback(e, fallbackImage)}
               />
+              
             </div>
             <p className="pdp-related-name">{item.title}</p>
 
