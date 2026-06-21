@@ -141,6 +141,19 @@ export default function ProductSummary({
             </div>
           </div>
         )}
+        <div className="pdp-mobile-bar">
+          <div className="pdp-mobile-price">
+            ₹{product.price.toLocaleString("en-IN")}
+          </div>
+
+          <button
+            className="pdp-mobile-cart-btn"
+            onClick={onAddToCart}
+            type="button"
+          >
+            Add to Cart
+          </button>
+        </div>
 
         {product.sizes.length > 0 && (
           <div className="pdp-option-group">
