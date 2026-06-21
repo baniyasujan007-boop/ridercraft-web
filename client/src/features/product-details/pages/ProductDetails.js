@@ -233,47 +233,45 @@ const totalReviews = reviewCounts.reduce(
                 </p>
               </div>
 
-              {totalReviews > 0 && (
-                <div className="pdp-review-summary">
-                  <div className="pdp-review-score">
-                    <h3>{product.rating.toFixed(1)}</h3>
-                    <p>★★★★★</p>
-                    <span>{totalReviews} reviews</span>
-                  </div>
-
-                  <div className="pdp-review-bars">
-                    {[5, 4, 3, 2, 1].map((star, index) => {
-                      const count = reviewCounts[index];
-                      const width =
-                        totalReviews > 0
-                          ? `${(count / totalReviews) * 100}%`
-                          : "0%";
-
-                      return (
-                        <div className="pdp-review-bar" key={star}>
-                          <span>{star}★</span>
-
-                          <div className="pdp-bar-track">
-                            <div className="pdp-bar-fill" style={{ width }} />
-                          </div>
-
-                          <strong>{count}</strong>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className="pdp-review-summary">
+                <div className="pdp-review-score">
+                  <h3>{product.rating.toFixed(1)}</h3>
+                  <p>★★★★★</p>
+                  <span>{totalReviews} reviews</span>
                 </div>
-              )}
 
-              {product.reviews.length === 0 && (
-                <p className="pdp-reviews-empty">
-                  No reviews yet. Purchase this product to leave a rating from
-                  your orders.
-                  <button className="pdp-review-btn">
-  Write a Review
-</button>
-                </p>
-              )}
+                <div className="pdp-review-bars">
+                  {[5, 4, 3, 2, 1].map((star, index) => {
+                    const count = reviewCounts[index];
+                    const width =
+                      totalReviews > 0
+                        ? `${(count / totalReviews) * 100}%`
+                        : "0%";
+
+                    return (
+                      <div className="pdp-review-bar" key={star}>
+                        <span>{star}★</span>
+
+                        <div className="pdp-bar-track">
+                          <div className="pdp-bar-fill" style={{ width }} />
+                        </div>
+
+                        <strong>{count}</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {product.reviews.length === 0 && (
+                  <div className="pdp-reviews-empty">
+                    <strong>No reviews yet</strong>
+                    <span>Be the first to review this product</span>
+                    <button className="pdp-review-btn" type="button">
+                      Write a Review
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="pdp-reviews-list">
                 {product.reviews.map((review) => (

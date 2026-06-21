@@ -141,19 +141,6 @@ export default function ProductSummary({
             </div>
           </div>
         )}
-        <div className="pdp-mobile-bar">
-          <div className="pdp-mobile-price">
-            ₹{product.price.toLocaleString("en-IN")}
-          </div>
-
-          <button
-            className="pdp-mobile-cart-btn"
-            onClick={onAddToCart}
-            type="button"
-          >
-            Add to Cart
-          </button>
-        </div>
 
         {product.sizes.length > 0 && (
           <div className="pdp-option-group">
@@ -177,11 +164,41 @@ export default function ProductSummary({
           </div>
         )}
       </div>
+      <div className="pdp-actions">
+        <button
+          className="pdp-btn pdp-btn-primary"
+          onClick={onAddToCart}
+          type="button"
+        >
+          🛒 Add to Cart
+        </button>
+
+        <button
+          className="pdp-btn pdp-btn-outline"
+          onClick={onCheckoutNow}
+          type="button"
+        >
+          ⚡ Buy Now
+        </button>
+      </div>
       <div className="pdp-trust-bar">
         <div>🛡 100% Genuine</div>
         <div>🚚 Free Shipping</div>
         <div>↩ Easy Returns</div>
         <div>💳 Secure Payment</div>
+      </div>
+      <div className="pdp-mobile-bar">
+        <div className="pdp-mobile-price">
+          ₹{product.price.toLocaleString("en-IN")}
+        </div>
+
+        <button
+          className="pdp-mobile-cart-btn"
+          onClick={onAddToCart}
+          type="button"
+        >
+          Add to Cart
+        </button>
       </div>
     </section>
   );
