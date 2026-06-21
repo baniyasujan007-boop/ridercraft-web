@@ -77,11 +77,7 @@
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,.08);
 }
-.pdp-gallery-layout {
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 18px;
-}
+
 @media (max-width: 980px) {
   .pdp-summary {
     position: static;
@@ -351,7 +347,8 @@
 }
 
 .pdp-review-card {
-  border: 1px solid #e5e7eb;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
   padding: 16px;
   background: white;
@@ -423,7 +420,7 @@
 .pdp-review-user {
   margin: 0;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
 }
 
 .pdp-review-rating {
@@ -434,13 +431,13 @@
 }
 
 .pdp-review-rating span {
-  color: #374151;
+  color: rgba(255,255,255,.75);
   margin-left: 4px;
 }
 
 .pdp-review-comment {
   margin: 8px 0 0;
-  color: #374151;
+  color: rgba(255,255,255,.75);
   line-height: 1.6;
 }
 @media (max-width: 768px) {
@@ -450,8 +447,9 @@
 }
 @media (max-width: 980px) {
   .pdp-top-grid {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
+
 
   .pdp-gallery,
   .pdp-summary {
@@ -460,8 +458,8 @@
 
   .pdp-summary {
     min-width: auto;
-  }
-}
+    }}
+
 
 @media (max-width: 700px) {
   .pdp-page {
@@ -1130,4 +1128,11 @@
 .pdp-bar-fill{
   height:100%;
   background:#f97316;
+}
+.pdp-reviews-head h2,
+.pdp-reviews-head p,
+.pdp-review-score span,
+.pdp-review-bar span,
+.pdp-review-bar strong {
+  color: #ffffff;
 }

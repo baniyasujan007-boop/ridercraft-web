@@ -27,8 +27,6 @@ export default function AdminSectionContent({ vm }) {
     removeHeroOffer,
     products,
     flashSaleProductIds,
-    flashSaleSchedule,
-    setFlashSaleSchedule,
     startEdit,
     toggleProductFlashSale,
     removeProduct,
@@ -1570,41 +1568,12 @@ export default function AdminSectionContent({ vm }) {
         </section>
       )}
       {section === "featured" && (
-        <section className="admin-form-wrap" id="flash-sale-manager">
-          <h2>Flash Sale</h2>
+        <section className="admin-form-wrap">
+          <h2>Flash Sale Products (Deals of the Day)</h2>
           <p className="admin-hint">
-            Choose exactly when this sale appears, then select its products. Selected:{" "}
+            Pick products shown in the shop Flash Sale section. Selected:{" "}
             <strong>{flashSaleProductIds.length}</strong>
           </p>
-          <div className="admin-form-grid admin-flash-schedule">
-            <label className="admin-field-label">
-              Flash Sale starts
-              <input
-                type="datetime-local"
-                value={flashSaleSchedule.startsAt}
-                onChange={(event) =>
-                  setFlashSaleSchedule((prev) => ({
-                    ...prev,
-                    startsAt: event.target.value,
-                  }))
-                }
-              />
-            </label>
-            <label className="admin-field-label">
-              Flash Sale ends
-              <input
-                type="datetime-local"
-                min={flashSaleSchedule.startsAt || undefined}
-                value={flashSaleSchedule.endsAt}
-                onChange={(event) =>
-                  setFlashSaleSchedule((prev) => ({
-                    ...prev,
-                    endsAt: event.target.value,
-                  }))
-                }
-              />
-            </label>
-          </div>
           <div className="admin-flash-product-grid">
             {products.map((product) => {
               const isSelected = flashSaleProductIds.includes(
@@ -1670,6 +1639,7 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             >
+              <option value="flash-sale">⚡ Flash Sale</option>
               <option value="trending">🔥 Trending Products</option>
               <option value="new-arrivals">🆕 New Arrivals</option>
               <option value="best-sellers">🏆 Best Sellers</option>
@@ -1697,6 +1667,32 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             />
+            <label className="admin-field-label">
+              Countdown start
+              <input
+                type="datetime-local"
+                value={featuredSectionForm.countdownStartsAt}
+                onChange={(e) =>
+                  setFeaturedSectionForm((prev) => ({
+                    ...prev,
+                    countdownStartsAt: e.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="admin-field-label">
+              Countdown end
+              <input
+                type="datetime-local"
+                value={featuredSectionForm.countdownEndsAt}
+                onChange={(e) =>
+                  setFeaturedSectionForm((prev) => ({
+                    ...prev,
+                    countdownEndsAt: e.target.value,
+                  }))
+                }
+              />
+            </label>
             <select
               value={featuredSectionForm.isActive ? "active" : "inactive"}
               onChange={(e) =>
@@ -1784,8 +1780,15 @@ export default function AdminSectionContent({ vm }) {
                 <tr key={row._id}>
                   <td>{row.key}</td>
                   <td>{row.title}</td>
+
                   <td>
-                    {Array.isArray(row.products) ? row.products.length : 0}
+                    {row.products?.length
+                      ? row.products
+                          .slice(0, 3)
+                          .map((product) => (
+                            <div key={product._id}>{product.name}</div>
+                          ))
+                      : "No products"}
                   </td>
                   <td>{row.sortOrder}</td>
                   <td>
@@ -1801,26 +1804,12 @@ export default function AdminSectionContent({ vm }) {
                   <td>{row.isActive ? "active" : "inactive"}</td>
                   <td>
                     <div className="row-actions">
-                      {row.key === "flash-sale" ? (
-                        <button
-                          className="table-edit-btn"
-                          onClick={() =>
-                            document.getElementById("flash-sale-manager")?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            })
-                          }
-                        >
-                          Manage above
-                        </button>
-                      ) : (
-                        <button
-                          className="table-edit-btn"
-                          onClick={() => startEditFeaturedSection(row)}
-                        >
-                          Edit
-                        </button>
-                      )}
+                      <button
+                        className="table-edit-btn"
+                        onClick={() => startEditFeaturedSection(row)}
+                      >
+                        Edit
+                      </button>
                       <button
                         className="table-delete-btn"
                         onClick={() => removeFeaturedSection(row._id)}
