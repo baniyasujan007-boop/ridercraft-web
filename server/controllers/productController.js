@@ -3,10 +3,116 @@ import Order from "../models/Order.js";
 import axios from "axios";
 import * as cheerio from "cheerio";
 
+const COLOR_HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
+  Boolean(
+    product?.isFlashSale === true &&
+      Number(product?.flashSalePrice) > 0 &&
+      product?.flashSaleEndsAt &&
+      new Date(product.flashSaleEndsAt).getTime() > now.getTime(),
+  );
+
+const productToClient = (product, now = new Date()) => {
+  const plain =
+    typeof product?.toObject === "function"
+      ? product.toObject({ virtuals: true })
+      : { ...product };
+  const active = isFlashSaleCurrentlyActive(plain, now);
+  const price = Number(plain.price || 0);
+  const flashSalePrice = Number(plain.flashSalePrice || 0);
+  const displayPrice = active ? flashSalePrice : price;
+
+  return {
+    ...plain,
+    isFlashSale: active,
+    isFlashSaleActive: active,
+    originalPrice: price,
+    displayPrice,
+    discountPercent:
+      active && price > 0
+        ? Math.round(((price - flashSalePrice) / price) * 100)
+        : 0,
+  };
+};
+
+const normalizeStringArray = (value) =>
+  Array.isArray(value)
+    ? value.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : [];
+
+const normalizeVariants = (variants) => {
+  if (!Array.isArray(variants)) return [];
+
+  return variants
+    .map((variant) => {
+      const color = String(variant?.color || "").trim();
+      const colorHex = String(variant?.colorHex || "").trim() || "#111827";
+      const stock = Number(variant?.stock ?? 0);
+      return {
+        color,
+        colorHex,
+        images: normalizeStringArray(variant?.images),
+        stock: Number.isInteger(stock) && stock >= 0 ? stock : 0,
+        sku: String(variant?.sku || "").trim(),
+      };
+    })
+    .filter((variant) => variant.color);
+};
+
+const validateVariants = (variants) => {
+  const invalidHex = variants.find(
+    (variant) => variant.colorHex && !COLOR_HEX_PATTERN.test(variant.colorHex),
+  );
+  if (invalidHex) {
+    return "Variant color hex must be a valid hex color, e.g. #2563eb";
+  }
+
+  const invalidImage = variants
+    .flatMap((variant) => variant.images)
+    .find(
+      (image) =>
+        image &&
+        !/^(https?:)?\/\//i.test(image) &&
+        !/^data:image\//i.test(image),
+    );
+  if (invalidImage) {
+    return "Variant images must be valid URLs or uploaded image data";
+  }
+
+  return "";
+};
+
+const normalizeFlashSaleFields = ({ isFlashSale, flashSalePrice, flashSaleEndsAt }) => {
+  const enabled = Boolean(isFlashSale);
+  const salePrice =
+    flashSalePrice === undefined || flashSalePrice === null || flashSalePrice === ""
+      ? null
+      : Number(flashSalePrice);
+  const endsAt = flashSaleEndsAt ? new Date(flashSaleEndsAt) : null;
+
+  return {
+    isFlashSale: enabled,
+    flashSalePrice: Number.isFinite(salePrice) && salePrice >= 0 ? salePrice : null,
+    flashSaleEndsAt:
+      endsAt && Number.isFinite(endsAt.getTime()) ? endsAt : null,
+  };
+};
+
+const expireFlashSales = () =>
+  Product.updateMany(
+    {
+      isFlashSale: true,
+      flashSaleEndsAt: { $lte: new Date() },
+    },
+    { $set: { isFlashSale: false } },
+  );
+
 export const listProducts = async (_req, res) => {
   try {
+    await expireFlashSales();
     const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    res.json(products.map((product) => productToClient(product)));
   } catch {
     res.status(500).json({ error: "Failed to load products" });
   }
@@ -14,12 +120,13 @@ export const listProducts = async (_req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
+    await expireFlashSales();
     const { id } = req.params;
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
-    res.json(product);
+    res.json(productToClient(product));
   } catch {
     res.status(500).json({ error: "Failed to load product" });
   }
@@ -38,6 +145,10 @@ export const createProduct = async (req, res) => {
       colors,
       stock,
       image,
+      variants,
+      isFlashSale,
+      flashSalePrice,
+      flashSaleEndsAt,
     } = req.body;
     if (!name || price === undefined || price === null) {
       return res.status(400).json({ error: "Name and price are required" });
@@ -50,6 +161,35 @@ export const createProduct = async (req, res) => {
         .json({ error: "Price must be a valid non-negative number" });
     }
 
+    const normalizedVariants = normalizeVariants(variants);
+    const variantError = validateVariants(normalizedVariants);
+    if (variantError) {
+      return res.status(400).json({ error: variantError });
+    }
+
+    const flashSale = normalizeFlashSaleFields({
+      isFlashSale,
+      flashSalePrice,
+      flashSaleEndsAt,
+    });
+    if (flashSale.isFlashSale) {
+      if (!flashSale.flashSalePrice || flashSale.flashSalePrice >= numericPrice) {
+        return res
+          .status(400)
+          .json({ error: "Flash sale price must be greater than 0 and lower than price" });
+      }
+      if (!flashSale.flashSaleEndsAt || flashSale.flashSaleEndsAt <= new Date()) {
+        return res
+          .status(400)
+          .json({ error: "Flash sale end date must be in the future" });
+      }
+    }
+
+    const fallbackStock =
+      Number.isInteger(Number(stock)) && Number(stock) >= 0
+        ? Number(stock)
+        : 25;
+
     const product = await Product.create({
       name: String(name).trim(),
       price: numericPrice,
@@ -57,18 +197,24 @@ export const createProduct = async (req, res) => {
       brand: brand ? String(brand).trim() : "Generic",
       colorFamily: colorFamily ? String(colorFamily).trim() : "Neutral",
       description: description || "",
-      sizes: Array.isArray(sizes) ? sizes : [],
-      colors: Array.isArray(colors) ? colors : [],
-      stock:
-        Number.isInteger(Number(stock)) && Number(stock) >= 0
-          ? Number(stock)
-          : 25,
-      image: image ? String(image) : "",
-      
+      sizes: normalizeStringArray(sizes),
+      colors: normalizedVariants.length
+        ? normalizedVariants.map((variant) => variant.color)
+        : normalizeStringArray(colors),
+      variants: normalizedVariants,
+      stock: normalizedVariants.length
+        ? normalizedVariants.reduce((sum, variant) => sum + variant.stock, 0)
+        : fallbackStock,
+      image:
+        normalizedVariants.find((variant) => variant.images.length)?.images[0] ||
+        (image ? String(image) : ""),
+      isFlashSale: flashSale.isFlashSale,
+      flashSalePrice: flashSale.flashSalePrice,
+      flashSaleEndsAt: flashSale.flashSaleEndsAt,
     });
-console.log("PRODUCT SAVED:", product._id);
-    res.status(201).json(product);
-  } catch {
+    res.status(201).json(productToClient(product));
+  } catch (error) {
+    console.error("Create product failed:", error);
     res.status(500).json({ error: "Failed to create product" });
   }
 };
@@ -86,6 +232,10 @@ export const updateProduct = async (req, res) => {
       colors,
       stock,
       image,
+      variants,
+      isFlashSale,
+      flashSalePrice,
+      flashSaleEndsAt,
     } = req.body;
     const product = await Product.findById(id);
 
@@ -127,10 +277,30 @@ export const updateProduct = async (req, res) => {
     }
 
     if (colors !== undefined) {
-      product.colors = Array.isArray(colors) ? colors : [];
+      product.colors = normalizeStringArray(colors);
     }
 
-    if (stock !== undefined) {
+    if (variants !== undefined) {
+      const normalizedVariants = normalizeVariants(variants);
+      const variantError = validateVariants(normalizedVariants);
+      if (variantError) {
+        return res.status(400).json({ error: variantError });
+      }
+      product.variants = normalizedVariants;
+      if (normalizedVariants.length) {
+        product.colors = normalizedVariants.map((variant) => variant.color);
+        product.stock = normalizedVariants.reduce(
+          (sum, variant) => sum + variant.stock,
+          0,
+        );
+        const firstVariantImage = normalizedVariants.find(
+          (variant) => variant.images.length,
+        )?.images[0];
+        if (firstVariantImage) product.image = firstVariantImage;
+      }
+    }
+
+    if (stock !== undefined && variants === undefined) {
       const parsedStock = Number(stock);
       if (!Number.isInteger(parsedStock) || parsedStock < 0) {
         return res
@@ -144,9 +314,47 @@ export const updateProduct = async (req, res) => {
       product.image = String(image);
     }
 
+    if (
+      isFlashSale !== undefined ||
+      flashSalePrice !== undefined ||
+      flashSaleEndsAt !== undefined
+    ) {
+      const flashSale = normalizeFlashSaleFields({
+        isFlashSale:
+          isFlashSale !== undefined ? isFlashSale : product.isFlashSale,
+        flashSalePrice:
+          flashSalePrice !== undefined
+            ? flashSalePrice
+            : product.flashSalePrice,
+        flashSaleEndsAt:
+          flashSaleEndsAt !== undefined
+            ? flashSaleEndsAt
+            : product.flashSaleEndsAt,
+      });
+      if (flashSale.isFlashSale) {
+        if (
+          !flashSale.flashSalePrice ||
+          flashSale.flashSalePrice >= Number(product.price || 0)
+        ) {
+          return res.status(400).json({
+            error: "Flash sale price must be greater than 0 and lower than price",
+          });
+        }
+        if (!flashSale.flashSaleEndsAt || flashSale.flashSaleEndsAt <= new Date()) {
+          return res
+            .status(400)
+            .json({ error: "Flash sale end date must be in the future" });
+        }
+      }
+      product.isFlashSale = flashSale.isFlashSale;
+      product.flashSalePrice = flashSale.flashSalePrice;
+      product.flashSaleEndsAt = flashSale.flashSaleEndsAt;
+    }
+
     await product.save();
-    res.json(product);
-  } catch {
+    res.json(productToClient(product));
+  } catch (error) {
+    console.error("Update product failed:", error);
     res.status(500).json({ error: "Failed to update product" });
   }
 };

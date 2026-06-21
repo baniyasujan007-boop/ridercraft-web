@@ -8,6 +8,10 @@ export default function AdminSectionContent({ vm }) {
     setForm,
     handleProductImageChange,
     handleProductImageUrlChange,
+    updateVariantField,
+    addVariant,
+    removeVariant,
+    handleVariantImageChange,
     saveProduct,
     resetForm,
     editingPromoId,
@@ -143,7 +147,7 @@ export default function AdminSectionContent({ vm }) {
 
             <input
               type="text"
-              placeholder="Colors (Blue,Black,White)"
+              placeholder="Legacy colors fallback (Blue,Black,White)"
               value={form.colors}
               onChange={(e) =>
                 setForm((prev) => ({
@@ -198,6 +202,19 @@ export default function AdminSectionContent({ vm }) {
               Flash Sale Product
             </label>
             <input
+              type="number"
+              min="0"
+              placeholder="Flash Sale Price"
+              value={form.flashSalePrice}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  flashSalePrice: e.target.value,
+                }))
+              }
+              disabled={!form.isFlashSale}
+            />
+            <input
               type="datetime-local"
               value={form.flashSaleEndsAt}
               onChange={(e) =>
@@ -207,6 +224,7 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
               placeholder="Flash Sale End Time"
+              disabled={!form.isFlashSale}
             />
             <input
               type="file"
@@ -230,6 +248,101 @@ export default function AdminSectionContent({ vm }) {
               </button>
             </div>
           )}
+
+          <div className="admin-variant-manager">
+            <div className="admin-variant-head">
+              <div>
+                <h3>Product Variants</h3>
+                <p>Use one row per color. Images here power color switching on product details.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-secondary-btn"
+                onClick={addVariant}
+              >
+                + Add Variant
+              </button>
+            </div>
+
+            {(form.variants || []).map((variant, index) => (
+              <article className="admin-variant-card" key={`variant-${index}`}>
+                <div className="admin-variant-card-head">
+                  <h4>Variant {index + 1}</h4>
+                  <button
+                    type="button"
+                    className="table-delete-btn"
+                    onClick={() => removeVariant(index)}
+                    disabled={(form.variants || []).length <= 1}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="admin-form-grid">
+                  <input
+                    placeholder="Color Name"
+                    value={variant.color}
+                    onChange={(e) =>
+                      updateVariantField(index, "color", e.target.value)
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Hex (#000000)"
+                    value={variant.colorHex}
+                    onChange={(e) =>
+                      updateVariantField(index, "colorHex", e.target.value)
+                    }
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Stock"
+                    value={variant.stock}
+                    onChange={(e) =>
+                      updateVariantField(index, "stock", e.target.value)
+                    }
+                  />
+                  <input
+                    placeholder="SKU"
+                    value={variant.sku}
+                    onChange={(e) =>
+                      updateVariantField(index, "sku", e.target.value)
+                    }
+                  />
+                  <textarea
+                    placeholder="Variant image URLs, one per line"
+                    value={variant.imagesText}
+                    onChange={(e) =>
+                      updateVariantField(index, "imagesText", e.target.value)
+                    }
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleVariantImageChange(index, e)}
+                  />
+                </div>
+                {variant.imagesText && (
+                  <div className="admin-variant-preview-row">
+                    {variant.imagesText
+                      .split(/\n|,/)
+                      .map((src) => src.trim())
+                      .filter(Boolean)
+                      .slice(0, 5)
+                      .map((src, imageIndex) => (
+                        <img
+                          key={`${src}-${imageIndex}`}
+                          src={src}
+                          alt={`${variant.color || "Variant"} ${imageIndex + 1}`}
+                          onError={applyImageFallback}
+                        />
+                      ))}
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
 
           <div className="admin-actions">
             <button onClick={saveProduct} className="admin-primary-btn">
@@ -551,6 +664,7 @@ export default function AdminSectionContent({ vm }) {
                 <th>Brand</th>
                 <th>Colour Family</th>
                 <th>Stock</th>
+                <th>Variants</th>
                 <th>Price</th>
                 <th>Rating</th>
                 <th>Flash Sale</th>
@@ -566,15 +680,25 @@ export default function AdminSectionContent({ vm }) {
                   <td>{product.brand || "Generic"}</td>
                   <td>{product.colorFamily || "Neutral"}</td>
                   <td>{Number(product.stock ?? 0)}</td>
-                  <td>${product.price}</td>
+                  <td>{product.variants?.length || 0}</td>
+                  <td>
+                    {product.isFlashSaleActive ? (
+                      <>
+                        <span>₹{product.displayPrice}</span>{" "}
+                        <small>
+                          <s>₹{product.originalPrice}</s> {product.discountPercent}% OFF
+                        </small>
+                      </>
+                    ) : (
+                      `₹${product.price}`
+                    )}
+                  </td>
                   <td>
                     {(product.ratingAverage || 0).toFixed(1)} / 5 (
                     {product.ratingCount || 0})
                   </td>
                   <td>
-                    {flashSaleProductIds.includes(String(product._id))
-                      ? "Yes"
-                      : "No"}
+                    {product.isFlashSaleActive ? "Live" : product.isFlashSale ? "Scheduled" : "No"}
                   </td>
                   <td>
                     {product.image ? (

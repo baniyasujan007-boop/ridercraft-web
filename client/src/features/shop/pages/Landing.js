@@ -484,7 +484,11 @@ export default function Landing() {
         "https://ridercraft-api.onrender.com/orders",
         {
           items: cart.map((item) => ({
-            productId: item._id,
+            productId: item.productId || item._id,
+            variantId: item.variantId || "",
+            variantSku: item.variantSku || "",
+            color: item.color || "",
+            colorHex: item.colorHex || "",
             name: item.name,
             price: item.price,
             qty: item.qty,
@@ -558,7 +562,16 @@ export default function Landing() {
     }));
     setPromoMessage("Dummy e-wallet details filled.");
   };
-  const formatCurrency = (value) => `$${Number(value || 0).toFixed(2)}`;
+  const formatCurrency = (value) =>
+    `₹${Number(value || 0).toLocaleString("en-IN")}`;
+  const getProductDisplayPrice = (product) =>
+    Number(product.displayPrice ?? product.price ?? 0);
+  const getProductOriginalPrice = (product) =>
+    Number(product.originalPrice ?? product.price ?? 0);
+  const isProductFlashSaleActive = (product) =>
+    Boolean(product.isFlashSaleActive || product.isFlashSale);
+  const getProductImage = (product) =>
+    product.image || product.variants?.find((variant) => variant.images?.length)?.images?.[0] || "";
   const renderRatingStars = (value) => {
     const rounded =
       Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
@@ -1622,9 +1635,9 @@ export default function Landing() {
                       onClick={() => navigate(`/products/${product._id}`)}
                     >
                       <div className="flash-sale-card-top">
-                        {product.image ? (
+                        {getProductImage(product) ? (
                           <img
-                            src={product.image}
+                            src={getProductImage(product)}
                             alt={product.name}
                             className="flash-sale-image"
                             onError={applyImageFallback}
@@ -1641,7 +1654,13 @@ export default function Landing() {
                             <small>({product.ratingCount || 0})</small>
                           </div>
                           <p className="flash-sale-price">
-                            ${Number(product.price || 0).toFixed(2)}
+                            {formatCurrency(getProductDisplayPrice(product))}
+                            {isProductFlashSaleActive(product) && (
+                              <small>
+                                <s>{formatCurrency(getProductOriginalPrice(product))}</s>
+                                {product.discountPercent ? ` ${product.discountPercent}% OFF` : ""}
+                              </small>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -1704,9 +1723,9 @@ export default function Landing() {
                           onClick={() => navigate(`/products/${product._id}`)}
                         >
                           <div className="featured-image-wrap">
-                            {product.image ? (
+                            {getProductImage(product) ? (
                               <img
-                                src={product.image}
+                                src={getProductImage(product)}
                                 alt={product.name}
                                 className="featured-image"
                                 onError={applyImageFallback}
@@ -1718,12 +1737,22 @@ export default function Landing() {
                             )}
                           </div>
                           <p className="featured-name">{product.name}</p>
+                          {isProductFlashSaleActive(product) && (
+                            <span className="product-flash-badge">
+                              ⚡ Flash Sale
+                            </span>
+                          )}
                           <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
                             {renderRatingStars(product.ratingAverage)}
                             <small>({product.ratingCount || 0})</small>
                           </div>
                           <p className="featured-price">
-                            ${Number(product.price || 0).toFixed(2)}
+                            {formatCurrency(getProductDisplayPrice(product))}
+                            {isProductFlashSaleActive(product) && (
+                              <small>
+                                <s>{formatCurrency(getProductOriginalPrice(product))}</s>
+                              </small>
+                            )}
                           </p>
                           <button
                             type="button"
@@ -1914,9 +1943,9 @@ export default function Landing() {
                     onClick={() => navigate(`/products/${product._id}`)}
                   >
                     <div className="product-card-image-wrap">
-                      {product.image ? (
+                      {getProductImage(product) ? (
                         <img
-                          src={product.image}
+                          src={getProductImage(product)}
                           alt={product.name}
                           className="product-card-image"
                           onError={applyImageFallback}
@@ -1928,8 +1957,19 @@ export default function Landing() {
                       )}
                     </div>
                     <p className="product-brand">{product.tag}</p>
+                    {isProductFlashSaleActive(product) && (
+                      <span className="product-flash-badge">⚡ Flash Sale</span>
+                    )}
                     <h3>{product.name}</h3>
-                    <p className="price">${product.price}</p>
+                    <p className="price">
+                      {formatCurrency(getProductDisplayPrice(product))}
+                      {isProductFlashSaleActive(product) && (
+                        <small>
+                          <s>{formatCurrency(getProductOriginalPrice(product))}</s>
+                          {product.discountPercent ? ` ${product.discountPercent}% OFF` : ""}
+                        </small>
+                      )}
+                    </p>
                     <div className="product-rating-display">
                       <div
                         className="display-star-row"
@@ -1996,7 +2036,8 @@ export default function Landing() {
                     )}
                     <div>
                       <h3>{item.name}</h3>
-                      <p>Color: {item.tag || "General"}</p>
+                      <p>Color: {item.color || item.tag || "General"}</p>
+                      {item.variantSku && <p>SKU: {item.variantSku}</p>}
                       <p>In stock</p>
                       <div className="cart-item-actions">
                         <button

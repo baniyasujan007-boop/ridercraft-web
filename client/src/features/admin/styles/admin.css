@@ -1203,3 +1203,51 @@
   color: #fff;
   font-size: 14px;
 }
+
+.admin-variant-manager {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.admin-variant-head,
+.admin-variant-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-variant-head h3,
+.admin-variant-card h4 {
+  margin: 0;
+}
+
+.admin-variant-head p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-variant-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-variant-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-variant-preview-row img {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}

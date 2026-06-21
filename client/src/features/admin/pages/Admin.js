@@ -15,7 +15,18 @@ const initialForm = {
   image: "",
   description: "",
   isFlashSale: false,
+  flashSalePrice: "",
   flashSaleEndsAt: "",
+  variants: [
+    {
+      color: "Black",
+      colorHex: "#000000",
+      stock: "25",
+      sku: "",
+      imagesText: "",
+      images: [],
+    },
+  ],
 };
 const initialPromoForm = {
   code: "",
@@ -54,6 +65,35 @@ const toDateTimeInputValue = (value) => {
     date.getHours(),
   )}:${pad(date.getMinutes())}`;
 };
+
+const createBlankVariant = () => ({
+  color: "",
+  colorHex: "#111827",
+  stock: "0",
+  sku: "",
+  imagesText: "",
+  images: [],
+});
+
+const normalizeVariantForForm = (variant = {}) => {
+  const images = Array.isArray(variant.images)
+    ? variant.images.filter(Boolean)
+    : [];
+  return {
+    color: variant.color || "",
+    colorHex: variant.colorHex || "#111827",
+    stock: String(variant.stock ?? "0"),
+    sku: variant.sku || "",
+    imagesText: images.join("\n"),
+    images,
+  };
+};
+
+const splitVariantImages = (variant) =>
+  String(variant.imagesText || "")
+    .split(/\n|,/)
+    .map((image) => image.trim())
+    .filter(Boolean);
 
 export default function Admin() {
   const [productUrl, setProductUrl] = useState("");
@@ -710,6 +750,69 @@ export default function Admin() {
       rawValue && /^www\./i.test(rawValue) ? `https://${rawValue}` : rawValue;
     setForm((prev) => ({ ...prev, image: nextValue }));
   };
+
+  const updateVariantField = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      variants: prev.variants.map((variant, variantIndex) =>
+        variantIndex === index ? { ...variant, [field]: value } : variant,
+      ),
+    }));
+  };
+
+  const addVariant = () => {
+    setForm((prev) => ({
+      ...prev,
+      variants: [...prev.variants, createBlankVariant()],
+    }));
+  };
+
+  const removeVariant = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      variants:
+        prev.variants.length > 1
+          ? prev.variants.filter((_, variantIndex) => variantIndex !== index)
+          : prev.variants,
+    }));
+  };
+
+  const handleVariantImageChange = async (index, event) => {
+    setError("");
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const invalidFile = files.find((file) => !file.type.startsWith("image/"));
+    if (invalidFile) {
+      setError("Variant uploads must be image files");
+      return;
+    }
+    const oversizedFile = files.find((file) => file.size > 2 * 1024 * 1024);
+    if (oversizedFile) {
+      setError("Each variant image must be 2MB or less");
+      return;
+    }
+
+    try {
+      const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
+      setForm((prev) => ({
+        ...prev,
+        variants: prev.variants.map((variant, variantIndex) => {
+          if (variantIndex !== index) return variant;
+          const images = [...(variant.images || []), ...dataUrls];
+          return {
+            ...variant,
+            images,
+            imagesText: images.join("\n"),
+          };
+        }),
+      }));
+    } catch {
+      setError("Failed to read variant image files");
+    } finally {
+      event.target.value = "";
+    }
+  };
   const fetchProductFromUrl = async () => {
     try {
       const headers = {
@@ -768,15 +871,46 @@ export default function Admin() {
         colorFamily: form.colorFamily.trim() || "Neutral",
         description: form.description || "",
 
-        sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
-
-        colors: form.colors ? form.colors.split(",").map((c) => c.trim()) : [],
+        sizes: form.sizes
+          ? form.sizes
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
 
         stock: Number(form.stock || 0),
         image: imageSource,
         isFlashSale: form.isFlashSale,
+        flashSalePrice: form.isFlashSale ? Number(form.flashSalePrice || 0) : null,
         flashSaleEndsAt: form.flashSaleEndsAt || null,
+        variants: form.variants
+          .map((variant) => {
+            const images = splitVariantImages(variant);
+            return {
+              color: String(variant.color || "").trim(),
+              colorHex: String(variant.colorHex || "").trim(),
+              stock: Number(variant.stock || 0),
+              sku: String(variant.sku || "").trim(),
+              images,
+            };
+          })
+          .filter((variant) => variant.color),
       };
+      payload.colors = payload.variants.map((variant) => variant.color);
+      if (payload.variants.length) {
+        payload.stock = payload.variants.reduce(
+          (sum, variant) => sum + Number(variant.stock || 0),
+          0,
+        );
+        payload.image =
+          payload.variants.find((variant) => variant.images.length)?.images[0] ||
+          imageSource;
+      } else if (form.colors) {
+        payload.colors = form.colors
+          .split(",")
+          .map((color) => color.trim())
+          .filter(Boolean);
+      }
       const headers = { Authorization: `Bearer ${token}` };
 
       if (editingId) {
@@ -818,7 +952,19 @@ export default function Admin() {
       stock: String(product.stock ?? "25"),
       image: product.image || "",
       isFlashSale: product.isFlashSale || false,
-      flashSaleEndsAt: product.flashSaleEndsAt || "",
+      flashSalePrice: String(product.flashSalePrice ?? ""),
+      flashSaleEndsAt: toDateTimeInputValue(product.flashSaleEndsAt),
+      variants: Array.isArray(product.variants) && product.variants.length
+        ? product.variants.map(normalizeVariantForForm)
+        : [
+            normalizeVariantForForm({
+              color: product.colors?.[0] || product.colorFamily || "",
+              colorHex: "#111827",
+              stock: product.stock ?? 0,
+              sku: "",
+              images: product.image ? [product.image] : [],
+            }),
+          ],
     });
   };
 
@@ -1271,6 +1417,10 @@ export default function Admin() {
             setForm,
             handleProductImageChange,
             handleProductImageUrlChange,
+            updateVariantField,
+            addVariant,
+            removeVariant,
+            handleVariantImageChange,
             saveProduct,
             resetForm,
             editingPromoId,

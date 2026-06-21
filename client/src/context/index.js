@@ -6,11 +6,34 @@ const CartContext = createContext(null);
 
 function normalizeCartItem(product) {
   const id = product?._id || product?.id;
+  const variant =
+    product?.selectedVariant ||
+    product?.variant ||
+    (Array.isArray(product?.variants) && product.variants.length
+      ? {
+          id: product.variants[0]._id || product.variants[0].id,
+          sku: product.variants[0].sku,
+          name: product.variants[0].color,
+          value: product.variants[0].colorHex,
+          images: product.variants[0].images,
+        }
+      : null);
+  const variantId = variant?.id || variant?._id || "";
+  const cartKey = `${id}${variantId ? `:${variantId}` : ""}`;
   return {
-    _id: String(id),
+    _id: String(cartKey),
+    productId: String(id),
+    variantId: String(variantId),
+    variantSku: variant?.sku || product?.variantSku || "",
+    color: variant?.name || product?.color || "",
+    colorHex: variant?.value || product?.colorHex || "",
     name: product?.name || product?.title || "Product",
-    price: Number(product?.price || 0),
-    image: product?.image || product?.images?.[0] || "",
+    price: Number(product?.displayPrice || product?.price || 0),
+    image:
+      product?.image ||
+      variant?.images?.[0] ||
+      product?.images?.[0] ||
+      "",
     tag: product?.tag || product?.brand || "General"
   };
 }

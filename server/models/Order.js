@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    variantId: { type: String, default: "" },
+    variantSku: { type: String, default: "" },
+    color: { type: String, default: "" },
+    colorHex: { type: String, default: "" },
     name: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
     qty: { type: Number, required: true, min: 1 },

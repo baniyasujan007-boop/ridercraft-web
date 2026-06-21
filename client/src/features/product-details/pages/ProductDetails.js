@@ -22,13 +22,45 @@ function mapApiProductToUi(product) {
     orange: "#f97316",
   };
 
+  const variants = Array.isArray(product.variants)
+    ? product.variants.map((variant) => ({
+        id: variant._id || variant.id || variant.sku || variant.color,
+        name: variant.color || "Default",
+        value:
+          variant.colorHex ||
+          colorMap[String(variant.color || "").trim().toLowerCase()] ||
+          "#1f1f1f",
+        images: Array.isArray(variant.images)
+          ? variant.images.filter(Boolean)
+          : [],
+        stock: Number(variant.stock || 0),
+        sku: variant.sku || "",
+      }))
+    : [];
+  const legacyColors = Array.isArray(product.colors)
+    ? product.colors.map((color) => ({
+        id: color,
+        name: color,
+        value: colorMap[String(color).trim().toLowerCase()] || "#1f1f1f",
+        images: [],
+        stock: Number(product.stock || 0),
+        sku: "",
+      }))
+    : [];
+  const activeFlashSale = Boolean(product.isFlashSaleActive || product.isFlashSale);
+  const originalPrice = Number(product.originalPrice || product.price || 0);
+  const displayPrice = Number(product.displayPrice || product.price || 0);
+
   return {
     id: product._id,
     brand: product.brand || "Generic",
     title: product.name || "Product",
-    isFlashSale: product.isFlashSale || false,
-    oldPrice: null,
-    price: Number(product.price || 0),
+    isFlashSale: activeFlashSale,
+    oldPrice: activeFlashSale ? originalPrice : null,
+    price: displayPrice,
+    originalPrice,
+    flashSalePrice: Number(product.flashSalePrice || 0),
+    discountPercent: Number(product.discountPercent || 0),
     rating: Number(product.ratingAverage || 0),
     soldCount: Number(product.ratingCount || 0),
     stock: Number(product.stock || 0),
@@ -43,13 +75,9 @@ function mapApiProductToUi(product) {
           .sort((a, b) => b.value - a.value)
       : [],
     description: product.description || "",
-    images: product.images?.length ? product.images : [image],
-    colors: Array.isArray(product.colors)
-      ? product.colors.map((color) => ({
-          name: color,
-          value: colorMap[String(color).trim().toLowerCase()] || "#1f1f1f",
-        }))
-      : [],
+    images: product.images?.length ? product.images : [image].filter(Boolean),
+    variants,
+    colors: variants.length ? variants : legacyColors,
     sizes: Array.isArray(product.sizes) ? product.sizes : [],
   };
 }
@@ -121,30 +149,55 @@ export default function ProductDetails() {
   }, [product]);
 
   const fallbackImage = DEFAULT_FALLBACK_IMAGE;
+  const activeImages =
+    selectedColor?.images?.length > 0
+      ? selectedColor.images
+      : product?.images?.length
+        ? product.images
+        : [fallbackImage];
+  const currentStock =
+    selectedColor && Number.isFinite(Number(selectedColor.stock))
+      ? Number(selectedColor.stock)
+      : Number(product?.stock || 0);
 
   const handlePrevImage = () => {
     if (!product) return;
     setActiveImage((prev) =>
-      prev === 0 ? product.images.length - 1 : prev - 1,
+      prev === 0 ? activeImages.length - 1 : prev - 1,
     );
   };
 
   const handleNextImage = () => {
     if (!product) return;
     setActiveImage((prev) =>
-      prev === product.images.length - 1 ? 0 : prev + 1,
+      prev === activeImages.length - 1 ? 0 : prev + 1,
     );
   };
 
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(product);
+    addToCart({
+      ...product,
+      stock: currentStock,
+      selectedVariant: selectedColor,
+      image: activeImages[activeImage] || activeImages[0],
+    });
   };
 
   const handleCheckoutNow = () => {
     if (!product) return;
-    addToCart(product);
+    addToCart({
+      ...product,
+      stock: currentStock,
+      selectedVariant: selectedColor,
+      image: activeImages[activeImage] || activeImages[0],
+    });
     navigate("/landing", { state: { view: "cart" } });
+  };
+
+  const handleSelectColor = (color) => {
+    setSelectedColor(color);
+    setActiveImage(0);
   };
 
   const renderReviewStars = (value) => {
@@ -202,7 +255,7 @@ const totalReviews = reviewCounts.reduce(
           <>
             <section className="pdp-top-grid">
               <ProductGallery
-                images={product.images}
+                images={activeImages}
                 title={product.title}
                 fallbackImage={fallbackImage}
                 activeImage={activeImage}
@@ -213,10 +266,11 @@ const totalReviews = reviewCounts.reduce(
 
               <ProductSummary
                 product={product}
+                stock={currentStock}
                 expanded={isExpanded}
                 onToggleDescription={() => setIsExpanded((prev) => !prev)}
                 selectedColor={selectedColor}
-                onSelectColor={setSelectedColor}
+                onSelectColor={handleSelectColor}
                 selectedSize={selectedSize}
                 onSelectSize={setSelectedSize}
                 onAddToCart={handleAddToCart}

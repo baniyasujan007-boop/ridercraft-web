@@ -28,12 +28,23 @@ export default function RelatedProducts({
               
             </div>
             <p className="pdp-related-name">{item.title}</p>
+            {item.isFlashSale && (
+              <span className="pdp-related-flash-badge">⚡ Flash Sale</span>
+            )}
 
             <div className="pdp-related-rating">
               ⭐ {item.rating?.toFixed(1) || "0.0"}
             </div>
 
-            <p className="pdp-related-price">₹{item.price.toLocaleString()}</p>
+            <p className="pdp-related-price">
+              ₹{item.price.toLocaleString("en-IN")}
+              {item.oldPrice && (
+                <small>
+                  <s>₹{item.oldPrice.toLocaleString("en-IN")}</s>{" "}
+                  {item.discountPercent}% OFF
+                </small>
+              )}
+            </p>
 
             <button
               className="pdp-related-btn"

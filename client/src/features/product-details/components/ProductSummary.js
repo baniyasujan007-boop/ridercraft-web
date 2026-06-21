@@ -22,6 +22,7 @@ function renderRatingStars(value) {
 
 export default function ProductSummary({
   product,
+  stock,
   expanded,
   onToggleDescription,
   selectedColor,
@@ -31,6 +32,9 @@ export default function ProductSummary({
   onAddToCart,
   onCheckoutNow,
 }) {
+  const visibleStock = Number.isFinite(Number(stock))
+    ? Number(stock)
+    : Number(product.stock || 0);
   const needsToggle = product.description.length > 145;
   const descriptionText =
     expanded || !needsToggle
@@ -52,18 +56,20 @@ export default function ProductSummary({
       <p className="pdp-brand-name">Brand: {product.brand}</p>
       <div
         className={
-          product.stock > 0
+          visibleStock > 0
             ? "pdp-stock-badge in-stock"
             : "pdp-stock-badge out-stock"
         }
       >
-        {product.stock > 0 ? `✓ In Stock (${product.stock})` : "✕ Out of Stock"}
+        {visibleStock > 0 ? `✓ In Stock (${visibleStock})` : "✕ Out of Stock"}
       </div>
 
       <div className="pdp-price-card">
         <div className="pdp-price-row">
           {product.oldPrice && (
-            <p className="pdp-old-price">${product.oldPrice.toFixed(2)}</p>
+            <p className="pdp-old-price">
+              ₹{product.oldPrice.toLocaleString("en-IN")}
+            </p>
           )}
 
           <p className="pdp-new-price">
@@ -73,11 +79,11 @@ export default function ProductSummary({
 
         {product.oldPrice && (
           <div className="pdp-discount-badge">
-            Save{" "}
-            {Math.round(
-              ((product.oldPrice - product.price) / product.oldPrice) * 100,
-            )}
-            %
+            {product.discountPercent ||
+              Math.round(
+                ((product.oldPrice - product.price) / product.oldPrice) * 100,
+              )}
+            % OFF
           </div>
         )}
       </div>

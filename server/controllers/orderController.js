@@ -52,6 +52,10 @@ export const createOrder = async (req, res) => {
 
     const normalizedItems = items.map((item) => ({
       productId: item.productId || item._id,
+      variantId: String(item.variantId || ""),
+      variantSku: String(item.variantSku || item.sku || ""),
+      color: String(item.color || ""),
+      colorHex: String(item.colorHex || ""),
       name: String(item.name || ""),
       price: Number(item.price || 0),
       qty: Number(item.qty || 0),

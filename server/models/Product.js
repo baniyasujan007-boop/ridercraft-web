@@ -13,6 +13,17 @@ const productRatingSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const productVariantSchema = new mongoose.Schema(
+  {
+    color: { type: String, required: true, trim: true },
+    colorHex: { type: String, default: "#111827", trim: true },
+    images: { type: [String], default: [] },
+    stock: { type: Number, default: 0, min: 0 },
+    sku: { type: String, default: "", trim: true },
+  },
+  { _id: true },
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -38,9 +49,18 @@ const productSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    variants: {
+      type: [productVariantSchema],
+      default: [],
+    },
     isFlashSale: {
       type: Boolean,
       default: false,
+    },
+    flashSalePrice: {
+      type: Number,
+      default: null,
+      min: 0,
     },
 
     flashSaleEndsAt: {
