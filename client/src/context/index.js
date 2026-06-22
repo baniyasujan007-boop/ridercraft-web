@@ -28,11 +28,11 @@ function normalizeCartItem(product) {
     color: variant?.name || product?.color || "",
     colorHex: variant?.value || product?.colorHex || "",
     name: product?.name || product?.title || "Product",
-    price: Number(product?.displayPrice || product?.price || 0),
+    price: Number(product?.displayPrice ?? product?.price ?? 0),
     image:
-      product?.image ||
       variant?.images?.[0] ||
       product?.images?.[0] ||
+      product?.image ||
       "",
     tag: product?.tag || product?.brand || "General"
   };

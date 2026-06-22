@@ -64,6 +64,81 @@ const FEATURED_SECTION_ICONS = {
   "new-arrivals": "◆",
 };
 
+const toNumber = (value, fallback = 0) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
+
+const getPrimaryVariant = (product) =>
+  Array.isArray(product?.variants) && product.variants.length
+    ? product.variants[0]
+    : null;
+
+const isProductFlashSaleActive = (product, now = Date.now()) => {
+  if (!product) return false;
+  if (product.isFlashSaleActive === true) return true;
+  if (product.isFlashSale !== true) return false;
+
+  const salePrice = toNumber(product.flashSalePrice);
+  if (salePrice <= 0) return false;
+
+  if (!product.flashSaleEndsAt) return true;
+  const endsAt = new Date(product.flashSaleEndsAt).getTime();
+  return Number.isFinite(endsAt) && endsAt > now;
+};
+
+const getProductDisplayPrice = (product, now = Date.now()) => {
+  if (isProductFlashSaleActive(product, now)) {
+    return toNumber(product.flashSalePrice || product.displayPrice || product.price);
+  }
+  return toNumber(product?.displayPrice ?? product?.price);
+};
+
+const getProductOriginalPrice = (product) =>
+  toNumber(product?.originalPrice ?? product?.oldPrice ?? product?.price);
+
+const getProductDiscountPercent = (product, now = Date.now()) => {
+  const explicitDiscount = toNumber(product?.discountPercent);
+  if (explicitDiscount > 0) return explicitDiscount;
+
+  const originalPrice = getProductOriginalPrice(product);
+  const displayPrice = getProductDisplayPrice(product, now);
+  if (originalPrice <= 0 || displayPrice >= originalPrice) return 0;
+  return Math.round(((originalPrice - displayPrice) / originalPrice) * 100);
+};
+
+const getProductStock = (product) => {
+  const variant = getPrimaryVariant(product);
+  if (variant) return Math.max(0, toNumber(variant.stock));
+  return Math.max(0, toNumber(product?.stock));
+};
+
+const getProductImage = (product) =>
+  getPrimaryVariant(product)?.images?.find(Boolean) ||
+  product?.images?.find?.(Boolean) ||
+  product?.image ||
+  "";
+
+const getCartProductPayload = (product, now = Date.now()) => {
+  const variant = getPrimaryVariant(product);
+  return {
+    ...product,
+    displayPrice: getProductDisplayPrice(product, now),
+    originalPrice: getProductOriginalPrice(product),
+    stock: getProductStock(product),
+    image: getProductImage(product),
+    selectedVariant: variant
+      ? {
+          id: variant._id || variant.id,
+          sku: variant.sku || "",
+          name: variant.color || "",
+          value: variant.colorHex || "",
+          images: variant.images || [],
+        }
+      : null,
+  };
+};
+
 export default function Landing() {
   const [dbNotifications, setDbNotifications] = useState([]);
 
@@ -258,9 +333,17 @@ export default function Landing() {
 
     const sorted = [...filtered];
     if (sortBy === "price-low") {
-      sorted.sort((a, b) => Number(a.price) - Number(b.price));
+      sorted.sort(
+        (a, b) =>
+          getProductDisplayPrice(a, offerNow) -
+          getProductDisplayPrice(b, offerNow),
+      );
     } else if (sortBy === "price-high") {
-      sorted.sort((a, b) => Number(b.price) - Number(a.price));
+      sorted.sort(
+        (a, b) =>
+          getProductDisplayPrice(b, offerNow) -
+          getProductDisplayPrice(a, offerNow),
+      );
     } else if (sortBy === "name-asc") {
       sorted.sort((a, b) => String(a.name).localeCompare(String(b.name)));
     }
@@ -273,6 +356,7 @@ export default function Landing() {
     activeColorFamily,
     sortBy,
     minRating,
+    offerNow,
   ]);
   const featuredSections = useMemo(
     () =>
@@ -564,14 +648,6 @@ export default function Landing() {
   };
   const formatCurrency = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN")}`;
-  const getProductDisplayPrice = (product) =>
-    Number(product.displayPrice ?? product.price ?? 0);
-  const getProductOriginalPrice = (product) =>
-    Number(product.originalPrice ?? product.price ?? 0);
-  const isProductFlashSaleActive = (product) =>
-    Boolean(product.isFlashSaleActive || product.isFlashSale);
-  const getProductImage = (product) =>
-    product.image || product.variants?.find((variant) => variant.images?.length)?.images?.[0] || "";
   const renderRatingStars = (value) => {
     const rounded =
       Math.round(Math.max(0, Math.min(5, Number(value || 0))) * 2) / 2;
@@ -1622,7 +1698,18 @@ export default function Landing() {
               </div>
               <div className="flash-sale-grid">
                 {flashSaleProducts.map((product) => {
-                  const stock = Math.max(0, Number(product.stock ?? 0));
+                  const stock = getProductStock(product);
+                  const imageSrc = getProductImage(product);
+                  const displayPrice = getProductDisplayPrice(product, offerNow);
+                  const originalPrice = getProductOriginalPrice(product);
+                  const discountPercent = getProductDiscountPercent(
+                    product,
+                    offerNow,
+                  );
+                  const isFlashSaleActive = isProductFlashSaleActive(
+                    product,
+                    offerNow,
+                  );
                   const maxStockBase = 20;
                   const soldProgress = Math.min(
                     100,
@@ -1635,9 +1722,9 @@ export default function Landing() {
                       onClick={() => navigate(`/products/${product._id}`)}
                     >
                       <div className="flash-sale-card-top">
-                        {getProductImage(product) ? (
+                        {imageSrc ? (
                           <img
-                            src={getProductImage(product)}
+                            src={imageSrc}
                             alt={product.name}
                             className="flash-sale-image"
                             onError={applyImageFallback}
@@ -1654,11 +1741,11 @@ export default function Landing() {
                             <small>({product.ratingCount || 0})</small>
                           </div>
                           <p className="flash-sale-price">
-                            {formatCurrency(getProductDisplayPrice(product))}
-                            {isProductFlashSaleActive(product) && (
+                            {formatCurrency(displayPrice)}
+                            {isFlashSaleActive && originalPrice > displayPrice && (
                               <small>
-                                <s>{formatCurrency(getProductOriginalPrice(product))}</s>
-                                {product.discountPercent ? ` ${product.discountPercent}% OFF` : ""}
+                                <s>{formatCurrency(originalPrice)}</s>
+                                {discountPercent ? ` ${discountPercent}% OFF` : ""}
                               </small>
                             )}
                           </p>
@@ -1679,7 +1766,7 @@ export default function Landing() {
                         disabled={stock <= 0}
                         onClick={(event) => {
                           event.stopPropagation();
-                          addToCart(product);
+                          addToCart(getCartProductPayload(product, offerNow));
                         }}
                       >
                         {stock > 0 ? "Add to cart" : "Out of stock"}
@@ -1716,56 +1803,74 @@ export default function Landing() {
                       )}
                     </div>
                     <div className="featured-grid">
-                      {(section.products || []).map((product) => (
-                        <article
-                          className="featured-card"
-                          key={`${section._id}-${product._id}`}
-                          onClick={() => navigate(`/products/${product._id}`)}
-                        >
-                          <div className="featured-image-wrap">
-                            {getProductImage(product) ? (
-                              <img
-                                src={getProductImage(product)}
-                                alt={product.name}
-                                className="featured-image"
-                                onError={applyImageFallback}
-                              />
-                            ) : (
-                              <div className="product-card-image-placeholder">
-                                No image
-                              </div>
-                            )}
-                          </div>
-                          <p className="featured-name">{product.name}</p>
-                          {isProductFlashSaleActive(product) && (
-                            <span className="product-flash-badge">
-                              ⚡ Flash Sale
-                            </span>
-                          )}
-                          <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
-                            {renderRatingStars(product.ratingAverage)}
-                            <small>({product.ratingCount || 0})</small>
-                          </div>
-                          <p className="featured-price">
-                            {formatCurrency(getProductDisplayPrice(product))}
-                            {isProductFlashSaleActive(product) && (
-                              <small>
-                                <s>{formatCurrency(getProductOriginalPrice(product))}</s>
-                              </small>
-                            )}
-                          </p>
-                          <button
-                            type="button"
-                            className="featured-add-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(product);
-                            }}
+                      {(section.products || []).map((product) => {
+                        const imageSrc = getProductImage(product);
+                        const displayPrice = getProductDisplayPrice(
+                          product,
+                          offerNow,
+                        );
+                        const originalPrice = getProductOriginalPrice(product);
+                        const discountPercent = getProductDiscountPercent(
+                          product,
+                          offerNow,
+                        );
+                        const isFlashSaleActive = isProductFlashSaleActive(
+                          product,
+                          offerNow,
+                        );
+
+                        return (
+                          <article
+                            className="featured-card"
+                            key={`${section._id}-${product._id}`}
+                            onClick={() => navigate(`/products/${product._id}`)}
                           >
-                            Add to cart
-                          </button>
-                        </article>
-                      ))}
+                            <div className="featured-image-wrap">
+                              {imageSrc ? (
+                                <img
+                                  src={imageSrc}
+                                  alt={product.name}
+                                  className="featured-image"
+                                  onError={applyImageFallback}
+                                />
+                              ) : (
+                                <div className="product-card-image-placeholder">
+                                  No image
+                                </div>
+                              )}
+                            </div>
+                            <p className="featured-name">{product.name}</p>
+                            {isFlashSaleActive && (
+                              <span className="product-flash-badge">
+                                ⚡ Flash Sale
+                              </span>
+                            )}
+                            <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
+                              {renderRatingStars(product.ratingAverage)}
+                              <small>({product.ratingCount || 0})</small>
+                            </div>
+                            <p className="featured-price">
+                              {formatCurrency(displayPrice)}
+                              {isFlashSaleActive && originalPrice > displayPrice && (
+                                <small>
+                                  <s>{formatCurrency(originalPrice)}</s>
+                                  {discountPercent ? ` ${discountPercent}% OFF` : ""}
+                                </small>
+                              )}
+                            </p>
+                            <button
+                              type="button"
+                              className="featured-add-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(getCartProductPayload(product, offerNow));
+                              }}
+                            >
+                              Add to cart
+                            </button>
+                          </article>
+                        );
+                      })}
                     </div>
                     {(!section.products || section.products.length === 0) && (
                       <p className="empty">
@@ -1936,63 +2041,77 @@ export default function Landing() {
               {ratingError && <p className="rating-error">{ratingError}</p>}
 
               <div className="products-grid">
-                {filteredProducts.map((product) => (
-                  <article
-                    className="product-card product-card-clickable"
-                    key={product._id}
-                    onClick={() => navigate(`/products/${product._id}`)}
-                  >
-                    <div className="product-card-image-wrap">
-                      {getProductImage(product) ? (
-                        <img
-                          src={getProductImage(product)}
-                          alt={product.name}
-                          className="product-card-image"
-                          onError={applyImageFallback}
-                        />
-                      ) : (
-                        <div className="product-card-image-placeholder">
-                          No image
-                        </div>
-                      )}
-                    </div>
-                    <p className="product-brand">{product.tag}</p>
-                    {isProductFlashSaleActive(product) && (
-                      <span className="product-flash-badge">⚡ Flash Sale</span>
-                    )}
-                    <h3>{product.name}</h3>
-                    <p className="price">
-                      {formatCurrency(getProductDisplayPrice(product))}
-                      {isProductFlashSaleActive(product) && (
-                        <small>
-                          <s>{formatCurrency(getProductOriginalPrice(product))}</s>
-                          {product.discountPercent ? ` ${product.discountPercent}% OFF` : ""}
-                        </small>
-                      )}
-                    </p>
-                    <div className="product-rating-display">
-                      <div
-                        className="display-star-row"
-                        aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}
-                      >
-                        {renderRatingStars(product.ratingAverage)}
-                      </div>
-                      <p className="product-rating-text">
-                        {(product.ratingAverage || 0).toFixed(1)} / 5 from{" "}
-                        {product.ratingCount || 0} ratings
-                      </p>
-                    </div>
-                    <button
-                      className="primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(product);
-                      }}
+                {filteredProducts.map((product) => {
+                  const imageSrc = getProductImage(product);
+                  const displayPrice = getProductDisplayPrice(product, offerNow);
+                  const originalPrice = getProductOriginalPrice(product);
+                  const discountPercent = getProductDiscountPercent(
+                    product,
+                    offerNow,
+                  );
+                  const isFlashSaleActive = isProductFlashSaleActive(
+                    product,
+                    offerNow,
+                  );
+
+                  return (
+                    <article
+                      className="product-card product-card-clickable"
+                      key={product._id}
+                      onClick={() => navigate(`/products/${product._id}`)}
                     >
-                      Add to Cart
-                    </button>
-                  </article>
-                ))}
+                      <div className="product-card-image-wrap">
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={product.name}
+                            className="product-card-image"
+                            onError={applyImageFallback}
+                          />
+                        ) : (
+                          <div className="product-card-image-placeholder">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <p className="product-brand">{product.tag}</p>
+                      {isFlashSaleActive && (
+                        <span className="product-flash-badge">⚡ Flash Sale</span>
+                      )}
+                      <h3>{product.name}</h3>
+                      <p className="price">
+                        {formatCurrency(displayPrice)}
+                        {isFlashSaleActive && originalPrice > displayPrice && (
+                          <small>
+                            <s>{formatCurrency(originalPrice)}</s>
+                            {discountPercent ? ` ${discountPercent}% OFF` : ""}
+                          </small>
+                        )}
+                      </p>
+                      <div className="product-rating-display">
+                        <div
+                          className="display-star-row"
+                          aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}
+                        >
+                          {renderRatingStars(product.ratingAverage)}
+                        </div>
+                        <p className="product-rating-text">
+                          {(product.ratingAverage || 0).toFixed(1)} / 5 from{" "}
+                          {product.ratingCount || 0} ratings
+                        </p>
+                      </div>
+                      <button
+                        className="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(getCartProductPayload(product, offerNow));
+                        }}
+                      >
+                        Add to Cart
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
 
               {filteredProducts.length === 0 && !productsError && (
