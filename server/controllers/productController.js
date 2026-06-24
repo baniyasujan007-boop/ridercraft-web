@@ -9,8 +9,19 @@ export const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
   Boolean(
     product?.isFlashSale === true &&
       Number(product?.flashSalePrice) > 0 &&
+      (!product?.flashSaleStartsAt ||
+        new Date(product.flashSaleStartsAt).getTime() <= now.getTime()) &&
       product?.flashSaleEndsAt &&
       new Date(product.flashSaleEndsAt).getTime() > now.getTime(),
+  );
+
+export const isFeaturedCurrentlyActive = (product, now = new Date()) =>
+  Boolean(
+    product?.isFeatured === true &&
+      (!product?.featuredStartDate ||
+        new Date(product.featuredStartDate).getTime() <= now.getTime()) &&
+      product?.featuredEndDate &&
+      new Date(product.featuredEndDate).getTime() > now.getTime(),
   );
 
 export const productToClient = (product, now = new Date()) => {
@@ -18,19 +29,22 @@ export const productToClient = (product, now = new Date()) => {
     typeof product?.toObject === "function"
       ? product.toObject({ virtuals: true })
       : { ...product };
-  const active = isFlashSaleCurrentlyActive(plain, now);
+  const flashSaleActive = isFlashSaleCurrentlyActive(plain, now);
+  const featuredActive = isFeaturedCurrentlyActive(plain, now);
   const price = Number(plain.price || 0);
   const flashSalePrice = Number(plain.flashSalePrice || 0);
-  const displayPrice = active ? flashSalePrice : price;
+  const displayPrice = flashSaleActive ? flashSalePrice : price;
 
   return {
     ...plain,
-    isFlashSale: active,
-    isFlashSaleActive: active,
+    isFlashSale: plain.isFlashSale === true,
+    isFlashSaleActive: flashSaleActive,
+    isFeatured: plain.isFeatured === true,
+    isFeaturedActive: featuredActive,
     originalPrice: price,
     displayPrice,
     discountPercent:
-      active && price > 0
+      flashSaleActive && price > 0
         ? Math.round(((price - flashSalePrice) / price) * 100)
         : 0,
   };
@@ -83,34 +97,44 @@ const validateVariants = (variants) => {
   return "";
 };
 
-const normalizeFlashSaleFields = ({ isFlashSale, flashSalePrice, flashSaleEndsAt }) => {
+const normalizeDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : null;
+};
+
+const normalizeFlashSaleFields = ({
+  isFlashSale,
+  flashSalePrice,
+  flashSaleStartsAt,
+  flashSaleEndsAt,
+}) => {
   const enabled = Boolean(isFlashSale);
   const salePrice =
     flashSalePrice === undefined || flashSalePrice === null || flashSalePrice === ""
       ? null
       : Number(flashSalePrice);
-  const endsAt = flashSaleEndsAt ? new Date(flashSaleEndsAt) : null;
 
   return {
     isFlashSale: enabled,
     flashSalePrice: Number.isFinite(salePrice) && salePrice >= 0 ? salePrice : null,
-    flashSaleEndsAt:
-      endsAt && Number.isFinite(endsAt.getTime()) ? endsAt : null,
+    flashSaleStartsAt: normalizeDate(flashSaleStartsAt),
+    flashSaleEndsAt: normalizeDate(flashSaleEndsAt),
   };
 };
 
-const expireFlashSales = () =>
-  Product.updateMany(
-    {
-      isFlashSale: true,
-      flashSaleEndsAt: { $lte: new Date() },
-    },
-    { $set: { isFlashSale: false } },
-  );
+const normalizeFeaturedFields = ({
+  isFeatured,
+  featuredStartDate,
+  featuredEndDate,
+}) => ({
+  isFeatured: Boolean(isFeatured),
+  featuredStartDate: normalizeDate(featuredStartDate),
+  featuredEndDate: normalizeDate(featuredEndDate),
+});
 
 export const listProducts = async (_req, res) => {
   try {
-    await expireFlashSales();
     const products = await Product.find().sort({ createdAt: -1 });
     res.json(products.map((product) => productToClient(product)));
   } catch {
@@ -120,7 +144,6 @@ export const listProducts = async (_req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
-    await expireFlashSales();
     const { id } = req.params;
     const product = await Product.findById(id);
     if (!product) {
@@ -146,8 +169,12 @@ export const createProduct = async (req, res) => {
       stock,
       image,
       variants,
+      isFeatured,
+      featuredStartDate,
+      featuredEndDate,
       isFlashSale,
       flashSalePrice,
+      flashSaleStartsAt,
       flashSaleEndsAt,
     } = req.body;
     if (!name || price === undefined || price === null) {
@@ -170,6 +197,7 @@ export const createProduct = async (req, res) => {
     const flashSale = normalizeFlashSaleFields({
       isFlashSale,
       flashSalePrice,
+      flashSaleStartsAt,
       flashSaleEndsAt,
     });
     if (flashSale.isFlashSale) {
@@ -182,6 +210,35 @@ export const createProduct = async (req, res) => {
         return res
           .status(400)
           .json({ error: "Flash sale end date must be in the future" });
+      }
+      if (
+        flashSale.flashSaleStartsAt &&
+        flashSale.flashSaleStartsAt >= flashSale.flashSaleEndsAt
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Flash sale end date must be after start date" });
+      }
+    }
+
+    const featured = normalizeFeaturedFields({
+      isFeatured,
+      featuredStartDate,
+      featuredEndDate,
+    });
+    if (featured.isFeatured) {
+      if (!featured.featuredEndDate || featured.featuredEndDate <= new Date()) {
+        return res
+          .status(400)
+          .json({ error: "Featured end date must be in the future" });
+      }
+      if (
+        featured.featuredStartDate &&
+        featured.featuredStartDate >= featured.featuredEndDate
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Featured end date must be after start date" });
       }
     }
 
@@ -208,8 +265,12 @@ export const createProduct = async (req, res) => {
       image:
         normalizedVariants.find((variant) => variant.images.length)?.images[0] ||
         (image ? String(image) : ""),
+      isFeatured: featured.isFeatured,
+      featuredStartDate: featured.featuredStartDate,
+      featuredEndDate: featured.featuredEndDate,
       isFlashSale: flashSale.isFlashSale,
       flashSalePrice: flashSale.flashSalePrice,
+      flashSaleStartsAt: flashSale.flashSaleStartsAt,
       flashSaleEndsAt: flashSale.flashSaleEndsAt,
     });
     res.status(201).json(productToClient(product));
@@ -233,8 +294,12 @@ export const updateProduct = async (req, res) => {
       stock,
       image,
       variants,
+      isFeatured,
+      featuredStartDate,
+      featuredEndDate,
       isFlashSale,
       flashSalePrice,
+      flashSaleStartsAt,
       flashSaleEndsAt,
     } = req.body;
     const product = await Product.findById(id);
@@ -317,6 +382,7 @@ export const updateProduct = async (req, res) => {
     if (
       isFlashSale !== undefined ||
       flashSalePrice !== undefined ||
+      flashSaleStartsAt !== undefined ||
       flashSaleEndsAt !== undefined
     ) {
       const flashSale = normalizeFlashSaleFields({
@@ -326,6 +392,10 @@ export const updateProduct = async (req, res) => {
           flashSalePrice !== undefined
             ? flashSalePrice
             : product.flashSalePrice,
+        flashSaleStartsAt:
+          flashSaleStartsAt !== undefined
+            ? flashSaleStartsAt
+            : product.flashSaleStartsAt,
         flashSaleEndsAt:
           flashSaleEndsAt !== undefined
             ? flashSaleEndsAt
@@ -345,10 +415,54 @@ export const updateProduct = async (req, res) => {
             .status(400)
             .json({ error: "Flash sale end date must be in the future" });
         }
+        if (
+          flashSale.flashSaleStartsAt &&
+          flashSale.flashSaleStartsAt >= flashSale.flashSaleEndsAt
+        ) {
+          return res
+            .status(400)
+            .json({ error: "Flash sale end date must be after start date" });
+        }
       }
       product.isFlashSale = flashSale.isFlashSale;
       product.flashSalePrice = flashSale.flashSalePrice;
+      product.flashSaleStartsAt = flashSale.flashSaleStartsAt;
       product.flashSaleEndsAt = flashSale.flashSaleEndsAt;
+    }
+
+    if (
+      isFeatured !== undefined ||
+      featuredStartDate !== undefined ||
+      featuredEndDate !== undefined
+    ) {
+      const featured = normalizeFeaturedFields({
+        isFeatured:
+          isFeatured !== undefined ? isFeatured : product.isFeatured,
+        featuredStartDate:
+          featuredStartDate !== undefined
+            ? featuredStartDate
+            : product.featuredStartDate,
+        featuredEndDate:
+          featuredEndDate !== undefined ? featuredEndDate : product.featuredEndDate,
+      });
+      if (featured.isFeatured) {
+        if (!featured.featuredEndDate || featured.featuredEndDate <= new Date()) {
+          return res
+            .status(400)
+            .json({ error: "Featured end date must be in the future" });
+        }
+        if (
+          featured.featuredStartDate &&
+          featured.featuredStartDate >= featured.featuredEndDate
+        ) {
+          return res
+            .status(400)
+            .json({ error: "Featured end date must be after start date" });
+        }
+      }
+      product.isFeatured = featured.isFeatured;
+      product.featuredStartDate = featured.featuredStartDate;
+      product.featuredEndDate = featured.featuredEndDate;
     }
 
     await product.save();

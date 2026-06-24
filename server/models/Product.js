@@ -62,8 +62,24 @@ const productSchema = new mongoose.Schema(
       default: null,
       min: 0,
     },
+    flashSaleStartsAt: {
+      type: Date,
+      default: null,
+    },
 
     flashSaleEndsAt: {
+      type: Date,
+      default: null,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    featuredStartDate: {
+      type: Date,
+      default: null,
+    },
+    featuredEndDate: {
       type: Date,
       default: null,
     },

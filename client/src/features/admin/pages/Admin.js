@@ -14,8 +14,12 @@ const initialForm = {
   colors: "",
   image: "",
   description: "",
+  isFeatured: false,
+  featuredStartDate: "",
+  featuredEndDate: "",
   isFlashSale: false,
   flashSalePrice: "",
+  flashSaleStartsAt: "",
   flashSaleEndsAt: "",
   variants: [
     {
@@ -122,11 +126,6 @@ export default function Admin() {
   );
   const [editingFeaturedSectionId, setEditingFeaturedSectionId] =
     useState(null);
-  const [flashSaleProductIds, setFlashSaleProductIds] = useState([]);
-  const [flashSaleSchedule, setFlashSaleSchedule] = useState({
-    startsAt: "",
-    endsAt: "",
-  });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectedCustomerEmail, setSelectedCustomerEmail] = useState("");
@@ -377,10 +376,6 @@ export default function Admin() {
         (request) => String(request.status || "").toLowerCase() === "requested",
       ),
     [serviceRequests],
-  );
-  const flashSaleSection = useMemo(
-    () => featuredSections.find((row) => row.key === "flash-sale") || null,
-    [featuredSections],
   );
   const inventoryInsights = useMemo(() => {
     const normalized = products.map((product) => ({
@@ -675,29 +670,6 @@ export default function Admin() {
     setServiceAdminNote(String(selectedServiceRequest.adminNote || ""));
   }, [selectedServiceRequest]);
 
-  useEffect(() => {
-    if (!flashSaleSection) {
-      setFlashSaleProductIds([]);
-      setFlashSaleSchedule({ startsAt: "", endsAt: "" });
-      return;
-    }
-    const selected = Array.isArray(flashSaleSection.products)
-      ? flashSaleSection.products.map((item) => String(item?._id || item))
-      : [];
-    setFlashSaleProductIds(selected);
-    setFlashSaleSchedule({
-      startsAt: toDateTimeInputValue(flashSaleSection.countdownStartsAt),
-      endsAt: toDateTimeInputValue(flashSaleSection.countdownEndsAt),
-    });
-  }, [flashSaleSection]);
-
-  const toggleFlashSaleProduct = (productId) => {
-    const id = String(productId);
-    setFlashSaleProductIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
-  };
-
   const resetForm = () => {
     setForm(initialForm);
     setEditingId(null);
@@ -849,6 +821,34 @@ export default function Admin() {
       setError("Name and price are required");
       return;
     }
+    if (form.isFeatured) {
+      if (!form.featuredEndDate) {
+        setError("Featured end date is required");
+        return;
+      }
+      if (
+        form.featuredStartDate &&
+        new Date(form.featuredStartDate).getTime() >=
+          new Date(form.featuredEndDate).getTime()
+      ) {
+        setError("Featured end date must be after start date");
+        return;
+      }
+    }
+    if (form.isFlashSale) {
+      if (!Number(form.flashSalePrice || 0) || !form.flashSaleEndsAt) {
+        setError("Flash sale price and end date are required");
+        return;
+      }
+      if (
+        form.flashSaleStartsAt &&
+        new Date(form.flashSaleStartsAt).getTime() >=
+          new Date(form.flashSaleEndsAt).getTime()
+      ) {
+        setError("Flash sale end date must be after start date");
+        return;
+      }
+    }
 
     try {
       const imageSource = String(form.image || "").trim();
@@ -880,9 +880,13 @@ export default function Admin() {
 
         stock: Number(form.stock || 0),
         image: imageSource,
+        isFeatured: form.isFeatured,
+        featuredStartDate: form.isFeatured ? form.featuredStartDate || null : null,
+        featuredEndDate: form.isFeatured ? form.featuredEndDate || null : null,
         isFlashSale: form.isFlashSale,
         flashSalePrice: form.isFlashSale ? Number(form.flashSalePrice || 0) : null,
-        flashSaleEndsAt: form.flashSaleEndsAt || null,
+        flashSaleStartsAt: form.isFlashSale ? form.flashSaleStartsAt || null : null,
+        flashSaleEndsAt: form.isFlashSale ? form.flashSaleEndsAt || null : null,
         variants: form.variants
           .map((variant) => {
             const images = splitVariantImages(variant);
@@ -951,8 +955,13 @@ export default function Admin() {
 
       stock: String(product.stock ?? "25"),
       image: product.image || "",
+      description: product.description || "",
+      isFeatured: product.isFeatured || false,
+      featuredStartDate: toDateTimeInputValue(product.featuredStartDate),
+      featuredEndDate: toDateTimeInputValue(product.featuredEndDate),
       isFlashSale: product.isFlashSale || false,
       flashSalePrice: String(product.flashSalePrice ?? ""),
+      flashSaleStartsAt: toDateTimeInputValue(product.flashSaleStartsAt),
       flashSaleEndsAt: toDateTimeInputValue(product.flashSaleEndsAt),
       variants: Array.isArray(product.variants) && product.variants.length
         ? product.variants.map(normalizeVariantForForm)
@@ -1188,98 +1197,6 @@ export default function Admin() {
       );
     }
   };
-  const saveFlashSaleProducts = async () => {
-    setError("");
-    setMessage("");
-    if (flashSaleProductIds.length === 0) {
-      setError("Select at least one product for flash sale");
-      return;
-    }
-    if (!flashSaleSchedule.startsAt || !flashSaleSchedule.endsAt) {
-      setError("Select both the Flash Sale start and end date/time");
-      return;
-    }
-    if (
-      new Date(flashSaleSchedule.startsAt).getTime() >=
-      new Date(flashSaleSchedule.endsAt).getTime()
-    ) {
-      setError("Flash Sale end date/time must be after its start");
-      return;
-    }
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const payload = {
-        key: "flash-sale",
-        title: flashSaleSection?.title || "⚡ Flash Sale",
-        products: flashSaleProductIds,
-        sortOrder: Number(flashSaleSection?.sortOrder ?? 1),
-        countdownStartsAt: flashSaleSchedule.startsAt,
-        countdownEndsAt: flashSaleSchedule.endsAt,
-        isActive: true,
-      };
-      if (flashSaleSection?._id) {
-        await axios.put(
-          `https://ridercraft-api.onrender.com/featured-sections/admin/${flashSaleSection._id}`,
-          payload,
-          { headers },
-        );
-      } else {
-        await axios.post(
-          "https://ridercraft-api.onrender.com/featured-sections/admin",
-          payload,
-          { headers },
-        );
-      }
-      setMessage("Flash sale products updated");
-      fetchFeaturedSections();
-    } catch (err) {
-      setError(
-        err.response?.data?.error || "Failed to update flash sale products",
-      );
-    }
-  };
-  const toggleProductFlashSale = async (productId) => {
-    setError("");
-    setMessage("");
-    const id = String(productId);
-    const isSelected = flashSaleProductIds.includes(id);
-    const nextProductIds = isSelected
-      ? flashSaleProductIds.filter((item) => item !== id)
-      : [...flashSaleProductIds, id];
-
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const payload = {
-        key: "flash-sale",
-        title: flashSaleSection?.title || "⚡ Flash Sale",
-        products: nextProductIds,
-        sortOrder: Number(flashSaleSection?.sortOrder ?? 1),
-        countdownStartsAt: flashSaleSchedule.startsAt || null,
-        countdownEndsAt: flashSaleSchedule.endsAt || null,
-        isActive: true,
-      };
-      if (flashSaleSection?._id) {
-        await axios.put(
-          `https://ridercraft-api.onrender.com/featured-sections/admin/${flashSaleSection._id}`,
-          payload,
-          { headers },
-        );
-      } else {
-        await axios.post(
-          "https://ridercraft-api.onrender.com/featured-sections/admin",
-          payload,
-          { headers },
-        );
-      }
-      setMessage(
-        isSelected ? "Removed from flash sale" : "Added to flash sale",
-      );
-      fetchFeaturedSections();
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to update flash sale");
-    }
-  };
-
   return (
     <div className="admin-wrapper">
       <aside className="admin-sidebar">
@@ -1439,11 +1356,7 @@ export default function Admin() {
             startEditHeroOffer,
             removeHeroOffer,
             products,
-            flashSaleProductIds,
-            flashSaleSchedule,
-            setFlashSaleSchedule,
             startEdit,
-            toggleProductFlashSale,
             removeProduct,
             pendingReturnOrders,
             setSection,
@@ -1476,8 +1389,6 @@ export default function Admin() {
             updateServiceStatus,
             inventoryInsights,
             productPerformance,
-            saveFlashSaleProducts,
-            toggleFlashSaleProduct,
             editingFeaturedSectionId,
             featuredSectionForm,
             setFeaturedSectionForm,

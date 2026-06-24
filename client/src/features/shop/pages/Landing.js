@@ -81,13 +81,28 @@ const getWishlistProduct = (entry) => {
 
 const isProductFlashSaleActive = (product, now = Date.now()) => {
   if (!product) return false;
-  if (product.isFlashSale !== true) return false;
+  const startsAt = product.flashSaleStartsAt
+    ? new Date(product.flashSaleStartsAt).getTime()
+    : 0;
+  if (startsAt && startsAt > now) return false;
+  return (
+    product.isFlashSale === true &&
+    toNumber(product.flashSalePrice) > 0 &&
+    new Date(product.flashSaleEndsAt).getTime() > now
+  );
+};
 
-  const salePrice = toNumber(product.flashSalePrice);
-  if (salePrice <= 0) return false;
+const isProductFeaturedActive = (product, now = Date.now()) => {
+  if (!product || product.isFeatured !== true) return false;
 
-  if (!product.flashSaleEndsAt) return false;
-  const endsAt = new Date(product.flashSaleEndsAt).getTime();
+  const startsAt = product.featuredStartDate
+    ? new Date(product.featuredStartDate).getTime()
+    : 0;
+  const endsAt = product.featuredEndDate
+    ? new Date(product.featuredEndDate).getTime()
+    : 0;
+
+  if (startsAt && startsAt > now) return false;
   return Number.isFinite(endsAt) && endsAt > now;
 };
 
@@ -178,7 +193,6 @@ export default function Landing() {
   const [products, setProducts] = useState([]);
   const [heroOffers, setHeroOffers] = useState([]);
   const [activePromos, setActivePromos] = useState([]);
-  const [featuredSectionsData, setFeaturedSectionsData] = useState([]);
   const [productsError, setProductsError] = useState("");
   const [categoryQuery, setCategoryQuery] = useState("");
   const [shopQuery, setShopQuery] = useState("");
@@ -272,6 +286,7 @@ export default function Landing() {
   const [currentUserId, setCurrentUserId] = useState("");
   const [offerNow, setOfferNow] = useState(Date.now());
   const [productsLoading, setProductsLoading] = useState(false);
+  const [featuredProductsLoading, setFeaturedProductsLoading] = useState(false);
   const [customerNotifications, setCustomerNotifications] = useState(() => {
     try {
       return JSON.parse(
@@ -295,6 +310,17 @@ export default function Landing() {
       products
         .filter((product) => isProductFlashSaleActive(product, offerNow))
         .slice(0, 6),
+    [products, offerNow],
+  );
+  const activeFeaturedProducts = useMemo(
+    () =>
+      products
+        .filter(
+          (product) =>
+            isProductFeaturedActive(product, offerNow) &&
+            !isProductFlashSaleActive(product, offerNow),
+        )
+        .slice(0, 8),
     [products, offerNow],
   );
   const nonFlashSaleProducts = useMemo(
@@ -386,37 +412,6 @@ export default function Landing() {
     minRating,
     offerNow,
   ]);
-  const featuredSections = useMemo(
-    () =>
-      featuredSectionsData
-        .filter(
-          (section) =>
-            section.isActive &&
-            section.key !== "deals-of-day" &&
-            section.key !== "flash-sale",
-        )
-        .map((section) => ({
-          ...section,
-          products: Array.isArray(section.products)
-            ? section.products.filter(
-                (product) => !isProductFlashSaleActive(product, offerNow),
-              )
-            : [],
-        }))
-        .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
-    [featuredSectionsData, offerNow],
-  );
- const flashDealsSection = useMemo(
-  () =>
-    featuredSectionsData.find(
-      (section) => section.key === "flash-sale"
-    ) || {
-      key: "flash-sale",
-      title: "⚡ Flash Sale",
-      products: [],
-    },
-  [featuredSectionsData]
-);
   const flashSaleCountdownTarget = useMemo(() => {
     const productEndTimes = flashSaleProducts
       .map((product) => new Date(product.flashSaleEndsAt).getTime())
@@ -425,8 +420,8 @@ export default function Landing() {
     if (productEndTimes.length > 0) {
       return new Date(productEndTimes[0]).toISOString();
     }
-    return flashDealsSection?.countdownEndsAt || "";
-  }, [flashSaleProducts, flashDealsSection, offerNow]);
+    return "";
+  }, [flashSaleProducts, offerNow]);
   const activeHeroOffers = useMemo(() => {
     const now = offerNow;
     return heroOffers
@@ -731,30 +726,6 @@ export default function Landing() {
     const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
     const pad = (num) => String(num).padStart(2, "0");
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  };
-  const getFeaturedCountdown = (featuredSection) => {
-    const startTime = featuredSection.countdownStartsAt
-      ? new Date(featuredSection.countdownStartsAt).getTime()
-      : null;
-    const endTime = featuredSection.countdownEndsAt
-      ? new Date(featuredSection.countdownEndsAt).getTime()
-      : null;
-
-    if (Number.isFinite(startTime) && offerNow < startTime) {
-      return {
-        label: "Starts in",
-        value: formatCountdown(featuredSection.countdownStartsAt),
-      };
-    }
-
-    if (Number.isFinite(endTime) && offerNow <= endTime) {
-      return {
-        label: "Ends in",
-        value: formatCountdown(featuredSection.countdownEndsAt),
-      };
-    }
-
-    return null;
   };
   const formatOrderDate = (value) =>
     new Date(value).toLocaleDateString(undefined, {
@@ -1437,29 +1408,31 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
     const loadProducts = async () => {
       try {
         setProductsLoading(true);
+        setFeaturedProductsLoading(true);
         setProductsError("");
         const res = await axios.get(
           "https://ridercraft-api.onrender.com/products",
+          { signal: controller.signal },
         );
-        if (!ignore) {
-          setProducts(Array.isArray(res.data) ? res.data : []);
-        }
-      } catch {
-        if (!ignore) {
-          setProducts([]);
-          setProductsError("Could not load products");
-        }
+        setProducts(Array.isArray(res.data) ? res.data : []);
+      } catch (error) {
+        if (axios.isCancel(error) || error.name === "CanceledError") return;
+        setProducts([]);
+        setProductsError("Could not load products");
       } finally {
-        if (!ignore) setProductsLoading(false);
+        if (!controller.signal.aborted) {
+          setProductsLoading(false);
+          setFeaturedProductsLoading(false);
+        }
       }
     };
     loadProducts();
     return () => {
-      ignore = true;
+      controller.abort();
     };
   }, []);
 
@@ -1480,20 +1453,6 @@ export default function Landing() {
   useEffect(() => {
     loadActivePromos();
   }, [loadActivePromos]);
-
-  useEffect(() => {
-    const loadFeaturedSections = async () => {
-      try {
-        const res = await axios.get(
-          "https://ridercraft-api.onrender.com/featured-sections",
-        );
-        setFeaturedSectionsData(Array.isArray(res.data) ? res.data : []);
-      } catch {
-        setFeaturedSectionsData([]);
-      }
-    };
-    loadFeaturedSections();
-  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setOfferNow(Date.now()), 1000);
@@ -1749,11 +1708,11 @@ export default function Landing() {
             </section>
           )}
 
-          {!isSearching && (productsLoading || flashSaleProducts.length > 0) && (
+          {!isSearching && (
             <section className="flash-sale-banner">
               <div className="flash-sale-head">
                 <div>
-                  <h3>⚡ {flashDealsSection.title || "Flash Sale"}</h3>
+                  <h3>⚡ Flash Sale</h3>
                   <p>Hurry! Limited-time offers on top riding gear.</p>
                 </div>
                 {flashSaleCountdownTarget && (
@@ -1887,130 +1846,97 @@ export default function Landing() {
           )}
           {!isSearching && (
             <div className="featured-sections">
-              {featuredSections.map((section) => {
-                const featuredCountdown = getFeaturedCountdown(section);
-                return (
-                  <section
-                    className="featured-block"
-                    key={section._id || section.key}
-                  >
-                    <div className="featured-head">
-                      <h3>
-                        <span aria-hidden="true">{FEATURED_SECTION_ICONS[section.key] || "◆"}</span>
-                        {section.title}
-                      </h3>
-                      {featuredCountdown && (
-                        <span className="featured-countdown">
-                          {featuredCountdown.label} {featuredCountdown.value}
-                        </span>
-                      )}
-                    </div>
-                    <div className="featured-grid">
-                      {(section.products || []).map((product) => {
-                        const imageSrc = getProductImage(product);
-                        const displayPrice = getProductDisplayPrice(
-                          product,
-                          offerNow,
-                        );
-                        const originalPrice = getProductOriginalPrice(product);
-                        const discountPercent = getProductDiscountPercent(
-                          product,
-                          offerNow,
-                        );
-                        const isFlashSaleActive = isProductFlashSaleActive(
-                          product,
-                          offerNow,
-                        );
+              <section className="featured-block">
+                <div className="featured-head">
+                  <h3>
+                    <span aria-hidden="true">{FEATURED_SECTION_ICONS.recommended}</span>
+                    Featured Products
+                  </h3>
+                </div>
+                {featuredProductsLoading && (
+                  <p className="shop-hero-empty">Loading featured products...</p>
+                )}
+                {!featuredProductsLoading && activeFeaturedProducts.length > 0 && (
+                  <div className="featured-grid">
+                    {activeFeaturedProducts.map((product) => {
+                      const imageSrc = getProductImage(product);
+                      const displayPrice = getProductOriginalPrice(product);
 
-                        return (
-                          <article
-                            className="featured-card"
-                            key={`${section._id}-${product._id}`}
-                            onClick={() => navigate(`/products/${product._id}`)}
-                          >
-                            <div className="featured-image-wrap">
-                              {imageSrc ? (
-                                <img
-                                  src={imageSrc}
-                                  alt={product.name}
-                                  className="featured-image"
-                                  onError={applyImageFallback}
-                                />
-                              ) : (
-                                <div className="product-card-image-placeholder">
-                                  No image
-                                </div>
-                              )}
-                              <div className="product-card-actions">
-                                <button
-                                  type="button"
-                                  className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
-                                  aria-label={
-                                    isWishlisted(product._id)
-                                      ? "Remove from wishlist"
-                                      : "Add to wishlist"
-                                  }
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleWishlistToggle(product);
-                                  }}
-                                >
-                                  {isWishlisted(product._id) ? "♥" : "♡"}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="product-icon-btn"
-                                  aria-label="Share product"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleShareProduct(product);
-                                  }}
-                                >
-                                  ↗
-                                </button>
+                      return (
+                        <article
+                          className="featured-card"
+                          key={`featured-${product._id}`}
+                          onClick={() => navigate(`/products/${product._id}`)}
+                        >
+                          <div className="featured-image-wrap">
+                            {imageSrc ? (
+                              <img
+                                src={imageSrc}
+                                alt={product.name}
+                                className="featured-image"
+                                onError={applyImageFallback}
+                              />
+                            ) : (
+                              <div className="product-card-image-placeholder">
+                                No image
                               </div>
-                            </div>
-                            <p className="featured-name">{product.name}</p>
-                            {isFlashSaleActive && (
-                              <span className="product-flash-badge">
-                                ⚡ Flash Sale
-                              </span>
                             )}
-                            <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
-                              {renderRatingStars(product.ratingAverage)}
-                              <small>({product.ratingCount || 0})</small>
+                            <div className="product-card-actions">
+                              <button
+                                type="button"
+                                className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
+                                aria-label={
+                                  isWishlisted(product._id)
+                                    ? "Remove from wishlist"
+                                    : "Add to wishlist"
+                                }
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleWishlistToggle(product);
+                                }}
+                              >
+                                {isWishlisted(product._id) ? "♥" : "♡"}
+                              </button>
+                              <button
+                                type="button"
+                                className="product-icon-btn"
+                                aria-label="Share product"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleShareProduct(product);
+                                }}
+                              >
+                                ↗
+                              </button>
                             </div>
-                            <p className="featured-price">
-                              {formatCurrency(displayPrice)}
-                              {isFlashSaleActive && originalPrice > displayPrice && (
-                                <small>
-                                  <s>{formatCurrency(originalPrice)}</s>
-                                  {discountPercent ? ` ${discountPercent}% OFF` : ""}
-                                </small>
-                              )}
-                            </p>
-                            <button
-                              type="button"
-                              className="featured-add-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(getCartProductPayload(product, offerNow));
-                              }}
-                            >
-                              Add to cart
-                            </button>
-                          </article>
-                        );
-                      })}
-                    </div>
-                    {(!section.products || section.products.length === 0) && (
-                      <p className="empty">
-                        No products assigned by admin for this section yet.
-                      </p>
-                    )}
-                  </section>
-                );
-              })}
+                          </div>
+                          <p className="featured-name">{product.name}</p>
+                          <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
+                            {renderRatingStars(product.ratingAverage)}
+                            <small>({product.ratingCount || 0})</small>
+                          </div>
+                          <p className="featured-price">
+                            {formatCurrency(displayPrice)}
+                          </p>
+                          <button
+                            type="button"
+                            className="featured-add-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(getCartProductPayload(product, offerNow));
+                            }}
+                          >
+                            Add to cart
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+                {!featuredProductsLoading && activeFeaturedProducts.length === 0 && (
+                  <p className="empty">No featured products are active right now.</p>
+                )}
+              </section>
             </div>
           )}
 

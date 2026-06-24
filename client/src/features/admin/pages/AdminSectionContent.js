@@ -30,9 +30,7 @@ export default function AdminSectionContent({ vm }) {
     startEditHeroOffer,
     removeHeroOffer,
     products,
-    flashSaleProductIds,
     startEdit,
-    toggleProductFlashSale,
     removeProduct,
     pendingReturnOrders,
     setSection,
@@ -65,8 +63,6 @@ export default function AdminSectionContent({ vm }) {
     updateServiceStatus,
     inventoryInsights,
     productPerformance,
-    saveFlashSaleProducts,
-    toggleFlashSaleProduct,
     editingFeaturedSectionId,
     featuredSectionForm,
     setFeaturedSectionForm,
@@ -191,6 +187,47 @@ export default function AdminSectionContent({ vm }) {
             <label className="admin-checkbox">
               <input
                 type="checkbox"
+                checked={form.isFeatured}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isFeatured: e.target.checked,
+                  }))
+                }
+              />
+              Featured Product
+            </label>
+            <label className="admin-field-label">
+              Featured Start
+              <input
+                type="datetime-local"
+                value={form.featuredStartDate}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    featuredStartDate: e.target.value,
+                  }))
+                }
+                disabled={!form.isFeatured}
+              />
+            </label>
+            <label className="admin-field-label">
+              Featured End
+              <input
+                type="datetime-local"
+                value={form.featuredEndDate}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    featuredEndDate: e.target.value,
+                  }))
+                }
+                disabled={!form.isFeatured}
+              />
+            </label>
+            <label className="admin-checkbox">
+              <input
+                type="checkbox"
                 checked={form.isFlashSale}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -214,18 +251,34 @@ export default function AdminSectionContent({ vm }) {
               }
               disabled={!form.isFlashSale}
             />
-            <input
-              type="datetime-local"
-              value={form.flashSaleEndsAt}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  flashSaleEndsAt: e.target.value,
-                }))
-              }
-              placeholder="Flash Sale End Time"
-              disabled={!form.isFlashSale}
-            />
+            <label className="admin-field-label">
+              Flash Sale Start
+              <input
+                type="datetime-local"
+                value={form.flashSaleStartsAt}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    flashSaleStartsAt: e.target.value,
+                  }))
+                }
+                disabled={!form.isFlashSale}
+              />
+            </label>
+            <label className="admin-field-label">
+              Flash Sale End
+              <input
+                type="datetime-local"
+                value={form.flashSaleEndsAt}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    flashSaleEndsAt: e.target.value,
+                  }))
+                }
+                disabled={!form.isFlashSale}
+              />
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -667,6 +720,7 @@ export default function AdminSectionContent({ vm }) {
                 <th>Variants</th>
                 <th>Price</th>
                 <th>Rating</th>
+                <th>Featured</th>
                 <th>Flash Sale</th>
                 <th>Image</th>
                 <th>Actions</th>
@@ -698,6 +752,13 @@ export default function AdminSectionContent({ vm }) {
                     {product.ratingCount || 0})
                   </td>
                   <td>
+                    {product.isFeaturedActive
+                      ? "Live"
+                      : product.isFeatured
+                        ? "Scheduled"
+                        : "No"}
+                  </td>
+                  <td>
                     {product.isFlashSaleActive ? "Live" : product.isFlashSale ? "Scheduled" : "No"}
                   </td>
                   <td>
@@ -719,14 +780,6 @@ export default function AdminSectionContent({ vm }) {
                         onClick={() => startEdit(product)}
                       >
                         Edit
-                      </button>
-                      <button
-                        className="table-edit-btn"
-                        onClick={() => toggleProductFlashSale(product._id)}
-                      >
-                        {flashSaleProductIds.includes(String(product._id))
-                          ? "Remove Flash"
-                          : "Add Flash"}
                       </button>
                       <button
                         className="table-delete-btn"
@@ -1693,26 +1746,20 @@ export default function AdminSectionContent({ vm }) {
       )}
       {section === "featured" && (
         <section className="admin-form-wrap">
-          <h2>Flash Sale Products (Deals of the Day)</h2>
+          <h2>Featured Products</h2>
           <p className="admin-hint">
-            Pick products shown in the shop Flash Sale section. Selected:{" "}
-            <strong>{flashSaleProductIds.length}</strong>
+            Manage product-level Featured settings from the Product Manager.
+            Active featured products appear here independently from Flash Sale.
           </p>
           <div className="admin-flash-product-grid">
-            {products.map((product) => {
-              const isSelected = flashSaleProductIds.includes(
-                String(product._id),
-              );
+            {products
+              .filter((product) => product.isFeatured)
+              .map((product) => {
               return (
                 <label
-                  key={`flash-${product._id}`}
-                  className={`admin-flash-product-card ${isSelected ? "selected" : ""}`}
+                  key={`featured-${product._id}`}
+                  className={`admin-flash-product-card ${product.isFeaturedActive ? "selected" : ""}`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => toggleFlashSaleProduct(product._id)}
-                  />
                   {product.image ? (
                     <img
                       src={product.image}
@@ -1726,19 +1773,19 @@ export default function AdminSectionContent({ vm }) {
                   )}
                   <div>
                     <p>{product.name}</p>
-                    <small>${Number(product.price || 0).toFixed(2)}</small>
+                    <small>
+                      {product.isFeaturedActive ? "Live" : "Scheduled"} · ₹
+                      {Number(product.price || 0).toFixed(2)}
+                    </small>
                   </div>
                 </label>
               );
             })}
-          </div>
-          <div className="admin-actions">
-            <button
-              onClick={saveFlashSaleProducts}
-              className="admin-primary-btn"
-            >
-              Save Flash Sale Products
-            </button>
+            {products.filter((product) => product.isFeatured).length === 0 && (
+              <p className="admin-hint">
+                No products are marked as featured yet.
+              </p>
+            )}
           </div>
         </section>
       )}
@@ -1750,8 +1797,7 @@ export default function AdminSectionContent({ vm }) {
               : "Create Featured Section"}
           </h2>
           <p className="admin-hint">
-            The <strong>Deals of the Day</strong> section powers Flash Sale
-            products in shop.
+            Curated sections are separate from product-level Flash Sale.
           </p>
           <div className="admin-form-grid">
             <select
@@ -1763,7 +1809,6 @@ export default function AdminSectionContent({ vm }) {
                 }))
               }
             >
-              <option value="flash-sale">⚡ Flash Sale</option>
               <option value="trending">🔥 Trending Products</option>
               <option value="new-arrivals">🆕 New Arrivals</option>
               <option value="best-sellers">🏆 Best Sellers</option>
