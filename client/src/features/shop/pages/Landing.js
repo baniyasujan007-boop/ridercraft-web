@@ -74,15 +74,19 @@ const getPrimaryVariant = (product) =>
     ? product.variants[0]
     : null;
 
+const getWishlistProduct = (entry) => {
+  const product = entry?.product || entry?.productId;
+  return product && typeof product === "object" ? product : null;
+};
+
 const isProductFlashSaleActive = (product, now = Date.now()) => {
   if (!product) return false;
-  if (product.isFlashSaleActive === true) return true;
   if (product.isFlashSale !== true) return false;
 
   const salePrice = toNumber(product.flashSalePrice);
   if (salePrice <= 0) return false;
 
-  if (!product.flashSaleEndsAt) return true;
+  if (!product.flashSaleEndsAt) return false;
   const endsAt = new Date(product.flashSaleEndsAt).getTime();
   return Number.isFinite(endsAt) && endsAt > now;
 };
@@ -221,8 +225,19 @@ export default function Landing() {
   const [returnActionLoadingId, setReturnActionLoadingId] = useState("");
   const [returnMessage, setReturnMessage] = useState("");
   const [returnError, setReturnError] = useState("");
-  const { cart, addToCart, changeQty, clearCart, totalItems, totalPrice } =
-    useCart();
+  const {
+    cart,
+    addToCart,
+    changeQty,
+    clearCart,
+    totalItems,
+    totalPrice,
+    wishlistItems,
+    wishlistCount,
+    wishlistLoading,
+    isWishlisted,
+    toggleWishlist,
+  } = useCart();
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -256,6 +271,7 @@ export default function Landing() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
   const [offerNow, setOfferNow] = useState(Date.now());
+  const [productsLoading, setProductsLoading] = useState(false);
   const [customerNotifications, setCustomerNotifications] = useState(() => {
     try {
       return JSON.parse(
@@ -273,40 +289,52 @@ export default function Landing() {
     window.location.href = "/";
   };
 
+  const isSearching = shopQuery.trim().length > 0;
+  const flashSaleProducts = useMemo(
+    () =>
+      products
+        .filter((product) => isProductFlashSaleActive(product, offerNow))
+        .slice(0, 6),
+    [products, offerNow],
+  );
+  const nonFlashSaleProducts = useMemo(
+    () => products.filter((product) => !isProductFlashSaleActive(product, offerNow)),
+    [products, offerNow],
+  );
+  const productListSource = isSearching ? products : nonFlashSaleProducts;
   const availableTags = useMemo(
-    () => ["All", ...new Set(products.map((item) => item.tag || "General"))],
-    [products],
+    () => ["All", ...new Set(productListSource.map((item) => item.tag || "General"))],
+    [productListSource],
   );
   const availableBrands = useMemo(
-    () => ["All", ...new Set(products.map((item) => item.brand || "Generic"))],
-    [products],
+    () => ["All", ...new Set(productListSource.map((item) => item.brand || "Generic"))],
+    [productListSource],
   );
   const availableColorFamilies = useMemo(
     () => [
       "All",
-      ...new Set(products.map((item) => item.colorFamily || "Neutral")),
+      ...new Set(productListSource.map((item) => item.colorFamily || "Neutral")),
     ],
-    [products],
+    [productListSource],
   );
   const tagCounts = useMemo(() => {
-    const counts = products.reduce((acc, item) => {
+    const counts = productListSource.reduce((acc, item) => {
       const tag = item.tag || "General";
       acc[tag] = (acc[tag] || 0) + 1;
       return acc;
     }, {});
-    return { All: products.length, ...counts };
-  }, [products]);
+    return { All: productListSource.length, ...counts };
+  }, [productListSource]);
   const visibleTags = useMemo(() => {
     const query = categoryQuery.trim().toLowerCase();
     if (!query) return availableTags;
     return availableTags.filter((tag) => tag.toLowerCase().includes(query));
   }, [availableTags, categoryQuery]);
   const showFilters = shopQuery.trim().length > 0;
-  const isSearching = shopQuery.trim().length > 0;
   const filteredProducts = useMemo(() => {
     const query = shopQuery.trim().toLowerCase();
 
-    const filtered = products.filter((item) => {
+    const filtered = productListSource.filter((item) => {
       const matchesTag =
         activeTag === "All" || (item.tag || "General") === activeTag;
       const matchesBrand =
@@ -349,7 +377,7 @@ export default function Landing() {
     }
     return sorted;
   }, [
-    products,
+    productListSource,
     shopQuery,
     activeTag,
     activeBrand,
@@ -367,8 +395,16 @@ export default function Landing() {
             section.key !== "deals-of-day" &&
             section.key !== "flash-sale",
         )
+        .map((section) => ({
+          ...section,
+          products: Array.isArray(section.products)
+            ? section.products.filter(
+                (product) => !isProductFlashSaleActive(product, offerNow),
+              )
+            : [],
+        }))
         .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0)),
-    [featuredSectionsData],
+    [featuredSectionsData, offerNow],
   );
  const flashDealsSection = useMemo(
   () =>
@@ -381,15 +417,16 @@ export default function Landing() {
     },
   [featuredSectionsData]
 );
-  const flashSaleProducts = useMemo(() => {
-    if (
-      !Array.isArray(flashDealsSection.products) ||
-      flashDealsSection.products.length === 0
-    ) {
-      return [];
+  const flashSaleCountdownTarget = useMemo(() => {
+    const productEndTimes = flashSaleProducts
+      .map((product) => new Date(product.flashSaleEndsAt).getTime())
+      .filter((time) => Number.isFinite(time) && time > offerNow)
+      .sort((a, b) => a - b);
+    if (productEndTimes.length > 0) {
+      return new Date(productEndTimes[0]).toISOString();
     }
-    return flashDealsSection.products.slice(0, 6);
-  }, [flashDealsSection]);
+    return flashDealsSection?.countdownEndsAt || "";
+  }, [flashSaleProducts, flashDealsSection, offerNow]);
   const activeHeroOffers = useMemo(() => {
     const now = offerNow;
     return heroOffers
@@ -405,17 +442,6 @@ export default function Landing() {
       })
       .sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
   }, [heroOffers, offerNow]);
-  const isFlashSaleScheduleActive = useMemo(() => {
-    const startsAt = flashDealsSection.countdownStartsAt
-      ? new Date(flashDealsSection.countdownStartsAt).getTime()
-      : null;
-    const endsAt = flashDealsSection.countdownEndsAt
-      ? new Date(flashDealsSection.countdownEndsAt).getTime()
-      : null;
-    const hasStarted = !Number.isFinite(startsAt) || offerNow >= startsAt;
-    const hasNotEnded = !Number.isFinite(endsAt) || offerNow <= endsAt;
-    return hasStarted && hasNotEnded;
-  }, [flashDealsSection, offerNow]);
   const tax = useMemo(
     () => Number((totalPrice * 0.08).toFixed(2)),
     [totalPrice],
@@ -645,6 +671,37 @@ export default function Landing() {
       walletId: DUMMY_EWALLET.walletId,
     }));
     setPromoMessage("Dummy e-wallet details filled.");
+  };
+  const handleWishlistToggle = async (product) => {
+    const result = await toggleWishlist(product);
+    if (!result.ok) {
+      toast.error(result.error || "Could not update wishlist");
+      return;
+    }
+    toast.success(result.saved ? "Added to wishlist" : "Removed from wishlist");
+  };
+  const handleShareProduct = async (product) => {
+    const productId = product?._id || product?.id;
+    const url = productId
+      ? `${window.location.origin}/products/${productId}`
+      : window.location.href;
+    const title = product?.name || product?.title || "RiderCraft product";
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: title, url });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Product link copied");
+      } else {
+        window.prompt("Product link", url);
+        toast.success("Product link copied");
+      }
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        toast.error("Could not share product");
+      }
+    }
   };
   const formatCurrency = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -1380,17 +1437,30 @@ export default function Landing() {
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     const loadProducts = async () => {
       try {
+        setProductsLoading(true);
+        setProductsError("");
         const res = await axios.get(
           "https://ridercraft-api.onrender.com/products",
         );
-        setProducts(res.data);
+        if (!ignore) {
+          setProducts(Array.isArray(res.data) ? res.data : []);
+        }
       } catch {
-        setProductsError("Could not load products");
+        if (!ignore) {
+          setProducts([]);
+          setProductsError("Could not load products");
+        }
+      } finally {
+        if (!ignore) setProductsLoading(false);
       }
     };
     loadProducts();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -1586,6 +1656,7 @@ export default function Landing() {
         setSearchQuery={setShopQuery}
         setView={setView}
         totalItems={totalItems}
+        wishlistCount={wishlistCount}
         profile={profile}
       />
 
@@ -1593,6 +1664,7 @@ export default function Landing() {
         view={view}
         setView={setView}
         totalItems={totalItems}
+        wishlistCount={wishlistCount}
         totalOrders={orderHistory.length}
         notifications={dbNotifications}
         notificationCount={
@@ -1677,26 +1749,28 @@ export default function Landing() {
             </section>
           )}
 
-          {!isSearching && isFlashSaleScheduleActive && (
+          {!isSearching && (productsLoading || flashSaleProducts.length > 0) && (
             <section className="flash-sale-banner">
               <div className="flash-sale-head">
                 <div>
                   <h3>⚡ {flashDealsSection.title || "Flash Sale"}</h3>
                   <p>Hurry! Limited-time offers on top riding gear.</p>
                 </div>
-                <div className="flash-sale-countdown">
-                  <span>Ends in</span>
-                  <strong>
-                    {flashDealsSection?.countdownEndsAt
-                      ? formatCountdown(flashDealsSection.countdownEndsAt)
-                      : "00:00:00"}
-                  </strong>
-                </div>
+                {flashSaleCountdownTarget && (
+                  <div className="flash-sale-countdown">
+                    <span>Ends in</span>
+                    <strong>{formatCountdown(flashSaleCountdownTarget)}</strong>
+                  </div>
+                )}
                 <button type="button" className="flash-view-btn" onClick={() => browseCategory("All")}>
                   View all deals
                 </button>
               </div>
-              <div className="flash-sale-grid">
+              {productsLoading && (
+                <p className="shop-hero-empty">Loading flash sale products...</p>
+              )}
+              {!productsLoading && (
+                <div className="flash-sale-grid">
                 {flashSaleProducts.map((product) => {
                   const stock = getProductStock(product);
                   const imageSrc = getProductImage(product);
@@ -1734,6 +1808,34 @@ export default function Landing() {
                             No image
                           </div>
                         )}
+                        <div className="product-card-actions">
+                          <button
+                            type="button"
+                            className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
+                            aria-label={
+                              isWishlisted(product._id)
+                                ? "Remove from wishlist"
+                                : "Add to wishlist"
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleWishlistToggle(product);
+                            }}
+                          >
+                            {isWishlisted(product._id) ? "♥" : "♡"}
+                          </button>
+                          <button
+                            type="button"
+                            className="product-icon-btn"
+                            aria-label="Share product"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleShareProduct(product);
+                            }}
+                          >
+                            ↗
+                          </button>
+                        </div>
                         <div>
                           <p className="flash-sale-name">{product.name}</p>
                           <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
@@ -1774,10 +1876,11 @@ export default function Landing() {
                     </article>
                   );
                 })}
-              </div>
-              {flashSaleProducts.length === 0 && (
+                </div>
+              )}
+              {!productsLoading && flashSaleProducts.length === 0 && (
                 <p className="shop-hero-empty">
-                  No flash sale products assigned by admin yet.
+                  No Flash Sale Products Available
                 </p>
               )}
             </section>
@@ -1838,6 +1941,34 @@ export default function Landing() {
                                   No image
                                 </div>
                               )}
+                              <div className="product-card-actions">
+                                <button
+                                  type="button"
+                                  className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
+                                  aria-label={
+                                    isWishlisted(product._id)
+                                      ? "Remove from wishlist"
+                                      : "Add to wishlist"
+                                  }
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleWishlistToggle(product);
+                                  }}
+                                >
+                                  {isWishlisted(product._id) ? "♥" : "♡"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="product-icon-btn"
+                                  aria-label="Share product"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleShareProduct(product);
+                                  }}
+                                >
+                                  ↗
+                                </button>
+                              </div>
                             </div>
                             <p className="featured-name">{product.name}</p>
                             {isFlashSaleActive && (
@@ -2073,6 +2204,34 @@ export default function Landing() {
                             No image
                           </div>
                         )}
+                        <div className="product-card-actions">
+                          <button
+                            type="button"
+                            className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
+                            aria-label={
+                              isWishlisted(product._id)
+                                ? "Remove from wishlist"
+                                : "Add to wishlist"
+                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleWishlistToggle(product);
+                            }}
+                          >
+                            {isWishlisted(product._id) ? "♥" : "♡"}
+                          </button>
+                          <button
+                            type="button"
+                            className="product-icon-btn"
+                            aria-label="Share product"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleShareProduct(product);
+                            }}
+                          >
+                            ↗
+                          </button>
+                        </div>
                       </div>
                       <p className="product-brand">{product.tag}</p>
                       {isFlashSaleActive && (
@@ -2118,6 +2277,104 @@ export default function Landing() {
                 <p className="empty">No products matched your filters.</p>
               )}
             </div>
+          </div>
+        </section>
+      )}
+
+      {view === "wishlist" && (
+        <section className="wishlist-shell">
+          <header className="wishlist-head">
+            <div>
+              <p className="shop-section-kicker">Saved gear</p>
+              <h2>My Wishlist</h2>
+            </div>
+            <span>{wishlistCount} saved</span>
+          </header>
+
+          {wishlistLoading && <p className="empty">Loading wishlist...</p>}
+          {!wishlistLoading && wishlistItems.length === 0 && (
+            <p className="empty">No wishlist products yet.</p>
+          )}
+
+          <div className="products-grid">
+            {wishlistItems.map((entry) => {
+              const product = getWishlistProduct(entry);
+              if (!product) return null;
+              const productId = product._id || product.id;
+              const imageSrc = getProductImage(product);
+              const displayPrice = getProductDisplayPrice(product, offerNow);
+              const originalPrice = getProductOriginalPrice(product);
+              const discountPercent = getProductDiscountPercent(product, offerNow);
+              const isFlashSaleActive = isProductFlashSaleActive(product, offerNow);
+
+              return (
+                <article
+                  className="product-card product-card-clickable"
+                  key={entry._id}
+                  onClick={() => navigate(`/products/${productId}`)}
+                >
+                  <div className="product-card-image-wrap">
+                    {imageSrc ? (
+                      <img
+                        src={imageSrc}
+                        alt={product.name}
+                        className="product-card-image"
+                        onError={applyImageFallback}
+                      />
+                    ) : (
+                      <div className="product-card-image-placeholder">No image</div>
+                    )}
+                    <div className="product-card-actions">
+                      <button
+                        type="button"
+                        className="product-icon-btn active"
+                        aria-label="Remove from wishlist"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleWishlistToggle(product);
+                        }}
+                      >
+                        ♥
+                      </button>
+                      <button
+                        type="button"
+                        className="product-icon-btn"
+                        aria-label="Share product"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleShareProduct(product);
+                        }}
+                      >
+                        ↗
+                      </button>
+                    </div>
+                  </div>
+                  <p className="product-brand">{product.tag}</p>
+                  {isFlashSaleActive && (
+                    <span className="product-flash-badge">⚡ Flash Sale</span>
+                  )}
+                  <h3>{product.name}</h3>
+                  <p className="price">
+                    {formatCurrency(displayPrice)}
+                    {isFlashSaleActive && originalPrice > displayPrice && (
+                      <small>
+                        <s>{formatCurrency(originalPrice)}</s>
+                        {discountPercent ? ` ${discountPercent}% OFF` : ""}
+                      </small>
+                    )}
+                  </p>
+                  <button
+                    className="primary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      addToCart(getCartProductPayload(product, offerNow));
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}

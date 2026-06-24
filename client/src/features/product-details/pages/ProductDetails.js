@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import ProductGallery from "../components/ProductGallery";
 import ProductSummary from "../components/ProductSummary";
 import RelatedProducts from "../components/RelatedProducts";
@@ -47,15 +48,29 @@ function mapApiProductToUi(product) {
         sku: "",
       }))
     : [];
-  const activeFlashSale = Boolean(product.isFlashSaleActive || product.isFlashSale);
+  const flashSaleEndsAt = product.flashSaleEndsAt
+    ? new Date(product.flashSaleEndsAt).getTime()
+    : NaN;
+  const activeFlashSale = Boolean(
+    product.isFlashSale === true &&
+      Number(product.flashSalePrice || 0) > 0 &&
+      Number.isFinite(flashSaleEndsAt) &&
+      flashSaleEndsAt > Date.now(),
+  );
   const originalPrice = Number(product.originalPrice || product.price || 0);
   const displayPrice = Number(product.displayPrice || product.price || 0);
 
   return {
     id: product._id,
+    _id: product._id,
+    name: product.name || "Product",
+    tag: product.tag || "General",
+    image,
     brand: product.brand || "Generic",
     title: product.name || "Product",
     isFlashSale: activeFlashSale,
+    isFlashSaleActive: activeFlashSale,
+    flashSaleEndsAt: product.flashSaleEndsAt || null,
     oldPrice: activeFlashSale ? originalPrice : null,
     price: displayPrice,
     originalPrice,
@@ -85,7 +100,7 @@ function mapApiProductToUi(product) {
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, isWishlisted, toggleWishlist } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -119,9 +134,28 @@ export default function ProductDetails() {
         ) {
           const currentProduct = productResult.value.data;
 
+          const currentIsFlashSaleActive = Boolean(
+            currentProduct.isFlashSale === true &&
+              Number(currentProduct.flashSalePrice || 0) > 0 &&
+              currentProduct.flashSaleEndsAt &&
+              new Date(currentProduct.flashSaleEndsAt).getTime() > Date.now(),
+          );
+
           const related = productsResult.value.data
             .filter(
-              (item) => item._id !== id && item.tag === currentProduct.tag,
+              (item) => {
+                const itemIsFlashSaleActive = Boolean(
+                  item.isFlashSale === true &&
+                    Number(item.flashSalePrice || 0) > 0 &&
+                    item.flashSaleEndsAt &&
+                    new Date(item.flashSaleEndsAt).getTime() > Date.now(),
+                );
+                return (
+                  item._id !== id &&
+                  item.tag === currentProduct.tag &&
+                  itemIsFlashSaleActive === currentIsFlashSaleActive
+                );
+              },
             )
             .slice(0, 4)
             .map((item) => mapApiProductToUi(item));
@@ -193,6 +227,40 @@ export default function ProductDetails() {
       image: activeImages[activeImage] || activeImages[0],
     });
     navigate("/landing", { state: { view: "cart" } });
+  };
+
+  const handleWishlistToggle = async () => {
+    if (!product) return;
+    const result = await toggleWishlist(product);
+    if (!result.ok) {
+      toast.error(result.error || "Could not update wishlist");
+      return;
+    }
+    toast.success(result.saved ? "Added to wishlist" : "Removed from wishlist");
+  };
+
+  const handleShareProduct = async () => {
+    if (!product) return;
+    const url = `${window.location.origin}/products/${product.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.title,
+          text: product.title,
+          url,
+        });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        toast.success("Product link copied");
+      } else {
+        window.prompt("Product link", url);
+        toast.success("Product link copied");
+      }
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        toast.error("Could not share product");
+      }
+    }
   };
 
   const handleSelectColor = (color) => {
@@ -275,6 +343,9 @@ const totalReviews = reviewCounts.reduce(
                 onSelectSize={setSelectedSize}
                 onAddToCart={handleAddToCart}
                 onCheckoutNow={handleCheckoutNow}
+                isWishlisted={isWishlisted(product.id)}
+                onToggleWishlist={handleWishlistToggle}
+                onShare={handleShareProduct}
               />
             </section>
 

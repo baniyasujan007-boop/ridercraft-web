@@ -1,4 +1,5 @@
 import FeaturedSection, { SECTION_KEYS } from "../models/FeaturedSection.js";
+import { productToClient } from "./productController.js";
 
 const parseOptionalDate = (value) => {
   if (!value) return null;
@@ -9,12 +10,26 @@ const parseOptionalDate = (value) => {
 const hasInvalidCountdownWindow = (startsAt, endsAt) =>
   startsAt && endsAt && startsAt.getTime() > endsAt.getTime();
 
+const featuredSectionToClient = (section, now = new Date()) => {
+  const plain =
+    typeof section?.toObject === "function"
+      ? section.toObject({ virtuals: true })
+      : { ...section };
+  return {
+    ...plain,
+    products: Array.isArray(plain.products)
+      ? plain.products.map((product) => productToClient(product, now))
+      : [],
+  };
+};
+
 export const listPublicFeaturedSections = async (_req, res) => {
   try {
+    const now = new Date();
     const sections = await FeaturedSection.find({ isActive: true })
       .populate("products")
       .sort({ sortOrder: 1, createdAt: 1 });
-    res.json(sections);
+    res.json(sections.map((section) => featuredSectionToClient(section, now)));
   } catch {
     res.status(500).json({ error: "Failed to load featured sections" });
   }

@@ -31,6 +31,9 @@ export default function ProductSummary({
   onSelectSize,
   onAddToCart,
   onCheckoutNow,
+  isWishlisted,
+  onToggleWishlist,
+  onShare,
 }) {
   const visibleStock = Number.isFinite(Number(stock))
     ? Number(stock)
@@ -44,8 +47,17 @@ export default function ProductSummary({
   return (
     <section className="pdp-summary">
       <div className="pdp-top-actions">
-        <button>♡</button>
-        <button>↗</button>
+        <button
+          type="button"
+          className={isWishlisted ? "active" : ""}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={onToggleWishlist}
+        >
+          {isWishlisted ? "♥" : "♡"}
+        </button>
+        <button type="button" aria-label="Share product" onClick={onShare}>
+          ↗
+        </button>
       </div>
       <p className="pdp-brand">{product.brand}</p>
 

@@ -6,6 +6,7 @@ export default function SiteHeader({
   setSearchQuery,
   setView,
   totalItems = 0,
+  wishlistCount = 0,
   profile = {},
 }) {
   const openView = (nextView) => {
@@ -47,6 +48,11 @@ export default function SiteHeader({
         </label>
 
         <div className="site-header-actions">
+          <button type="button" className="header-action" onClick={() => openView("wishlist")}>
+            <span className="header-action-icon" aria-hidden="true">♥</span>
+            <span className="header-action-copy"><b>Wishlist</b><small>{wishlistCount} saved</small></span>
+            {wishlistCount > 0 && <span className="header-action-badge">{wishlistCount}</span>}
+          </button>
           <button type="button" className="header-action" onClick={() => openView("cart")}>
             <span className="header-action-icon" aria-hidden="true">🛒</span>
             <span className="header-action-copy"><b>Cart</b><small>{totalItems} items</small></span>

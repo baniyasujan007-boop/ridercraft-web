@@ -1363,7 +1363,7 @@
   background: #fff;
   box-shadow: 0 4px 14px rgba(17, 24, 39, .04);
 }
-.featured-image-wrap { height: 155px; border: 0; background: #f7f8fa; }
+.featured-image-wrap { position: relative; height: 155px; border: 0; background: #f7f8fa; }
 .featured-image { object-fit: contain; }
 .featured-name { min-height: 36px; margin-top: 3px; font-weight: 800; }
 .featured-price { margin-top: auto; color: #101827; font-size: 17px; }
@@ -1384,8 +1384,81 @@
 .shop-sort { border-radius: 4px; }
 .products-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 13px; }
 .product-card { min-width: 0; padding: 11px; gap: 7px; border-radius: 7px; border-color: #dfe3e8; box-shadow: 0 4px 14px rgba(17, 24, 39, .04); }
-.product-card-image-wrap { height: 210px; border: 0; border-radius: 5px; background: #f7f8fa; }
+.product-card-image-wrap { position: relative; height: 210px; border: 0; border-radius: 5px; background: #f7f8fa; }
 .product-card-image { object-fit: contain; }
+.product-card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.flash-sale-card-top {
+  position: relative;
+}
+
+.product-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(17, 24, 39, .12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .94);
+  color: #17202d;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgba(17, 24, 39, .12);
+  transition: transform .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.product-icon-btn:hover {
+  transform: translateY(-1px);
+  border-color: #ff6a00;
+  color: #e65400;
+}
+
+.product-icon-btn.active {
+  border-color: rgba(225, 29, 72, .2);
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.wishlist-shell {
+  width: min(1280px, calc(100% - 32px));
+  margin: 26px auto 40px;
+  padding: 18px;
+  border-radius: 9px;
+  background: #f4f5f7;
+  color: #141c29;
+}
+
+.wishlist-head {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #dce0e6;
+}
+
+.wishlist-head h2 {
+  margin: 2px 0 0;
+  color: #17202d;
+  font-size: 22px;
+  text-transform: uppercase;
+}
+
+.wishlist-head > span {
+  color: #687386;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
 .product-brand { color: #e65400; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .product-card h3 { min-height: 38px; font-size: 14px; line-height: 1.35; }
 .price { color: #101827; font-size: 19px; }

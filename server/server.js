@@ -10,6 +10,7 @@ import heroOfferRoutes from "./routes/heroOfferRoutes.js";
 import featuredSectionRoutes from "./routes/featuredSectionRoutes.js";
 import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
 import notificationRoutes from "./routes/notifications.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/orders", orderRoutes);
 app.use("/hero-offers", heroOfferRoutes);
 app.use("/featured-sections", featuredSectionRoutes);
 app.use("/service-requests", serviceRequestRoutes);
+app.use("/wishlist", wishlistRoutes);
 app.use(
   "/notifications",
   notificationRoutes

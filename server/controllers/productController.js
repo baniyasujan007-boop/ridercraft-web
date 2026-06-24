@@ -5,7 +5,7 @@ import * as cheerio from "cheerio";
 
 const COLOR_HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
+export const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
   Boolean(
     product?.isFlashSale === true &&
       Number(product?.flashSalePrice) > 0 &&
@@ -13,7 +13,7 @@ const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
       new Date(product.flashSaleEndsAt).getTime() > now.getTime(),
   );
 
-const productToClient = (product, now = new Date()) => {
+export const productToClient = (product, now = new Date()) => {
   const plain =
     typeof product?.toObject === "function"
       ? product.toObject({ virtuals: true })
