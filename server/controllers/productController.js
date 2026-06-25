@@ -5,24 +5,22 @@ import * as cheerio from "cheerio";
 
 const COLOR_HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-const getTimeValue = (value) => {
-  if (!value) return NaN;
-  const time = new Date(value).getTime();
-  return Number.isFinite(time) ? time : NaN;
-};
-
 export const isFlashSaleCurrentlyActive = (product, now = new Date()) => {
-  const nowTime = now.getTime();
-  const startsAt = getTimeValue(product?.flashSaleStartsAt);
-  const endsAt = getTimeValue(product?.flashSaleEndsAt);
+  const startsAt = new Date(
+    product?.flashSaleStartsAt ||
+      (product?.isFlashSale === true && product?.flashSaleEndsAt
+        ? new Date(0).toISOString()
+        : null),
+  );
+  const endsAt = new Date(product?.flashSaleEndsAt);
 
   return Boolean(
     product?.isFlashSale === true &&
       Number(product?.flashSalePrice) > 0 &&
-      Number.isFinite(startsAt) &&
-      Number.isFinite(endsAt) &&
-      startsAt <= nowTime &&
-      endsAt >= nowTime,
+      Number.isFinite(startsAt.getTime()) &&
+      Number.isFinite(endsAt.getTime()) &&
+      startsAt <= now &&
+      endsAt >= now,
   );
 };
 
@@ -47,7 +45,9 @@ export const productToClient = (product, now = new Date()) => {
   const displayPrice = flashSaleActive ? flashSalePrice : price;
   const flashSaleStartsAt =
     plain.flashSaleStartsAt ||
-    (plain.isFlashSale === true && plain.flashSaleEndsAt ? new Date(0) : null);
+    (plain.isFlashSale === true && plain.flashSaleEndsAt
+      ? new Date(0).toISOString()
+      : null);
 
   return {
     ...plain,
@@ -63,7 +63,7 @@ export const productToClient = (product, now = new Date()) => {
     discountPercent:
       flashSaleActive && price > 0
         ? Math.round(((price - flashSalePrice) / price) * 100)
-        : 0,
+      : 0,
   };
 };
 
@@ -132,12 +132,15 @@ const normalizeFlashSaleFields = ({
       ? null
       : Number(flashSalePrice);
   const startsAt = normalizeDate(flashSaleStartsAt);
+  const endsAt = normalizeDate(flashSaleEndsAt);
+  const resolvedStartsAt =
+    startsAt || (enabled && endsAt ? new Date(0) : null);
 
   return {
     isFlashSale: enabled,
     flashSalePrice: Number.isFinite(salePrice) && salePrice >= 0 ? salePrice : null,
-    flashSaleStartsAt: enabled ? startsAt || new Date() : startsAt,
-    flashSaleEndsAt: normalizeDate(flashSaleEndsAt),
+    flashSaleStartsAt: enabled ? resolvedStartsAt : startsAt,
+    flashSaleEndsAt: endsAt,
   };
 };
 
@@ -559,7 +562,7 @@ export const rateProduct = async (req, res) => {
     await product.save();
     res.json({
       message: existing ? "Rating updated" : "Rating added",
-      product,
+      product: productToClient(product),
     });
   } catch {
     res.status(500).json({ error: "Failed to save rating" });

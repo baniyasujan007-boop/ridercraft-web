@@ -79,12 +79,6 @@ const getWishlistProduct = (entry) => {
   return product && typeof product === "object" ? product : null;
 };
 
-const getTimeValue = (value) => {
-  if (!value) return NaN;
-  const time = new Date(value).getTime();
-  return Number.isFinite(time) ? time : NaN;
-};
-
 const normalizeProductForClient = (product) => ({
   ...product,
   isFlashSale: product?.isFlashSale === true,
@@ -92,24 +86,27 @@ const normalizeProductForClient = (product) => ({
     product?.flashSalePrice === undefined || product?.flashSalePrice === null
       ? 0
       : Number(product.flashSalePrice),
-  flashSaleStartsAt: product?.flashSaleStartsAt || null,
+  flashSaleStartsAt:
+    product?.flashSaleStartsAt ||
+    (product?.isFlashSale === true && product?.flashSaleEndsAt
+      ? new Date(0).toISOString()
+      : null),
   flashSaleEndsAt: product?.flashSaleEndsAt || null,
 });
 
 const isProductFlashSaleActive = (product, now = Date.now()) => {
   if (!product) return false;
   const nowDate = now instanceof Date ? now : new Date(now);
-  const nowTime = nowDate.getTime();
-  const startsAt = getTimeValue(product.flashSaleStartsAt);
-  const endsAt = getTimeValue(product.flashSaleEndsAt);
+  const startsAt = new Date(product.flashSaleStartsAt);
+  const endsAt = new Date(product.flashSaleEndsAt);
 
   return (
     product.isFlashSale === true &&
     Number(product.flashSalePrice) > 0 &&
-    Number.isFinite(startsAt) &&
-    Number.isFinite(endsAt) &&
-    startsAt <= nowTime &&
-    endsAt >= nowTime
+    Number.isFinite(startsAt.getTime()) &&
+    Number.isFinite(endsAt.getTime()) &&
+    startsAt <= nowDate &&
+    endsAt >= nowDate
   );
 };
 
@@ -504,7 +501,11 @@ export default function Landing() {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setProducts((prev) =>
-        prev.map((item) => (item._id === productId ? res.data.product : item)),
+        prev.map((item) =>
+          item._id === productId
+            ? normalizeProductForClient(res.data.product)
+            : item,
+        ),
       );
       setRatingInputs((prev) => ({ ...prev, [productId]: selected }));
       if (comment !== undefined) {
