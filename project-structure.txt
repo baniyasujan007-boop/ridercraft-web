@@ -1,0 +1,141 @@
+.
+├── README.md
+├── client
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   └── src
+│       ├── App.css
+│       ├── App.js
+│       ├── App.test.js
+│       ├── assets
+│       │   ├── athlete-illustration.svg
+│       │   └── ridercraft-logo.png
+│       ├── components
+│       │   ├── common
+│       │   └── layout
+│       │       ├── InquiryChatbot.js
+│       │       ├── Navbar.js
+│       │       ├── SiteFooter.js
+│       │       └── SiteHeader.js
+│       ├── context
+│       │   └── index.js
+│       ├── data
+│       ├── features
+│       │   ├── about
+│       │   │   ├── pages
+│       │   │   │   └── About.js
+│       │   │   └── styles
+│       │   │       └── about.css
+│       │   ├── admin
+│       │   │   ├── components
+│       │   │   │   └── orders
+│       │   │   │       ├── OrderDetailsDrawer.js
+│       │   │   │       ├── OrdersHeader.js
+│       │   │   │       ├── OrdersSidebar.js
+│       │   │   │       └── OrdersTable.js
+│       │   │   ├── pages
+│       │   │   │   ├── Admin.js
+│       │   │   │   ├── AdminOrdersDashboard.js
+│       │   │   │   ├── AdminSectionContent.js
+│       │   │   │   └── GarageDashboard.js
+│       │   │   └── styles
+│       │   │       ├── admin-orders-dashboard.css
+│       │   │       ├── admin.css
+│       │   │       └── garage-dashboard.css
+│       │   ├── auth
+│       │   │   ├── components
+│       │   │   │   ├── AuthInput.js
+│       │   │   │   ├── AuthLayout.js
+│       │   │   │   └── GoogleAuthButton.js
+│       │   │   ├── pages
+│       │   │   │   ├── ForgotPassword.js
+│       │   │   │   ├── GarageLogin.js
+│       │   │   │   ├── GarageSignup.js
+│       │   │   │   ├── Login.js
+│       │   │   │   └── Register.js
+│       │   │   └── styles
+│       │   │       └── auth.css
+│       │   ├── product-details
+│       │   │   ├── components
+│       │   │   │   ├── ProductGallery.js
+│       │   │   │   ├── ProductSummary.js
+│       │   │   │   └── RelatedProducts.js
+│       │   │   ├── pages
+│       │   │   │   └── ProductDetails.js
+│       │   │   └── styles
+│       │   │       └── product-details.css
+│       │   └── shop
+│       │       ├── pages
+│       │       │   └── Landing.js
+│       │       └── styles
+│       │           ├── landing-base.css
+│       │           ├── landing-cart.css
+│       │           ├── landing-nav.css
+│       │           ├── landing-profile.css
+│       │           ├── landing-service.css
+│       │           └── landing-shop.css
+│       ├── hooks
+│       │   └── index.js
+│       ├── index.css
+│       ├── index.js
+│       ├── logo.svg
+│       ├── main.js
+│       ├── reportWebVitals.js
+│       ├── routes
+│       │   ├── AdminRoute.js
+│       │   ├── GarageRoute.js
+│       │   └── ProtectedRoute.js
+│       ├── services
+│       │   └── api.js
+│       ├── setupTests.js
+│       ├── styles
+│       │   └── layout
+│       │       ├── inquiry-chatbot.css
+│       │       └── site-chrome.css
+│       └── utils
+│           ├── fallbackImage.js
+│           └── index.js
+├── package-lock.json
+├── package.json
+├── project-structure.txt
+└── server
+    ├── config
+    │   └── db.js
+    ├── controllers
+    │   ├── authController.js
+    │   ├── featuredSectionController.js
+    │   ├── heroOfferController.js
+    │   ├── orderController.js
+    │   ├── productController.js
+    │   ├── promoController.js
+    │   ├── serviceRequestController.js
+    │   └── wishlistController.js
+    ├── middleware
+    │   └── authMiddleware.js
+    ├── models
+    │   ├── FeaturedSection.js
+    │   ├── HeroOffer.js
+    │   ├── Notification.js
+    │   ├── Order.js
+    │   ├── Product.js
+    │   ├── Promo.js
+    │   ├── ServiceRequest.js
+    │   ├── User.js
+    │   └── Wishlist.js
+    ├── package-lock.json
+    ├── package.json
+    ├── routes
+    │   ├── authRoutes.js
+    │   ├── featuredSectionRoutes.js
+    │   ├── heroOfferRoutes.js
+    │   ├── notifications.js
+    │   ├── orderRoutes.js
+    │   ├── productRoutes.js
+    │   ├── promoRoutes.js
+    │   ├── serviceRequestRoutes.js
+    │   └── wishlistRoutes.js
+    ├── server.js
+    └── utils
+
+42 directories, 97 files

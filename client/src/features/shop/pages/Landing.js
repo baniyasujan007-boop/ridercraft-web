@@ -79,16 +79,37 @@ const getWishlistProduct = (entry) => {
   return product && typeof product === "object" ? product : null;
 };
 
+const getTimeValue = (value) => {
+  if (!value) return NaN;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : NaN;
+};
+
+const normalizeProductForClient = (product) => ({
+  ...product,
+  isFlashSale: product?.isFlashSale === true,
+  flashSalePrice:
+    product?.flashSalePrice === undefined || product?.flashSalePrice === null
+      ? 0
+      : Number(product.flashSalePrice),
+  flashSaleStartsAt: product?.flashSaleStartsAt || null,
+  flashSaleEndsAt: product?.flashSaleEndsAt || null,
+});
+
 const isProductFlashSaleActive = (product, now = Date.now()) => {
   if (!product) return false;
-  const startsAt = product.flashSaleStartsAt
-    ? new Date(product.flashSaleStartsAt).getTime()
-    : 0;
-  if (startsAt && startsAt > now) return false;
+  const nowDate = now instanceof Date ? now : new Date(now);
+  const nowTime = nowDate.getTime();
+  const startsAt = getTimeValue(product.flashSaleStartsAt);
+  const endsAt = getTimeValue(product.flashSaleEndsAt);
+
   return (
     product.isFlashSale === true &&
-    toNumber(product.flashSalePrice) > 0 &&
-    new Date(product.flashSaleEndsAt).getTime() > now
+    Number(product.flashSalePrice) > 0 &&
+    Number.isFinite(startsAt) &&
+    Number.isFinite(endsAt) &&
+    startsAt <= nowTime &&
+    endsAt >= nowTime
   );
 };
 
@@ -1418,7 +1439,12 @@ export default function Landing() {
           "https://ridercraft-api.onrender.com/products",
           { signal: controller.signal },
         );
-        setProducts(Array.isArray(res.data) ? res.data : []);
+        const nextProducts = Array.isArray(res.data)
+          ? res.data.map(normalizeProductForClient)
+          : [];
+        if (!controller.signal.aborted) {
+          setProducts(nextProducts);
+        }
       } catch (error) {
         if (axios.isCancel(error) || error.name === "CanceledError") return;
         setProducts([]);

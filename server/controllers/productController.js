@@ -5,15 +5,26 @@ import * as cheerio from "cheerio";
 
 const COLOR_HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-export const isFlashSaleCurrentlyActive = (product, now = new Date()) =>
-  Boolean(
+const getTimeValue = (value) => {
+  if (!value) return NaN;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : NaN;
+};
+
+export const isFlashSaleCurrentlyActive = (product, now = new Date()) => {
+  const nowTime = now.getTime();
+  const startsAt = getTimeValue(product?.flashSaleStartsAt);
+  const endsAt = getTimeValue(product?.flashSaleEndsAt);
+
+  return Boolean(
     product?.isFlashSale === true &&
       Number(product?.flashSalePrice) > 0 &&
-      (!product?.flashSaleStartsAt ||
-        new Date(product.flashSaleStartsAt).getTime() <= now.getTime()) &&
-      product?.flashSaleEndsAt &&
-      new Date(product.flashSaleEndsAt).getTime() > now.getTime(),
+      Number.isFinite(startsAt) &&
+      Number.isFinite(endsAt) &&
+      startsAt <= nowTime &&
+      endsAt >= nowTime,
   );
+};
 
 export const isFeaturedCurrentlyActive = (product, now = new Date()) =>
   Boolean(
@@ -34,10 +45,16 @@ export const productToClient = (product, now = new Date()) => {
   const price = Number(plain.price || 0);
   const flashSalePrice = Number(plain.flashSalePrice || 0);
   const displayPrice = flashSaleActive ? flashSalePrice : price;
+  const flashSaleStartsAt =
+    plain.flashSaleStartsAt ||
+    (plain.isFlashSale === true && plain.flashSaleEndsAt ? new Date(0) : null);
 
   return {
     ...plain,
     isFlashSale: plain.isFlashSale === true,
+    flashSalePrice,
+    flashSaleStartsAt,
+    flashSaleEndsAt: plain.flashSaleEndsAt || null,
     isFlashSaleActive: flashSaleActive,
     isFeatured: plain.isFeatured === true,
     isFeaturedActive: featuredActive,
@@ -114,11 +131,12 @@ const normalizeFlashSaleFields = ({
     flashSalePrice === undefined || flashSalePrice === null || flashSalePrice === ""
       ? null
       : Number(flashSalePrice);
+  const startsAt = normalizeDate(flashSaleStartsAt);
 
   return {
     isFlashSale: enabled,
     flashSalePrice: Number.isFinite(salePrice) && salePrice >= 0 ? salePrice : null,
-    flashSaleStartsAt: normalizeDate(flashSaleStartsAt),
+    flashSaleStartsAt: enabled ? startsAt || new Date() : startsAt,
     flashSaleEndsAt: normalizeDate(flashSaleEndsAt),
   };
 };

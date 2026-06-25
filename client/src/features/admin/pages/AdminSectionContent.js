@@ -1,5 +1,20 @@
 import { applyImageFallback } from "../../../utils/fallbackImage";
 
+const toDatetimeLocalValue = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+};
+
+const fromDatetimeLocalValue = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : "";
+};
+
 export default function AdminSectionContent({ vm }) {
   const {
     section,
@@ -255,11 +270,11 @@ export default function AdminSectionContent({ vm }) {
               Flash Sale Start
               <input
                 type="datetime-local"
-                value={form.flashSaleStartsAt}
+                value={toDatetimeLocalValue(form.flashSaleStartsAt)}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    flashSaleStartsAt: e.target.value,
+                    flashSaleStartsAt: fromDatetimeLocalValue(e.target.value),
                   }))
                 }
                 disabled={!form.isFlashSale}
@@ -269,11 +284,11 @@ export default function AdminSectionContent({ vm }) {
               Flash Sale End
               <input
                 type="datetime-local"
-                value={form.flashSaleEndsAt}
+                value={toDatetimeLocalValue(form.flashSaleEndsAt)}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    flashSaleEndsAt: e.target.value,
+                    flashSaleEndsAt: fromDatetimeLocalValue(e.target.value),
                   }))
                 }
                 disabled={!form.isFlashSale}
