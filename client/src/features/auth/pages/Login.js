@@ -109,12 +109,6 @@ function PremiumIcon({ type }) {
         <path d="M12 6.6c1.3 0 2.5.5 3.4 1.3L18 5.4A8.8 8.8 0 0 0 12 3a9 9 0 0 0-8 4.9l3 2.3a5.4 5.4 0 0 1 5-3.6Z" />
       </>
     ),
-    apple: (
-      <>
-        <path d="M16.6 12.1c0-2 1.6-3 1.7-3.1-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7-.7 0-1.7-.7-2.7-.7-1.4 0-2.8.8-3.5 2.1-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.6 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7 1.3 0 1.7.7 2.8.7 1.2 0 1.9-1 2.6-2.1.8-1.2 1.1-2.3 1.2-2.4 0 0-2.8-1.1-2.8-3.5Z" />
-        <path d="M14.6 6.1c.6-.7 1-1.7.9-2.7-.9 0-1.9.6-2.5 1.3-.6.6-1 1.6-.9 2.6.9.1 1.9-.5 2.5-1.2Z" />
-      </>
-    ),
   };
 
   return (
@@ -193,11 +187,6 @@ function LoginCard({ onEmailLogin, onGoogleSuccess, onGoogleError }) {
     onGoogleError?.(message);
   };
 
-  const handleAppleClick = () => {
-    setSuccess("");
-    setError("Apple sign-in is not configured yet.");
-  };
-
   return (
     <section className="premium-login__card" aria-labelledby="premium-login-title">
       <div className="premium-login__card-header">
@@ -261,10 +250,6 @@ function LoginCard({ onEmailLogin, onGoogleSuccess, onGoogleError }) {
               onError={handleGoogleError}
             />
           </div>
-          <button type="button" className="premium-login__social-button" onClick={handleAppleClick}>
-            <PremiumIcon type="apple" />
-            <span>Apple</span>
-          </button>
         </div>
 
         <div className="premium-login__signup">
@@ -295,9 +280,6 @@ function PremiumHeader() {
             </a>
           ))}
         </div>
-        <Link className="premium-login__nav-cta" to="/register">
-          Join RiderCraft
-        </Link>
       </nav>
     </header>
   );
