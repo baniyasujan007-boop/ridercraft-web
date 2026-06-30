@@ -58,7 +58,7 @@ export default function ForgotPassword() {
         }
       );
 
-      const message = res.data.message || "Password reset link has been sent to your email.";
+      const message = res.data.message || "Password reset successful";
       setStatus(message);
       toast.success(message);
 
@@ -77,13 +77,14 @@ export default function ForgotPassword() {
       <div className="premium-login__card-header">
         <p className="premium-login__eyebrow">Rider account</p>
         <h2 id="forgot-password-title">Forgot Password</h2>
-        <p>No worries. Enter your email and new password to reset your account.</p>
+        <p>Enter the email associated with your RiderCraft account and set a new password.</p>
       </div>
 
       <form className="premium-login__form" onSubmit={submit}>
         <PremiumAuthInput
           icon="mail"
           label="Email Address"
+          placeholder="Enter your email"
           value={form.email}
           onChange={(event) => setForm({ ...form, email: event.target.value })}
           autoComplete="email"
@@ -91,6 +92,7 @@ export default function ForgotPassword() {
         <PremiumAuthInput
           icon="lock"
           label="New Password"
+          placeholder="Enter your new password"
           type="password"
           value={form.newPassword}
           onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
@@ -99,6 +101,7 @@ export default function ForgotPassword() {
         <PremiumAuthInput
           icon="lock"
           label="Confirm Password"
+          placeholder="Confirm your password"
           type="password"
           value={form.confirmPassword}
           onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
@@ -124,7 +127,7 @@ export default function ForgotPassword() {
     <PremiumAuthShell
       label="forgot-password"
       title={<>Reset Your<br />RiderCraft Account</>}
-      subtitle="Enter your email address and new password to get back to your RiderCraft account."
+      subtitle="Enter the email associated with your RiderCraft account."
       card={card}
     />
   );

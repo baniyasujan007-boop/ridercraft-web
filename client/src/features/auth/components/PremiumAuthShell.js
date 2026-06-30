@@ -4,8 +4,7 @@ import ridercraftLogo from "../../../assets/ridercraft-logo.png";
 import heroImage from "../../../assets/ridercraft-premium-login-hero.png";
 import "../styles/premium-login-prototype.css";
 
-const navItems = ["Helmets", "Riding Gear", "Bike Service", "Accessories"];
-const trustBadges = ["Genuine Products", "Fast Delivery", "Secure Payments"];
+const trustBadges = ["RiderCraft account", "Secure access", "Order management"];
 
 export function PremiumIcon({ type }) {
   const paths = {
@@ -69,6 +68,7 @@ export function PremiumIcon({ type }) {
 export function PremiumAuthInput({
   icon,
   label,
+  placeholder,
   type = "text",
   value,
   onChange,
@@ -88,7 +88,7 @@ export function PremiumAuthInput({
           type={type}
           value={value}
           onChange={onChange}
-          placeholder={label}
+          placeholder={placeholder}
           autoComplete={autoComplete}
           required={required}
         />
@@ -113,22 +113,11 @@ export function PremiumStatus({ type, children }) {
 function PremiumHeader({ label }) {
   return (
     <header className="premium-login__header">
-      <div className="premium-login__shipping-bar">
-        <span>Free shipping on premium riding gear orders above Rs. 4999</span>
-        <span>Service bookings now open in select cities</span>
-      </div>
       <nav className="premium-login__nav" aria-label={`${label} navigation`}>
         <Link className="premium-login__brand" to="/landing" aria-label="RiderCraft home">
           <img src={ridercraftLogo} alt="" />
           <span>RiderCraft</span>
         </Link>
-        <div className="premium-login__nav-links">
-          {navItems.map((item) => (
-            <a href="#premium-login-features" key={item}>
-              {item}
-            </a>
-          ))}
-        </div>
       </nav>
     </header>
   );
@@ -156,9 +145,8 @@ function PremiumFooter() {
         <img src={ridercraftLogo} alt="" />
         <span>RiderCraft</span>
       </Link>
-      <p>Premium gear, verified service, and secure shopping for riders.</p>
+      <p>RiderCraft account access for riders.</p>
       <div className="premium-login__footer-links">
-        <a href="#premium-login-features">Features</a>
         <Link to="/forgot-password">Support</Link>
         <Link to="/register">Create Account</Link>
       </div>
@@ -167,7 +155,7 @@ function PremiumFooter() {
 }
 
 export default function PremiumAuthShell({
-  eyebrow = "Premium rider access",
+  eyebrow = "RiderCraft account",
   title,
   subtitle,
   card,

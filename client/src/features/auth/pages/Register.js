@@ -125,7 +125,8 @@ export default function Register() {
 
         <PremiumAuthInput
           icon="user"
-          label={form.role === "garage" ? "Owner name" : "Full Name"}
+          label={form.role === "garage" ? "Owner Name" : "Full Name"}
+          placeholder="Enter your full name"
           value={form.name}
           onChange={(event) => updateForm("name", event.target.value)}
           autoComplete="name"
@@ -133,6 +134,7 @@ export default function Register() {
         <PremiumAuthInput
           icon="mail"
           label="Email Address"
+          placeholder="Enter your email"
           value={form.email}
           onChange={(event) => updateForm("email", event.target.value)}
           autoComplete="email"
@@ -140,6 +142,7 @@ export default function Register() {
         <PremiumAuthInput
           icon="phone"
           label="Phone Number"
+          placeholder="Enter your phone number"
           value={form.phone}
           onChange={(event) => updateForm("phone", event.target.value)}
           autoComplete="tel"
@@ -148,6 +151,7 @@ export default function Register() {
         <PremiumAuthInput
           icon="lock"
           label="Password"
+          placeholder="Enter your password"
           type={showPassword ? "text" : "password"}
           value={form.password}
           onChange={(event) => updateForm("password", event.target.value)}
@@ -166,6 +170,7 @@ export default function Register() {
         <PremiumAuthInput
           icon="lock"
           label="Confirm Password"
+          placeholder="Confirm your password"
           type={showConfirmPassword ? "text" : "password"}
           value={form.confirmPassword}
           onChange={(event) => updateForm("confirmPassword", event.target.value)}
@@ -187,6 +192,7 @@ export default function Register() {
             <PremiumAuthInput
               icon="garage"
               label="Garage Name"
+              placeholder="Enter your garage name"
               value={form.garageName}
               onChange={(event) => updateForm("garageName", event.target.value)}
               autoComplete="organization"
@@ -194,6 +200,7 @@ export default function Register() {
             <PremiumAuthInput
               icon="mapPin"
               label="Garage Address"
+              placeholder="Enter your garage address"
               value={form.garageAddress}
               onChange={(event) => updateForm("garageAddress", event.target.value)}
               autoComplete="street-address"
@@ -221,6 +228,7 @@ export default function Register() {
             <PremiumAuthInput
               icon="mapPin"
               label="Service Radius (km)"
+              placeholder="Enter service radius"
               type="number"
               value={form.serviceRadiusKm}
               onChange={(event) => updateForm("serviceRadiusKm", event.target.value)}
@@ -276,7 +284,7 @@ export default function Register() {
     <PremiumAuthShell
       label="register"
       title={<>Join The<br />RiderCraft Community</>}
-      subtitle="Create your account and start your journey with premium helmets, riding gear and bike services."
+      subtitle="Create your RiderCraft account to manage orders, service requests, and account details."
       card={card}
     />
   );
