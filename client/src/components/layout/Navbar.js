@@ -5,7 +5,6 @@ export default function Navbar({
   view,
   setView,
   totalItems,
-  wishlistCount = 0,
   totalOrders,
   notificationCount,
   notifications,
@@ -110,13 +109,6 @@ export default function Navbar({
             <span>Cart ({totalItems})</span>
           </button>
           <button
-            className={view === "wishlist" ? "nav-btn active" : "nav-btn"}
-            onClick={() => goToView("wishlist")}
-          >
-            <span className="nav-chip chip-rose" />
-            <span>Wishlist ({wishlistCount})</span>
-          </button>
-          <button
             className={view === "orders" ? "nav-btn active" : "nav-btn"}
             onClick={() => goToView("orders")}
           >
@@ -129,11 +121,6 @@ export default function Navbar({
           >
             <span className="nav-chip chip-sky" />
             <span>Bike Servicing</span>
-          </button>
-
-          <button className="nav-btn nav-deals-btn" onClick={() => goToView("shop")}>
-            <span className="nav-chip chip-rose" />
-            <span>Deals</span>
           </button>
 
           <button className="nav-btn" onClick={() => goToPath("/about")}>

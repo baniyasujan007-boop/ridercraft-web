@@ -47,7 +47,6 @@
 
 .nav-btn:hover,
 .nav-btn.active { color: #ff7a1a; background: rgba(255, 255, 255, .04); border-bottom-color: #ff6a00; }
-.nav-deals-btn { color: #ff6a00; }
 .nav-chip { display: none; }
 .nav-profile-btn { margin-left: auto; }
 .nav-user-name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
