@@ -1,11 +1,8 @@
+/* ==========================================================
+   PAGE LAYOUT
+========================================================== */
+
 .shop-wrapper {
-  min-height: 100dvh;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(34, 211, 238, 0.15), transparent 44%),
-    radial-gradient(circle at 88% 4%, rgba(56, 189, 248, 0.14), transparent 36%),
-    radial-gradient(circle at 82% 82%, rgba(14, 165, 233, 0.08), transparent 40%),
-    linear-gradient(160deg, #071225, #111a2d 55%, #151a2b);
-  color: #e9f0fb;
   --surface-1: rgba(11, 24, 45, 0.78);
   --surface-2: rgba(16, 29, 50, 0.95);
   --line: rgba(148, 163, 184, 0.2);
@@ -15,31 +12,42 @@
   --accent-strong: #e65400;
   --ok: #34d399;
   --danger: #fb7185;
+  min-height: 100dvh;
+  color: #e9f0fb;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(34, 211, 238, 0.15), transparent 44%),
+    radial-gradient(circle at 88% 4%, rgba(56, 189, 248, 0.14), transparent 36%),
+    radial-gradient(circle at 82% 82%, rgba(14, 165, 233, 0.08), transparent 40%),
+    linear-gradient(160deg, #071225, #111a2d 55%, #151a2b);
 }
 
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
 .primary {
-  border: none;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #fff;
-  border-radius: 12px;
   padding: 10px 18px;
   font-weight: 600;
-  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border: none;
+  border-radius: 12px;
   box-shadow: 0 8px 20px rgba(230, 84, 0, 0.24);
+  cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .primary:hover {
-  transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(230, 84, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .success-text {
-  color: var(--ok);
   margin: 12px 0 0;
+  color: var(--ok);
 }
 
 .error-text {
-  color: var(--danger);
   margin: 12px 0 0;
+  color: var(--danger);
 }

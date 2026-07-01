@@ -1,7 +1,11 @@
+/* ==========================================================
+   BIKE SERVICING
+========================================================== */
+
 .garage-dashboard-page {
   min-height: calc(100dvh - 132px);
-  background: linear-gradient(135deg, #e9eef7, #f8fafd);
   padding: 16px;
+  background: linear-gradient(135deg, #e9eef7, #f8fafd);
 }
 
 .garage-dashboard-shell {
@@ -11,8 +15,8 @@
 
 .garage-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -26,14 +30,18 @@
   color: #475569;
 }
 
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
 .garage-logout-btn {
-  border: none;
-  background: #dc2626;
-  color: #fff;
-  border-radius: 10px;
   padding: 10px 14px;
-  cursor: pointer;
   font-weight: 700;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 .garage-grid {
@@ -44,10 +52,10 @@
 
 .garage-booking-list,
 .garage-booking-detail {
+  padding: 12px;
   background: #fff;
   border: 1px solid #dbe1ea;
   border-radius: 12px;
-  padding: 12px;
 }
 
 .garage-booking-list h2,
@@ -56,26 +64,26 @@
 }
 
 .garage-list-item {
-  width: 100%;
-  border: 1px solid #dbe1ea;
-  border-radius: 10px;
-  background: #f8fafc;
-  padding: 10px;
   display: grid;
   gap: 4px;
-  text-align: left;
-  cursor: pointer;
+  width: 100%;
   margin-bottom: 8px;
+  padding: 10px;
+  text-align: left;
+  background: #f8fafc;
+  border: 1px solid #dbe1ea;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 .garage-list-item.active {
-  border-color: #0ea5e9;
   background: #e0f2fe;
+  border-color: #0ea5e9;
 }
 
 .garage-list-item span {
-  color: #475569;
   font-size: 13px;
+  color: #475569;
 }
 
 .garage-booking-detail p {
@@ -83,12 +91,16 @@
   color: #1e293b;
 }
 
+/* ==========================================================
+   FORMS
+========================================================== */
+
 .garage-response-box {
-  margin-top: 12px;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 12px;
   display: grid;
   gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .garage-response-box label {
@@ -98,31 +110,35 @@
 
 .garage-response-box select,
 .garage-response-box textarea {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
   padding: 10px;
   font: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
 }
 
 .garage-response-box button {
-  border: none;
-  border-radius: 10px;
-  background: #0ea5e9;
-  color: #fff;
   height: 42px;
   font-weight: 700;
+  color: #fff;
+  background: #0ea5e9;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
 }
 
 .garage-success {
-  color: #166534;
   margin: 0 0 8px;
+  color: #166534;
 }
 
 .garage-error {
-  color: #b91c1c;
   margin: 0 0 8px;
+  color: #b91c1c;
 }
+
+/* ==========================================================
+   RESPONSIVE - TABLET
+========================================================== */
 
 @media (max-width: 900px) {
   .garage-grid {
@@ -130,10 +146,14 @@
   }
 }
 
+/* ==========================================================
+   RESPONSIVE - MOBILE
+========================================================== */
+
 @media (max-width: 640px) {
   .garage-dashboard-page {
-    padding: 10px;
     min-height: calc(100dvh - 106px);
+    padding: 10px;
   }
 
   .garage-head {

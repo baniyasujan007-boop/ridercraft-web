@@ -1,9 +1,13 @@
+/* ==========================================================
+   BIKE SERVICING
+========================================================== */
+
 .servicing-wrap {
   width: min(1220px, 100% - 40px);
   margin: 18px auto 32px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: linear-gradient(160deg, rgba(5, 18, 36, 0.86), rgba(7, 24, 44, 0.92));
   padding: clamp(18px, 2.4vw, 28px);
+  background: linear-gradient(160deg, rgba(5, 18, 36, 0.86), rgba(7, 24, 44, 0.92));
+  border: 1px solid rgba(148, 163, 184, 0.24);
 }
 
 .servicing-wrap,
@@ -24,45 +28,45 @@
 .servicing-eyebrow {
   display: inline-block;
   margin: 0;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #7dd3fc;
-  font-size: 0.75rem;
 }
 
 .servicing-info-icon {
   position: relative;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1px solid rgba(125, 211, 252, 0.72);
-  color: #7dd3fc;
-  font-size: 11px;
-  font-weight: 700;
   display: inline-grid;
   place-items: center;
-  cursor: help;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7dd3fc;
+  border: 1px solid rgba(125, 211, 252, 0.72);
+  border-radius: 50%;
   outline: none;
+  cursor: help;
 }
 
 .servicing-info-tooltip {
   position: absolute;
-  left: 50%;
   bottom: calc(100% + 8px);
-  transform: translateX(-50%);
+  left: 50%;
+  z-index: 3;
   width: min(260px, 70vw);
+  padding: 7px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #e2e8f0;
   background: rgba(2, 6, 23, 0.95);
   border: 1px solid rgba(148, 163, 184, 0.35);
-  color: #e2e8f0;
-  font-weight: 500;
-  font-size: 11px;
-  line-height: 1.35;
-  padding: 7px 8px;
   border-radius: 8px;
   opacity: 0;
+  transform: translateX(-50%);
   pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 3;
 }
 
 .servicing-info-icon:hover .servicing-info-tooltip,
@@ -78,22 +82,34 @@
   min-width: 0;
 }
 
+/* ==========================================================
+   FORMS
+========================================================== */
+
 .servicing-package-row select {
   min-width: 0;
 }
 
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
 .servicing-cta {
-  margin-top: 16px;
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
 }
+
+/* ==========================================================
+   FORMS
+========================================================== */
 
 .servicing-form {
   margin-top: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: rgba(15, 33, 59, 0.62);
   padding: 14px;
+  background: rgba(15, 33, 59, 0.62);
+  border: 1px solid rgba(148, 163, 184, 0.24);
 }
 
 .servicing-form h3,
@@ -110,19 +126,19 @@
 .servicing-form-grid label {
   display: grid;
   gap: 6px;
+  min-width: 0;
   font-size: 0.88rem;
   color: var(--text-soft);
-  min-width: 0;
 }
 
 .servicing-form-grid input,
 .servicing-form-grid select,
 .servicing-form-grid textarea {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(5, 18, 36, 0.6);
-  color: var(--text-main);
   padding: 10px 11px;
+  color: var(--text-main);
+  background: rgba(5, 18, 36, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .servicing-form-full {
@@ -166,9 +182,9 @@
 }
 
 .servicing-history-card {
-  border: 1px solid rgba(59, 130, 246, 0.22);
-  background: rgba(5, 18, 36, 0.46);
   padding: 12px;
+  background: rgba(5, 18, 36, 0.46);
+  border: 1px solid rgba(59, 130, 246, 0.22);
 }
 
 .servicing-history-card p {
@@ -176,16 +192,20 @@
 }
 
 .servicing-emergency-chip {
-  margin-left: 8px;
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  margin-left: 8px;
   padding: 3px 8px;
   font-size: 11px;
   font-weight: 700;
-  background: rgba(239, 68, 68, 0.24);
   color: #fecaca;
+  background: rgba(239, 68, 68, 0.24);
+  border-radius: 999px;
 }
+
+/* ==========================================================
+   RESPONSIVE - TABLET
+========================================================== */
 
 @media (max-width: 900px) {
   .servicing-wrap {
@@ -196,6 +216,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================
+   RESPONSIVE - MOBILE
+========================================================== */
 
 @media (max-width: 560px) {
   .servicing-wrap {

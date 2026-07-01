@@ -1,41 +1,53 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* ==========================================================
+   ORDERS PAGE
+========================================================== */
+
 .orders-layout {
-  min-height: calc(100dvh - 140px);
+  position: relative;
   display: grid;
   grid-template-columns: 270px 1fr;
-  background: #f6f0e6;
+  min-height: calc(100dvh - 140px);
   font-family: "Inter", sans-serif;
   color: #1f2937;
-  position: relative;
+  background: #f6f0e6;
 }
 
+/* ==========================================================
+   NAVBAR
+========================================================== */
+
 .orders-sidebar {
-  background: linear-gradient(180deg, #0b1324, #111f35 55%, #172a44);
-  color: #d6deea;
-  padding: 22px 16px;
+  z-index: 12;
   display: flex;
   flex-direction: column;
+  padding: 22px 16px;
+  color: #d6deea;
+  background: linear-gradient(180deg, #0b1324, #111f35 55%, #172a44);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  z-index: 12;
 }
+
+/* ==========================================================
+   TABLES
+========================================================== */
 
 .orders-logo-row {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
 .orders-logo-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, #facc15, #f59e0b);
-  color: #111827;
+  width: 40px;
+  height: 40px;
   font-weight: 700;
+  color: #111827;
+  background: linear-gradient(145deg, #facc15, #f59e0b);
+  border-radius: 12px;
 }
 
 .orders-logo-row h1 {
@@ -50,24 +62,28 @@
   color: #9fb1cc;
 }
 
+/* ==========================================================
+   NAVBAR
+========================================================== */
+
 .orders-nav-list {
   display: grid;
   gap: 6px;
 }
 
 .orders-nav-item {
-  border: none;
-  background: transparent;
-  color: #c8d3e6;
-  border-radius: 12px;
-  padding: 10px 12px;
-  text-align: left;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  text-align: left;
+  color: #c8d3e6;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 14px;
 }
 
 .orders-nav-item:hover {
@@ -75,8 +91,8 @@
 }
 
 .orders-nav-item.active {
-  background: rgba(250, 204, 21, 0.16);
   color: #fef3c7;
+  background: rgba(250, 204, 21, 0.16);
   box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.25);
 }
 
@@ -86,12 +102,12 @@
 }
 
 .orders-logout-btn {
-  margin-top: auto;
-  border: 1px solid rgba(250, 204, 21, 0.4);
-  background: rgba(250, 204, 21, 0.12);
-  color: #fde68a;
-  border-radius: 12px;
   height: 42px;
+  margin-top: auto;
+  color: #fde68a;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -103,6 +119,10 @@
 .orders-main-area {
   padding: 18px;
 }
+
+/* ==========================================================
+   HEADER
+========================================================== */
 
 .orders-header-card,
 .orders-table-card,
@@ -130,38 +150,42 @@
 
 .orders-mobile-toggle {
   display: none;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  border-radius: 10px;
   width: 36px;
   height: 36px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   cursor: pointer;
 }
 
 .orders-toolbar {
   display: grid;
   grid-template-columns: repeat(3, minmax(120px, 1fr)) minmax(200px, 1.3fr) auto;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
 }
 
 .orders-toolbar select,
 .orders-search-wrap input {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
   height: 42px;
   padding: 0 12px;
   font-size: 13px;
   background: #fff;
-}
-
-.orders-search-wrap {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
+}
+
+/* ==========================================================
+   FORMS
+========================================================== */
+
+.orders-search-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
 }
 
 .orders-search-wrap span {
@@ -169,19 +193,23 @@
 }
 
 .orders-search-wrap input {
-  border: none;
   width: 100%;
   padding: 0;
+  border: none;
   outline: none;
 }
+
+/* ==========================================================
+   HEADER
+========================================================== */
 
 .orders-profile-pill {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 6px 8px;
-  border-radius: 12px;
   background: #f8fafc;
+  border-radius: 12px;
 }
 
 .orders-profile-pill img {
@@ -202,11 +230,15 @@
 }
 
 .orders-content-grid {
-  margin-top: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 14px;
+  margin-top: 14px;
 }
+
+/* ==========================================================
+   TABLES
+========================================================== */
 
 .orders-table-card {
   padding: 8px;
@@ -215,23 +247,23 @@
 
 .orders-table {
   width: 100%;
+  min-width: 830px;
   border-collapse: separate;
   border-spacing: 0 8px;
-  min-width: 830px;
 }
 
 .orders-table th {
-  text-align: left;
-  color: #6b7280;
+  padding: 0 10px 4px;
   font-size: 12px;
   font-weight: 600;
-  padding: 0 10px 4px;
+  text-align: left;
+  color: #6b7280;
 }
 
 .orders-table td {
   padding: 12px 10px;
-  background: #fff;
   font-size: 14px;
+  background: #fff;
   border-top: 1px solid #eef2f7;
   border-bottom: 1px solid #eef2f7;
 }
@@ -273,65 +305,73 @@
 }
 
 .orders-avatar-fallback {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #e5e7eb;
-  color: #374151;
+  width: 30px;
+  height: 30px;
   font-size: 12px;
   font-weight: 700;
+  color: #374151;
+  background: #e5e7eb;
+  border-radius: 50%;
 }
 
 .status-badge {
-  border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 600;
   text-transform: capitalize;
+  border-radius: 999px;
 }
 
 .status-paid {
-  background: #fef3c7;
   color: #92400e;
+  background: #fef3c7;
 }
 
 .status-delivered {
-  background: #ffedd5;
   color: #c2410c;
+  background: #ffedd5;
 }
 
 .status-completed {
-  background: #dcfce7;
   color: #166534;
+  background: #dcfce7;
 }
 
 .status-pending {
-  background: #e5e7eb;
   color: #374151;
+  background: #e5e7eb;
 }
 
 .status-refunded {
-  background: #fee2e2;
   color: #991b1b;
+  background: #fee2e2;
 }
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
 
 .orders-more-btn {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
   background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   cursor: pointer;
 }
 
+/* ==========================================================
+   MODALS
+========================================================== */
+
 .order-drawer {
-  padding: 16px;
-  align-self: start;
   position: sticky;
   top: 18px;
+  align-self: start;
   min-height: 520px;
+  padding: 16px;
   transform: translateX(0);
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
@@ -347,9 +387,9 @@
 
 .drawer-head {
   display: flex;
+  align-items: start;
   justify-content: space-between;
   gap: 8px;
-  align-items: start;
 }
 
 .drawer-head h3 {
@@ -358,39 +398,47 @@
 
 .drawer-head p {
   margin: 4px 0 0;
-  color: #6b7280;
   font-size: 13px;
+  color: #6b7280;
 }
 
 .drawer-close {
-  border: 1px solid #e5e7eb;
-  background: #fff;
   width: 28px;
   height: 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   cursor: pointer;
 }
 
+/* ==========================================================
+   TABLES
+========================================================== */
+
 .drawer-chip-row {
-  margin-top: 12px;
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .promo-chip {
-  border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
-  background: #eef2ff;
   color: #3730a3;
+  background: #eef2ff;
+  border-radius: 999px;
 }
 
+/* ==========================================================
+   MODALS
+========================================================== */
+
 .drawer-customer {
-  margin-top: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 14px;
 }
 
 .drawer-customer img {
@@ -415,48 +463,52 @@
 }
 
 .drawer-contact-icons {
-  margin-top: 12px;
   display: flex;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .drawer-contact-icons button,
 .drawer-contact-icons a {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  border: 1px solid #d8dde5;
-  background: linear-gradient(145deg, #ffffff, #f5f7fa);
-  cursor: pointer;
   display: inline-grid;
   place-items: center;
+  width: 42px;
+  height: 42px;
+  font-size: 18px;
   text-decoration: none;
   color: #111827;
-  font-size: 18px;
+  background: linear-gradient(145deg, #ffffff, #f5f7fa);
+  border: 1px solid #d8dde5;
+  border-radius: 10px;
   box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .drawer-contact-icons a:hover,
 .drawer-contact-icons button:hover {
-  transform: translateY(-1px);
   border-color: #cbd5e1;
   box-shadow: 0 12px 22px rgba(15, 23, 42, 0.14);
+  transform: translateY(-1px);
 }
 
 .drawer-items {
-  margin-top: 14px;
   display: grid;
   gap: 8px;
+  margin-top: 14px;
 }
+
+/* ==========================================================
+   TABLES
+========================================================== */
 
 .drawer-item-row {
   display: grid;
   grid-template-columns: 44px 1fr;
   gap: 8px;
+  padding: 8px;
   border: 1px solid #eef2f7;
   border-radius: 12px;
-  padding: 8px;
 }
 
 .drawer-item-row img {
@@ -476,47 +528,51 @@
 }
 
 .drawer-total-row {
-  margin-top: 14px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-top: 1px dashed #e5e7eb;
+  justify-content: space-between;
+  margin-top: 14px;
   padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;
 }
 
+/* ==========================================================
+   MODALS
+========================================================== */
+
 .drawer-actions {
-  margin-top: 14px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-top: 14px;
 }
 
 .drawer-track-btn,
 .drawer-refund-btn {
   height: 40px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
   font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .drawer-track-btn {
-  background: #111827;
   color: #fff;
+  background: #111827;
 }
 
 .drawer-refund-btn {
-  background: #facc15;
   color: #1f2937;
+  background: #facc15;
 }
 
 .drawer-return-box {
   margin-top: 12px;
-  border: 1px solid #eef2f7;
-  border-radius: 12px;
   padding: 10px;
   background: #f9fbff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
 }
 
 .drawer-return-box h4 {
@@ -531,39 +587,47 @@
 .drawer-return-box input,
 .drawer-return-box select {
   width: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
   padding: 8px 10px;
   background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
 }
 
 .drawer-return-proof-grid {
-  margin: 8px 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
+  margin: 8px 0;
 }
 
 .drawer-return-proof-grid img,
 .drawer-return-proof-grid video {
   width: 100%;
   height: 90px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
   background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .drawer-return-actions {
-  margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-top: 8px;
 }
+
+/* ==========================================================
+   NAVBAR
+========================================================== */
 
 .orders-sidebar-overlay {
   display: none;
 }
+
+/* ==========================================================
+   RESPONSIVE - TABLET
+========================================================== */
 
 @media (max-width: 1200px) {
   .orders-toolbar {
@@ -588,8 +652,8 @@
   .orders-sidebar {
     position: fixed;
     top: 0;
-    left: 0;
     bottom: 0;
+    left: 0;
     width: 270px;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
@@ -600,12 +664,12 @@
   }
 
   .orders-sidebar-overlay {
-    display: block;
     position: fixed;
     inset: 0;
+    z-index: 11;
+    display: block;
     background: rgba(0, 0, 0, 0.35);
     border: none;
-    z-index: 11;
   }
 
   .orders-mobile-toggle {
@@ -622,6 +686,10 @@
   }
 }
 
+/* ==========================================================
+   RESPONSIVE - MOBILE
+========================================================== */
+
 @media (max-width: 640px) {
   .orders-main-area {
     padding: 8px;
@@ -636,8 +704,8 @@
   }
 
   .orders-profile-pill {
-    width: 100%;
     justify-content: flex-start;
+    width: 100%;
   }
 
   .orders-table {
@@ -645,8 +713,8 @@
   }
 
   .order-drawer {
-    padding: 12px;
     min-height: auto;
+    padding: 12px;
   }
 
   .drawer-actions,

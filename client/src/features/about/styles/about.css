@@ -1,15 +1,23 @@
+/* ==========================================================
+   PAGE LAYOUT
+========================================================== */
+
 .about-live-page {
   width: min(1220px, calc(100% - 24px));
   margin: 16px auto 32px;
   color: #0f172a;
 }
 
+/* ==========================================================
+   HERO SECTION
+========================================================== */
+
 .about-live-hero {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #f8fafc;
-  border-radius: 10px;
-  padding: clamp(20px, 4vw, 38px);
   margin-bottom: 16px;
+  padding: clamp(20px, 4vw, 38px);
+  color: #f8fafc;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border-radius: 10px;
 }
 
 .about-live-hero h1 {
@@ -31,6 +39,10 @@
   color: #b91c1c;
 }
 
+/* ==========================================================
+   PRODUCT CARD
+========================================================== */
+
 .about-live-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -38,10 +50,10 @@
 }
 
 .about-live-stat {
+  padding: 14px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 14px;
 }
 
 .about-live-stat h3 {
@@ -56,10 +68,10 @@
 
 .about-live-section {
   margin-top: 16px;
+  padding: 14px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 14px;
 }
 
 .about-live-section h2 {
@@ -67,10 +79,10 @@
 }
 
 .about-live-card {
+  padding: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 12px;
 }
 
 .about-live-card p {
@@ -87,6 +99,10 @@
   gap: 10px;
 }
 
+/* ==========================================================
+   PRODUCT GRID
+========================================================== */
+
 .about-live-product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -94,22 +110,22 @@
 }
 
 .about-live-product-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px;
   display: grid;
   grid-template-columns: 90px 1fr;
   gap: 10px;
+  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
 
 .about-live-product-card img,
 .about-live-image-placeholder {
   width: 90px;
   height: 90px;
+  border: 1px solid #dbe2ea;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid #dbe2ea;
 }
 
 .about-live-image-placeholder {
@@ -126,9 +142,13 @@
 
 .about-live-product-meta {
   margin: 4px 0 0;
-  color: #64748b;
   font-size: 13px;
+  color: #64748b;
 }
+
+/* ==========================================================
+   RESPONSIVE - MOBILE
+========================================================== */
 
 @media (max-width: 640px) {
   .about-live-card-grid {

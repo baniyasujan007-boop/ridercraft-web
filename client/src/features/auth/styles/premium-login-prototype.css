@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 
+/* ==========================================================
+   PAGE LAYOUT
+========================================================== */
+
 .premium-login {
   --premium-bg: #07111f;
   --premium-secondary-bg: #0d1728;
@@ -14,12 +18,12 @@
   --premium-line: rgba(255, 255, 255, 0.08);
   --premium-shadow: 0 28px 78px rgba(0, 0, 0, 0.38);
   min-height: 100vh;
+  overflow-x: hidden;
+  font-family: Inter, Arial, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--premium-text);
   background:
     radial-gradient(circle at 78% 14%, rgba(255, 91, 0, 0.1), transparent 34%),
     linear-gradient(135deg, var(--premium-bg), var(--premium-secondary-bg));
-  color: var(--premium-text);
-  font-family: Inter, Arial, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  overflow-x: hidden;
 }
 
 .premium-login *,
@@ -29,9 +33,13 @@
 }
 
 .premium-login a {
-  color: inherit;
   text-decoration: none;
+  color: inherit;
 }
+
+/* ==========================================================
+   HEADER
+========================================================== */
 
 .premium-login__header {
   position: absolute;
@@ -45,11 +53,15 @@
   justify-content: space-between;
   gap: 28px;
   padding: 18px clamp(20px, 4vw, 72px);
-  border-bottom: 1px solid var(--premium-line);
   background: rgba(7, 17, 31, 0.78);
+  border-bottom: 1px solid var(--premium-line);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(14px);
 }
+
+/* ==========================================================
+   FOOTER
+========================================================== */
 
 .premium-login__brand,
 .premium-login__footer-brand {
@@ -57,10 +69,10 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-  color: var(--premium-white);
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+  color: var(--premium-white);
 }
 
 .premium-login__brand img,
@@ -93,11 +105,15 @@
   color: var(--premium-orange-hover);
 }
 
+/* ==========================================================
+   HERO SECTION
+========================================================== */
+
 .premium-login__hero {
   position: relative;
+  isolation: isolate;
   min-height: 850px;
   padding-top: 118px;
-  isolation: isolate;
 }
 
 .premium-login__hero-media,
@@ -141,40 +157,40 @@
 
 .premium-login__eyebrow {
   margin: 0 0 14px;
-  color: var(--premium-orange-hover);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
+  color: var(--premium-orange-hover);
 }
 
 .premium-login__copy h1 {
   margin: 0;
-  color: var(--premium-white);
   font-size: 4.375rem;
   font-style: italic;
   font-weight: 900;
-  letter-spacing: 0;
   line-height: 0.97;
+  letter-spacing: 0;
   text-transform: uppercase;
+  color: var(--premium-white);
   text-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
 }
 
 .premium-login__copy h1 span {
   display: block;
   margin-bottom: 10px;
-  color: var(--premium-orange-hover);
   font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.1;
+  color: var(--premium-orange-hover);
 }
 
 .premium-login__copy > p:not(.premium-login__eyebrow) {
   max-width: 650px;
   margin: 28px 0 0;
-  color: var(--premium-muted);
   font-size: 1.1rem;
   line-height: 1.7;
+  color: var(--premium-muted);
 }
 
 .premium-login__trust-list {
@@ -190,13 +206,13 @@
   gap: 9px;
   min-height: 42px;
   padding: 0 15px;
-  border: 1px solid var(--premium-line);
-  border-radius: 999px;
-  background: rgba(13, 23, 40, 0.72);
-  backdrop-filter: blur(14px);
-  color: var(--premium-white);
   font-size: 0.88rem;
   font-weight: 800;
+  color: var(--premium-white);
+  background: rgba(13, 23, 40, 0.72);
+  border: 1px solid var(--premium-line);
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
 }
 
 .premium-login__trust-list svg {
@@ -212,42 +228,50 @@
 .premium-login__card {
   position: relative;
   padding: clamp(24px, 2.4vw, 36px);
-  border: 1px solid var(--premium-line);
-  border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016)),
     var(--premium-panel);
+  border: 1px solid var(--premium-line);
+  border-radius: 8px;
   box-shadow: var(--premium-shadow);
   backdrop-filter: blur(18px);
   animation: premiumFadeUp 760ms 120ms ease both;
 }
 
 .premium-login__card::before {
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  pointer-events: none;
-  content: "";
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 91, 0, 0.16);
+  pointer-events: none;
 }
 
 .premium-login__card--auth {
-  width: min(100%, 430px);
   justify-self: end;
+  width: min(100%, 430px);
 }
+
+/* ==========================================================
+   HEADER
+========================================================== */
 
 .premium-login__card-header h2 {
   margin: 0;
-  color: var(--premium-white);
   font-size: 2.15rem;
   line-height: 1.05;
+  color: var(--premium-white);
 }
 
 .premium-login__card-header p:last-child {
   margin: 14px 0 0;
-  color: var(--premium-muted);
   line-height: 1.55;
+  color: var(--premium-muted);
 }
+
+/* ==========================================================
+   FORMS
+========================================================== */
 
 .premium-login__form {
   display: grid;
@@ -260,36 +284,44 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 4px;
+  background: var(--premium-secondary-bg);
   border: 1px solid var(--premium-line);
   border-radius: 8px;
-  background: var(--premium-secondary-bg);
 }
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
 
 .premium-login__role-toggle button {
   min-height: 40px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--premium-muted);
-  cursor: pointer;
   font: inherit;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0;
+  color: var(--premium-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
   transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .premium-login__role-toggle button:hover,
 .premium-login__role-toggle button:focus-visible {
-  background: rgba(255, 91, 0, 0.1);
   color: var(--premium-white);
+  background: rgba(255, 91, 0, 0.1);
 }
 
 .premium-login__role-toggle button.is-active {
-  background: linear-gradient(135deg, var(--premium-orange), var(--premium-orange-hover));
   color: var(--premium-white);
+  background: linear-gradient(135deg, var(--premium-orange), var(--premium-orange-hover));
   box-shadow: 0 10px 24px rgba(255, 91, 0, 0.22);
 }
+
+/* ==========================================================
+   FORMS
+========================================================== */
 
 .premium-login__field {
   display: grid;
@@ -297,11 +329,11 @@
 }
 
 .premium-login__field-label {
-  color: var(--premium-muted);
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+  color: var(--premium-muted);
 }
 
 .premium-login__field-shell {
@@ -312,9 +344,9 @@
   gap: 12px;
   min-height: 48px;
   padding: 0 16px;
+  background: var(--premium-secondary-bg);
   border: 1px solid var(--premium-line);
   border-radius: 6px;
-  background: var(--premium-secondary-bg);
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
@@ -327,11 +359,11 @@
 .premium-login__field-shell input {
   width: 100%;
   min-width: 0;
+  font: inherit;
+  color: var(--premium-white);
+  background: transparent;
   border: 0;
   outline: 0;
-  background: transparent;
-  color: var(--premium-white);
-  font: inherit;
 }
 
 .premium-login__field-shell input::placeholder {
@@ -352,25 +384,33 @@
   color: var(--premium-orange);
 }
 
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
 .premium-login__icon-button {
   display: inline-grid;
   place-items: center;
   width: 36px;
   height: 36px;
+  color: var(--premium-muted);
+  background: transparent;
   border: 0;
   border-radius: 50%;
-  background: transparent;
-  color: var(--premium-muted);
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .premium-login__icon-button:hover,
 .premium-login__icon-button:focus-visible {
-  background: rgba(255, 91, 0, 0.14);
   color: var(--premium-orange-hover);
+  background: rgba(255, 91, 0, 0.14);
   transform: scale(1.04);
 }
+
+/* ==========================================================
+   FORMS
+========================================================== */
 
 .premium-login__form-row,
 .premium-login__signup {
@@ -378,16 +418,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  color: var(--premium-muted);
   font-size: 0.9rem;
+  color: var(--premium-muted);
 }
 
 .premium-login__form-row a,
 .premium-login__signup a,
 .premium-login__terms a,
 .premium-login__helper a {
-  color: var(--premium-white);
   font-weight: 800;
+  color: var(--premium-white);
 }
 
 .premium-login__check {
@@ -399,9 +439,9 @@
 
 .premium-login__terms {
   align-items: flex-start;
-  color: var(--premium-muted);
   font-size: 0.86rem;
   line-height: 1.35;
+  color: var(--premium-muted);
 }
 
 .premium-login__check input {
@@ -412,26 +452,30 @@
 
 .premium-login__status {
   padding: 12px 14px;
-  border: 1px solid var(--premium-line);
-  border-radius: 8px;
-  background: rgba(13, 23, 40, 0.86);
-  color: var(--premium-white);
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.35;
+  color: var(--premium-white);
+  background: rgba(13, 23, 40, 0.86);
+  border: 1px solid var(--premium-line);
+  border-radius: 8px;
 }
 
 .premium-login__status--error {
-  border-color: rgba(255, 91, 0, 0.34);
-  background: rgba(255, 91, 0, 0.1);
   color: var(--premium-white);
+  background: rgba(255, 91, 0, 0.1);
+  border-color: rgba(255, 91, 0, 0.34);
 }
 
 .premium-login__status--success {
-  border-color: rgba(255, 91, 0, 0.34);
-  background: rgba(255, 91, 0, 0.14);
   color: var(--premium-white);
+  background: rgba(255, 91, 0, 0.14);
+  border-color: rgba(255, 91, 0, 0.34);
 }
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
 
 .premium-login__primary-button {
   position: relative;
@@ -440,40 +484,36 @@
   justify-content: center;
   gap: 10px;
   min-height: 56px;
-  border: 0;
-  border-radius: 4px;
-  background: linear-gradient(135deg, var(--premium-orange), var(--premium-orange-hover));
-  box-shadow: 0 10px 24px rgba(255, 91, 0, 0.28);
-  color: var(--premium-white);
-  cursor: pointer;
+  overflow: hidden;
   font: inherit;
   font-weight: 900;
   letter-spacing: 0;
-  overflow: hidden;
   text-transform: uppercase;
+  color: var(--premium-white);
+  background: linear-gradient(135deg, var(--premium-orange), var(--premium-orange-hover));
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 10px 24px rgba(255, 91, 0, 0.28);
+  cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
 }
 
 .premium-login__primary-button::after {
+  content: "";
   position: absolute;
   inset: auto auto 50% 50%;
   width: 0;
   height: 0;
-  border-radius: 999px;
   background: rgba(255, 255, 255, 0.28);
-  content: "";
+  border-radius: 999px;
   transform: translate(-50%, 50%);
   transition: width 360ms ease, height 360ms ease, opacity 360ms ease;
 }
 
 .premium-login__primary-button:hover,
 .premium-login__primary-button:focus-visible {
-  transform: translateY(-3px);
-}
-
-.premium-login__primary-button:hover,
-.premium-login__primary-button:focus-visible {
   box-shadow: 0 16px 34px rgba(255, 91, 0, 0.34);
+  transform: translateY(-3px);
 }
 
 .premium-login__primary-button:hover::after,
@@ -484,8 +524,8 @@
 }
 
 .premium-login__primary-button:disabled {
-  cursor: wait;
   opacity: 0.58;
+  cursor: wait;
 }
 
 .premium-login__primary-button:disabled:hover,
@@ -501,42 +541,46 @@
 
 .premium-login__secondary-button {
   min-height: 46px;
-  border: 1px solid rgba(255, 91, 0, 0.46);
-  border-radius: 4px;
-  background: var(--premium-secondary-bg);
-  color: var(--premium-white);
-  cursor: pointer;
   font: inherit;
   font-weight: 800;
   letter-spacing: 0;
+  color: var(--premium-white);
+  background: var(--premium-secondary-bg);
+  border: 1px solid rgba(255, 91, 0, 0.46);
+  border-radius: 4px;
+  cursor: pointer;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease, opacity 180ms ease, transform 180ms ease;
 }
 
 .premium-login__secondary-button:hover,
 .premium-login__secondary-button:focus-visible {
-  border-color: var(--premium-orange-hover);
-  background: rgba(255, 91, 0, 0.14);
   color: var(--premium-orange-hover);
+  background: rgba(255, 91, 0, 0.14);
+  border-color: var(--premium-orange-hover);
   transform: translateY(-2px);
 }
 
 .premium-login__secondary-button:disabled {
-  cursor: wait;
   opacity: 0.58;
+  cursor: wait;
 }
 
 .premium-login__secondary-button:disabled:hover,
 .premium-login__secondary-button:disabled:focus-visible {
-  background: var(--premium-secondary-bg);
   color: var(--premium-white);
+  background: var(--premium-secondary-bg);
   transform: none;
 }
 
+/* ==========================================================
+   FORMS
+========================================================== */
+
 .premium-login__helper {
   margin: -6px 0 0;
-  color: var(--premium-muted);
   font-size: 0.84rem;
   line-height: 1.45;
+  color: var(--premium-muted);
 }
 
 .premium-login__divider {
@@ -544,18 +588,18 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 12px;
-  color: var(--premium-muted);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+  color: var(--premium-muted);
 }
 
 .premium-login__divider::before,
 .premium-login__divider::after {
+  content: "";
   height: 1px;
   background: var(--premium-line);
-  content: "";
 }
 
 .premium-login__social-grid {
@@ -582,14 +626,18 @@
 .premium-login__google-auth .google-missing {
   margin: 0;
   padding: 12px;
-  border: 1px solid var(--premium-line);
-  border-radius: 6px;
-  background: var(--premium-secondary-bg);
-  color: var(--premium-muted);
   font-size: 0.78rem;
   line-height: 1.35;
   text-align: center;
+  color: var(--premium-muted);
+  background: var(--premium-secondary-bg);
+  border: 1px solid var(--premium-line);
+  border-radius: 6px;
 }
+
+/* ==========================================================
+   FOOTER
+========================================================== */
 
 .premium-login__footer {
   display: grid;
@@ -597,24 +645,24 @@
   align-items: center;
   gap: 24px;
   padding: 30px clamp(20px, 4vw, 72px);
-  border-top: 1px solid var(--premium-line);
-  background: #07111f;
   color: var(--premium-muted);
+  background: #07111f;
+  border-top: 1px solid var(--premium-line);
 }
 
 .premium-login__footer p {
   margin: 0;
-  color: var(--premium-muted);
   text-align: center;
+  color: var(--premium-muted);
 }
 
 .premium-login__footer-links {
   display: flex;
   justify-content: flex-end;
   gap: 22px;
-  color: var(--premium-white);
   font-size: 0.9rem;
   font-weight: 800;
+  color: var(--premium-white);
 }
 
 .premium-login :focus-visible {
@@ -622,22 +670,39 @@
   outline-offset: 3px;
 }
 
+/* ==========================================================
+   ANIMATIONS
+========================================================== */
+
 @keyframes premiumFadeUp {
   from {
     opacity: 0;
     transform: translateY(22px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
+.premium-login__signup--center {
+  justify-content: center;
+}
+
+/* ==========================================================
+   RESPONSIVE - TABLET
+========================================================== */
+
 @media (max-width: 1180px) {
   .premium-login__hero-content {
     grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
-    width: min(100% - 48px, 1120px);
     gap: 36px;
+    width: min(100% - 48px, 1120px);
   }
 
   .premium-login__copy h1 {
@@ -647,7 +712,6 @@
   .premium-login__copy h1 span {
     font-size: 1.15rem;
   }
-
 }
 
 @media (max-width: 920px) {
@@ -676,8 +740,8 @@
   }
 
   .premium-login__card {
-    max-width: 560px;
     justify-self: stretch;
+    max-width: 560px;
   }
 
   .premium-login__footer {
@@ -690,6 +754,10 @@
     justify-content: center;
   }
 }
+
+/* ==========================================================
+   RESPONSIVE - MOBILE
+========================================================== */
 
 @media (max-width: 640px) {
   .premium-login__nav {
@@ -740,8 +808,8 @@
 
   .premium-login__form-row,
   .premium-login__signup {
-    align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
   }
 
@@ -758,9 +826,9 @@
   }
 }
 
-.premium-login__signup--center {
-  justify-content: center;
-}
+/* ==========================================================
+   RESPONSIVE - TABLET
+========================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   .premium-login *,
@@ -768,7 +836,7 @@
   .premium-login *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
