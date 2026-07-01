@@ -52,7 +52,7 @@ const SHOP_CATEGORIES = [
   { label: "Riding Gear", tag: "Riding Gear", icon: "🧥" },
   { label: "Lights", tag: "Lights", icon: "💡" },
   { label: "Luggage", tag: "Luggage", icon: "🎒" },
-  { label: "Accessories", tag: "Mobile Holder", icon: "📱" },
+  { label: "Accessories", tag: "Accessories", icon: "📱" },
   { label: "Bike Parts", tag: "Bike Parts", icon: "⚙" },
   { label: "Maintenance", tag: "Maintenance", icon: "🔧" },
 ];
