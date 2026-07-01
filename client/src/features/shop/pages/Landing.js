@@ -1252,7 +1252,7 @@ export default function Landing() {
 
     setServiceLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+    async (position) => {
         const latitude = Number(position.coords.latitude.toFixed(6));
         const longitude = Number(position.coords.longitude.toFixed(6));
         const accuracyMeters = Number.isFinite(position.coords.accuracy)
@@ -1261,15 +1261,48 @@ export default function Landing() {
         const capturedAt = new Date(
           position.timestamp || Date.now(),
         ).toISOString();
-        setServiceForm((prev) => ({
-          ...prev,
-          pickupLocation: {
-            latitude,
-            longitude,
-            accuracyMeters,
-            capturedAt,
-          },
-        }));
+       try {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  const address =
+    data.display_name ||
+    `${latitude}, ${longitude}`;
+
+  setServiceForm((prev) => ({
+    ...prev,
+    pickupAddress: address,
+    pickupLocation: {
+      latitude,
+      longitude,
+      accuracyMeters,
+      capturedAt,
+    },
+  }));
+} catch (err) {
+  console.error("Reverse geocoding failed:", err);
+
+  setServiceForm((prev) => ({
+    ...prev,
+    pickupAddress: `${latitude}, ${longitude}`,
+    pickupLocation: {
+      latitude,
+      longitude,
+      accuracyMeters,
+      capturedAt,
+    },
+  }));
+}
+
+setServiceLocationLoading(false);
         setServiceLocationLoading(false);
       },
       (error) => {
