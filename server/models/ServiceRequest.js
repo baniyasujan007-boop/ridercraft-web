@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+const serviceBillingItemSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    quantity: { type: Number, default: 1, min: 0 },
+    unitPrice: { type: Number, default: 0, min: 0 },
+    total: { type: Number, default: 0, min: 0 }
+  },
+  { _id: false }
+);
+
 const serviceRequestSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -32,6 +42,32 @@ const serviceRequestSchema = new mongoose.Schema(
     garageAssignedAt: { type: Date, default: null },
     garageNote: { type: String, default: "", trim: true },
     garageRespondedAt: { type: Date, default: null },
+    billing: {
+      type: {
+        laborCharge: { type: Number, default: 0, min: 0 },
+        items: { type: [serviceBillingItemSchema], default: [] },
+        subtotal: { type: Number, default: 0, min: 0 },
+        tax: { type: Number, default: 0, min: 0 },
+        discount: { type: Number, default: 0, min: 0 },
+        total: { type: Number, default: 0, min: 0 },
+        status: {
+          type: String,
+          enum: ["unbilled", "issued", "paid", "cancelled"],
+          default: "unbilled"
+        },
+        notes: { type: String, default: "", trim: true },
+        paymentMethod: {
+          type: String,
+          enum: ["", "cash", "card", "upi", "ewallet", "bank_transfer", "other"],
+          default: ""
+        },
+        paymentReference: { type: String, default: "", trim: true },
+        issuedAt: { type: Date, default: null },
+        paidAt: { type: Date, default: null },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
+      },
+      default: () => ({})
+    },
     status: {
       type: String,
       enum: ["requested", "confirmed", "in_progress", "completed", "cancelled"],

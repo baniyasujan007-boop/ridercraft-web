@@ -92,6 +92,217 @@
 }
 
 /* ==========================================================
+   BILLING
+========================================================== */
+
+.garage-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.garage-section-head h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.garage-section-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.garage-billing-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.garage-bill-status {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+}
+
+.garage-bill-status-issued {
+  color: #075985;
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.garage-bill-status-paid {
+  color: #166534;
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.garage-bill-status-cancelled {
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.garage-billing-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.garage-billing-summary div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.garage-billing-summary span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.garage-billing-summary strong {
+  color: #0f172a;
+}
+
+.garage-billing-summary .garage-billing-total {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.garage-billing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.garage-billing-grid label,
+.garage-billing-notes {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.garage-billing-grid input,
+.garage-billing-grid select,
+.garage-billing-notes textarea,
+.garage-billing-item-row input {
+  width: 100%;
+  padding: 10px;
+  font: inherit;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.garage-billing-grid input:disabled,
+.garage-billing-grid select:disabled,
+.garage-billing-notes textarea:disabled,
+.garage-billing-item-row input:disabled {
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.garage-billing-items {
+  display: grid;
+  gap: 8px;
+}
+
+.garage-billing-items-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.garage-billing-items-head button,
+.garage-payment-actions button {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-weight: 800;
+  color: #0f172a;
+  background: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.garage-billing-item-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) 80px 110px 100px 84px;
+  align-items: center;
+  gap: 8px;
+}
+
+.garage-billing-item-row span {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.garage-billing-item-row button {
+  min-height: 38px;
+  font-weight: 800;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.garage-primary-btn {
+  min-height: 42px;
+  padding: 10px 14px;
+  font-weight: 800;
+  color: #fff;
+  background: #0f766e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.garage-payment-box {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.garage-payment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.garage-muted-note {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.garage-billing-items-head button:disabled,
+.garage-billing-item-row button:disabled,
+.garage-primary-btn:disabled,
+.garage-payment-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
    FORMS
 ========================================================== */
 
@@ -144,6 +355,23 @@
   .garage-grid {
     grid-template-columns: 1fr;
   }
+
+  .garage-billing-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .garage-billing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .garage-billing-item-row {
+    grid-template-columns: 1fr 84px 110px;
+  }
+
+  .garage-billing-item-row span,
+  .garage-billing-item-row button {
+    grid-column: span 1;
+  }
 }
 
 /* ==========================================================
@@ -162,6 +390,27 @@
   }
 
   .garage-logout-btn {
+    width: 100%;
+  }
+
+  .garage-section-head {
+    flex-direction: column;
+  }
+
+  .garage-billing-summary,
+  .garage-billing-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .garage-billing-items-head,
+  .garage-payment-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .garage-billing-items-head button,
+  .garage-payment-actions button,
+  .garage-primary-btn {
     width: 100%;
   }
 }

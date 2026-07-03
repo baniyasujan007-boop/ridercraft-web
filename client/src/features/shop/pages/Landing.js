@@ -811,7 +811,10 @@ export default function Landing() {
   };
   const getStatusLabel = useCallback((status) => {
     const normalized = String(status || "").toLowerCase();
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    return normalized
+      .split("_")
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+      .join(" ");
   }, []);
   const getReturnStatusIndex = (status) => {
     const index = returnTrackingSteps.indexOf(
@@ -2888,7 +2891,15 @@ setServiceLocationLoading(false);
               <p className="empty">No service requests yet.</p>
             )}
             <div className="servicing-history-list">
-              {serviceRequests.map((request) => (
+              {serviceRequests.map((request) => {
+                const billing = request.billing || {};
+                const billingStatus = String(billing.status || "unbilled");
+                const hasServiceBill = billingStatus !== "unbilled";
+                const billingItems = Array.isArray(billing.items)
+                  ? billing.items
+                  : [];
+
+                return (
                 <article className="servicing-history-card" key={request._id}>
                   <p>
                     <strong>
@@ -2938,8 +2949,45 @@ setServiceLocationLoading(false);
                   {request.garageNote && (
                     <p>Garage Response: {request.garageNote}</p>
                   )}
+                  {hasServiceBill && (
+                    <div className={`servicing-bill-box servicing-bill-${billingStatus}`}>
+                      <div className="servicing-bill-head">
+                        <strong>Service Bill</strong>
+                        <span>{getStatusLabel(billingStatus)}</span>
+                      </div>
+                      <div className="servicing-bill-summary">
+                        <span>Subtotal: {formatCurrency(billing.subtotal)}</span>
+                        <span>Tax: {formatCurrency(billing.tax)}</span>
+                        <span>Discount: {formatCurrency(billing.discount)}</span>
+                        <strong>Total: {formatCurrency(billing.total)}</strong>
+                      </div>
+                      {billingItems.length > 0 && (
+                        <div className="servicing-bill-lines">
+                          {billingItems.map((item, index) => (
+                            <p key={`${request._id}-bill-item-${index}`}>
+                              {item.name}: {Number(item.quantity || 0)} x{" "}
+                              {formatCurrency(item.unitPrice)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {billing.notes && <p>Billing Note: {billing.notes}</p>}
+                      {billingStatus === "paid" && (
+                        <p>
+                          Paid via {getStatusLabel(billing.paymentMethod || "payment")}
+                          {billing.paymentReference
+                            ? ` (${billing.paymentReference})`
+                            : ""}
+                        </p>
+                      )}
+                      {billingStatus === "issued" && (
+                        <p>Payment due at the assigned garage.</p>
+                      )}
+                    </div>
+                  )}
                 </article>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

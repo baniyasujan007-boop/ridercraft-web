@@ -10,6 +10,16 @@ const ALLOWED_SERVICE_STATUSES = [
   "completed",
   "cancelled"
 ];
+const ALLOWED_BILLING_PAYMENT_STATUSES = ["issued", "paid", "cancelled"];
+const ALLOWED_BILLING_PAYMENT_METHODS = [
+  "",
+  "cash",
+  "card",
+  "upi",
+  "ewallet",
+  "bank_transfer",
+  "other"
+];
 
 const degToRad = (value) => (value * Math.PI) / 180;
 
@@ -34,6 +44,39 @@ const sortServiceRequests = (requests) =>
     if (aEmergency !== bEmergency) return bEmergency - aEmergency;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+
+const toMoney = (value) => {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return Number(amount.toFixed(2));
+};
+
+const normalizeBillingItems = (items) => {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item) => {
+      const name = String(item?.name || "").trim();
+      const quantity = toMoney(item?.quantity === undefined ? 1 : item.quantity);
+      const unitPrice = toMoney(item?.unitPrice);
+
+      if (!name && Number(unitPrice || 0) === 0) return null;
+      if (!name || quantity === null || unitPrice === null || quantity <= 0) {
+        return { invalid: true };
+      }
+
+      return {
+        name,
+        quantity,
+        unitPrice,
+        total: Number((quantity * unitPrice).toFixed(2))
+      };
+    })
+    .filter(Boolean);
+};
+
+const canGarageAccessRequest = (requestDoc, user) =>
+  String(requestDoc?.assignedGarage || "") === String(user?.id || "");
 
 const findClosestGarage = async (pickupLatitude, pickupLongitude) => {
   const garages = await User.find({
@@ -284,5 +327,133 @@ await Notification.create({
     return res.json({ message: "Booking response submitted", request: requestDoc });
   } catch {
     return res.status(500).json({ error: "Failed to respond to booking" });
+  }
+};
+
+export const updateGarageServiceBilling = async (req, res) => {
+  try {
+    const requestId = String(req.params?.id || "");
+    const laborCharge = toMoney(req.body?.laborCharge);
+    const tax = toMoney(req.body?.tax);
+    const discount = toMoney(req.body?.discount);
+    const notes = String(req.body?.notes || "").trim();
+    const items = normalizeBillingItems(req.body?.items);
+
+    if (laborCharge === null) {
+      return res.status(400).json({ error: "Labor charge must be a valid amount" });
+    }
+    if (tax === null) {
+      return res.status(400).json({ error: "Tax must be a valid amount" });
+    }
+    if (discount === null) {
+      return res.status(400).json({ error: "Discount must be a valid amount" });
+    }
+    if (items.some((item) => item.invalid)) {
+      return res.status(400).json({ error: "Billing items need a name, quantity, and price" });
+    }
+    if (items.length > 20) {
+      return res.status(400).json({ error: "You can add up to 20 billing items" });
+    }
+
+    const requestDoc = await ServiceRequest.findById(requestId);
+    if (!requestDoc) {
+      return res.status(404).json({ error: "Service request not found" });
+    }
+    if (!canGarageAccessRequest(requestDoc, req.user)) {
+      return res.status(403).json({ error: "This booking is not assigned to your garage" });
+    }
+    if (requestDoc.billing?.status === "paid") {
+      return res.status(400).json({ error: "Paid bills cannot be edited" });
+    }
+
+    const partsTotal = items.reduce((sum, item) => sum + item.total, 0);
+    const subtotal = Number((laborCharge + partsTotal).toFixed(2));
+    const totalBeforeDiscount = Number((subtotal + tax).toFixed(2));
+
+    if (discount > totalBeforeDiscount) {
+      return res.status(400).json({ error: "Discount cannot exceed subtotal plus tax" });
+    }
+
+    const total = Number((totalBeforeDiscount - discount).toFixed(2));
+    const existingIssuedAt = requestDoc.billing?.issuedAt || null;
+
+    requestDoc.billing = {
+      laborCharge,
+      items,
+      subtotal,
+      tax,
+      discount,
+      total,
+      status: "issued",
+      notes,
+      paymentMethod: "",
+      paymentReference: "",
+      issuedAt: existingIssuedAt || new Date(),
+      paidAt: null,
+      updatedBy: req.user.id
+    };
+
+    await requestDoc.save();
+    await Notification.create({
+      userId: requestDoc.user,
+      title: "Service Bill Issued",
+      body: `Your garage bill for ${requestDoc.bikeModel} is ₹${total.toLocaleString("en-IN")}.`,
+      type: "payment"
+    });
+
+    return res.json({ message: "Service bill updated", request: requestDoc });
+  } catch {
+    return res.status(500).json({ error: "Failed to update service bill" });
+  }
+};
+
+export const updateGarageServiceBillingPayment = async (req, res) => {
+  try {
+    const requestId = String(req.params?.id || "");
+    const nextStatus = String(req.body?.billingStatus || req.body?.status || "").toLowerCase();
+    const paymentMethod = String(req.body?.paymentMethod || "").toLowerCase();
+    const paymentReference = String(req.body?.paymentReference || "").trim();
+
+    if (!ALLOWED_BILLING_PAYMENT_STATUSES.includes(nextStatus)) {
+      return res.status(400).json({ error: "Invalid billing payment status" });
+    }
+    if (!ALLOWED_BILLING_PAYMENT_METHODS.includes(paymentMethod)) {
+      return res.status(400).json({ error: "Invalid payment method" });
+    }
+    if (nextStatus === "paid" && !paymentMethod) {
+      return res.status(400).json({ error: "Payment method is required when marking paid" });
+    }
+
+    const requestDoc = await ServiceRequest.findById(requestId);
+    if (!requestDoc) {
+      return res.status(404).json({ error: "Service request not found" });
+    }
+    if (!canGarageAccessRequest(requestDoc, req.user)) {
+      return res.status(403).json({ error: "This booking is not assigned to your garage" });
+    }
+    if (!requestDoc.billing || requestDoc.billing.status === "unbilled") {
+      return res.status(400).json({ error: "Create a service bill before updating payment" });
+    }
+
+    requestDoc.billing.status = nextStatus;
+    requestDoc.billing.paymentMethod = nextStatus === "paid" ? paymentMethod : "";
+    requestDoc.billing.paymentReference = nextStatus === "paid" ? paymentReference : "";
+    requestDoc.billing.paidAt = nextStatus === "paid" ? new Date() : null;
+    requestDoc.billing.updatedBy = req.user.id;
+
+    await requestDoc.save();
+    await Notification.create({
+      userId: requestDoc.user,
+      title: nextStatus === "paid" ? "Service Payment Received" : "Service Bill Updated",
+      body:
+        nextStatus === "paid"
+          ? `Payment received for your ${requestDoc.bikeModel} service bill.`
+          : `Your service bill is now ${nextStatus}.`,
+      type: "payment"
+    });
+
+    return res.json({ message: "Service bill payment updated", request: requestDoc });
+  } catch {
+    return res.status(500).json({ error: "Failed to update service bill payment" });
   }
 };
