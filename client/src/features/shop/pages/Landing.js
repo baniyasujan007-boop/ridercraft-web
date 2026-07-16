@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SiteHeader from "../../../components/layout/SiteHeader";
 import axios from "axios";
+import { googleLogout } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -318,9 +319,28 @@ export default function Landing() {
   const orderStatusSnapshotRef = useRef(null);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
-  };
+  // Logout from Google OAuth
+  googleLogout();
+
+  // Prevent automatic account selection
+  if (window.google?.accounts?.id) {
+    window.google.accounts.id.disableAutoSelect();
+    window.google.accounts.id.cancel();
+  }
+
+  // Clear application storage
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // Remove cookies created by Google Identity Services (optional)
+  document.cookie.split(";").forEach((cookie) => {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  });
+
+  window.location.replace("/");
+};
 
   const isSearching = shopQuery.trim().length > 0;
   const flashSaleProducts = useMemo(
