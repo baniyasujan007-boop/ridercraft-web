@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import axios from "axios";
 
-export default function GoogleAuthButton({ onSuccess, onError, label = "signin_with" }) {
+export default function GoogleAuthButton({
+  onSuccess,
+  onError,
+  label = "signin_with",
+}) {
   const googleBtnRef = useRef(null);
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -10,9 +14,12 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
 
     const handleGoogleResponse = async (response) => {
       try {
-        const res = await axios.post("https://ridercraft-api.onrender.com/auth/google", {
-          credential: response.credential
-        });
+        const res = await axios.post(
+          "https://ridercraft-api.onrender.com/auth/google",
+          {
+            credential: response.credential,
+          },
+        );
         onSuccess(res.data);
       } catch (err) {
         onError(err.response?.data?.error || "Google login failed");
@@ -21,16 +28,21 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
 
     const renderGoogleButton = () => {
       if (!window.google?.accounts?.id || !googleBtnRef.current) return;
+      window.google.accounts.id.disableAutoSelect();
+      window.google.accounts.id.cancel();
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: handleGoogleResponse
+        callback: handleGoogleResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        ux_mode: "popup",
       });
       googleBtnRef.current.innerHTML = "";
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: "outline",
         size: "large",
         width: 300,
-       text: "continue_with"
+       text: "signin_with",
       });
     };
 
@@ -47,6 +59,11 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
     document.body.appendChild(script);
 
     return () => {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.cancel();
+        window.google.accounts.id.disableAutoSelect();
+      }
+
       script.remove();
     };
   }, [clientId, label, onError, onSuccess]);
@@ -54,7 +71,8 @@ export default function GoogleAuthButton({ onSuccess, onError, label = "signin_w
   if (!clientId) {
     return (
       <p className="google-missing">
-        Google sign-in is not configured. Add `REACT_APP_GOOGLE_CLIENT_ID` in `client/.env`.
+        Google sign-in is not configured. Add `REACT_APP_GOOGLE_CLIENT_ID` in
+        `client/.env`.
       </p>
     );
   }
