@@ -14,9 +14,6 @@ const initialForm = {
   colors: "",
   image: "",
   description: "",
-  isFeatured: false,
-  featuredStartDate: "",
-  featuredEndDate: "",
   isFlashSale: false,
   flashSalePrice: "",
   flashSaleStartsAt: "",
@@ -821,20 +818,6 @@ export default function Admin() {
       setError("Name and price are required");
       return;
     }
-    if (form.isFeatured) {
-      if (!form.featuredEndDate) {
-        setError("Featured end date is required");
-        return;
-      }
-      if (
-        form.featuredStartDate &&
-        new Date(form.featuredStartDate).getTime() >=
-          new Date(form.featuredEndDate).getTime()
-      ) {
-        setError("Featured end date must be after start date");
-        return;
-      }
-    }
     if (form.isFlashSale) {
       if (!Number(form.flashSalePrice || 0) || !form.flashSaleEndsAt) {
         setError("Flash sale price and end date are required");
@@ -880,9 +863,6 @@ export default function Admin() {
 
         stock: Number(form.stock || 0),
         image: imageSource,
-        isFeatured: form.isFeatured,
-        featuredStartDate: form.isFeatured ? form.featuredStartDate || null : null,
-        featuredEndDate: form.isFeatured ? form.featuredEndDate || null : null,
         isFlashSale: form.isFlashSale,
         flashSalePrice: form.isFlashSale ? Number(form.flashSalePrice || 0) : null,
         flashSaleStartsAt: form.isFlashSale ? form.flashSaleStartsAt || null : null,
@@ -956,9 +936,6 @@ export default function Admin() {
       stock: String(product.stock ?? "25"),
       image: product.image || "",
       description: product.description || "",
-      isFeatured: product.isFeatured || false,
-      featuredStartDate: toDateTimeInputValue(product.featuredStartDate),
-      featuredEndDate: toDateTimeInputValue(product.featuredEndDate),
       isFlashSale: product.isFlashSale || false,
       flashSalePrice: String(product.flashSalePrice ?? ""),
       flashSaleStartsAt: toDateTimeInputValue(product.flashSaleStartsAt),

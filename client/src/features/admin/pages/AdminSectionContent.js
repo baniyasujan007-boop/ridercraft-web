@@ -202,47 +202,6 @@ export default function AdminSectionContent({ vm }) {
             <label className="admin-checkbox">
               <input
                 type="checkbox"
-                checked={form.isFeatured}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    isFeatured: e.target.checked,
-                  }))
-                }
-              />
-              Featured Product
-            </label>
-            <label className="admin-field-label">
-              Featured Start
-              <input
-                type="datetime-local"
-                value={form.featuredStartDate}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    featuredStartDate: e.target.value,
-                  }))
-                }
-                disabled={!form.isFeatured}
-              />
-            </label>
-            <label className="admin-field-label">
-              Featured End
-              <input
-                type="datetime-local"
-                value={form.featuredEndDate}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    featuredEndDate: e.target.value,
-                  }))
-                }
-                disabled={!form.isFeatured}
-              />
-            </label>
-            <label className="admin-checkbox">
-              <input
-                type="checkbox"
                 checked={form.isFlashSale}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -735,7 +694,6 @@ export default function AdminSectionContent({ vm }) {
                 <th>Variants</th>
                 <th>Price</th>
                 <th>Rating</th>
-                <th>Featured</th>
                 <th>Flash Sale</th>
                 <th>Image</th>
                 <th>Actions</th>
@@ -765,13 +723,6 @@ export default function AdminSectionContent({ vm }) {
                   <td>
                     {(product.ratingAverage || 0).toFixed(1)} / 5 (
                     {product.ratingCount || 0})
-                  </td>
-                  <td>
-                    {product.isFeaturedActive
-                      ? "Live"
-                      : product.isFeatured
-                        ? "Scheduled"
-                        : "No"}
                   </td>
                   <td>
                     {product.isFlashSaleActive ? "Live" : product.isFlashSale ? "Scheduled" : "No"}
@@ -1757,51 +1708,6 @@ export default function AdminSectionContent({ vm }) {
               )}
             </tbody>
           </table>
-        </section>
-      )}
-      {section === "featured" && (
-        <section className="admin-form-wrap">
-          <h2>Featured Products</h2>
-          <p className="admin-hint">
-            Manage product-level Featured settings from the Product Manager.
-            Active featured products appear here independently from Flash Sale.
-          </p>
-          <div className="admin-flash-product-grid">
-            {products
-              .filter((product) => product.isFeatured)
-              .map((product) => {
-              return (
-                <label
-                  key={`featured-${product._id}`}
-                  className={`admin-flash-product-card ${product.isFeaturedActive ? "selected" : ""}`}
-                >
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      onError={applyImageFallback}
-                    />
-                  ) : (
-                    <div className="admin-flash-thumb-placeholder">
-                      No image
-                    </div>
-                  )}
-                  <div>
-                    <p>{product.name}</p>
-                    <small>
-                      {product.isFeaturedActive ? "Live" : "Scheduled"} · ₹
-                      {Number(product.price || 0).toFixed(2)}
-                    </small>
-                  </div>
-                </label>
-              );
-            })}
-            {products.filter((product) => product.isFeatured).length === 0 && (
-              <p className="admin-hint">
-                No products are marked as featured yet.
-              </p>
-            )}
-          </div>
         </section>
       )}
       {section === "featured" && (
