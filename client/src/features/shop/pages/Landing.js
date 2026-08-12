@@ -111,20 +111,6 @@ const isProductFlashSaleActive = (product, now = Date.now()) => {
   );
 };
 
-const isProductFeaturedActive = (product, now = Date.now()) => {
-  if (!product || product.isFeatured !== true) return false;
-
-  const startsAt = product.featuredStartDate
-    ? new Date(product.featuredStartDate).getTime()
-    : 0;
-  const endsAt = product.featuredEndDate
-    ? new Date(product.featuredEndDate).getTime()
-    : 0;
-
-  if (startsAt && startsAt > now) return false;
-  return Number.isFinite(endsAt) && endsAt > now;
-};
-
 const getProductDisplayPrice = (product, now = Date.now()) => {
   if (isProductFlashSaleActive(product, now)) {
     return toNumber(product.flashSalePrice || product.displayPrice || product.price);
@@ -306,6 +292,8 @@ export default function Landing() {
   const [offerNow, setOfferNow] = useState(Date.now());
   const [productsLoading, setProductsLoading] = useState(false);
   const [featuredProductsLoading, setFeaturedProductsLoading] = useState(false);
+  const [featuredSections, setFeaturedSections] = useState([]);
+  const [featuredSectionsError, setFeaturedSectionsError] = useState("");
   const [customerNotifications, setCustomerNotifications] = useState(() => {
     try {
       return JSON.parse(
@@ -350,16 +338,23 @@ export default function Landing() {
         .slice(0, 6),
     [products, offerNow],
   );
-  const activeFeaturedProducts = useMemo(
+  const activeFeaturedSections = useMemo(
     () =>
-      products
+      featuredSections
         .filter(
-          (product) =>
-            isProductFeaturedActive(product, offerNow) &&
-            !isProductFlashSaleActive(product, offerNow),
+          (section) =>
+            section?.isActive === true &&
+            Array.isArray(section.products) &&
+            section.products.length > 0,
         )
-        .slice(0, 8),
-    [products, offerNow],
+        .map((section) => ({
+          ...section,
+          products: section.products.map(normalizeProductForClient),
+        }))
+        .sort(
+          (a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0),
+        ),
+    [featuredSections],
   );
   const nonFlashSaleProducts = useMemo(
     () => products.filter((product) => !isProductFlashSaleActive(product, offerNow)),
@@ -1490,7 +1485,6 @@ setServiceLocationLoading(false);
     const loadProducts = async () => {
       try {
         setProductsLoading(true);
-        setFeaturedProductsLoading(true);
         setProductsError("");
         const res = await axios.get(
           "https://ridercraft-api.onrender.com/products",
@@ -1509,11 +1503,39 @@ setServiceLocationLoading(false);
       } finally {
         if (!controller.signal.aborted) {
           setProductsLoading(false);
-          setFeaturedProductsLoading(false);
         }
       }
     };
     loadProducts();
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadFeaturedSections = async () => {
+      try {
+        setFeaturedProductsLoading(true);
+        setFeaturedSectionsError("");
+        const res = await axios.get(
+          "https://ridercraft-api.onrender.com/featured-sections",
+          { signal: controller.signal },
+        );
+        if (!controller.signal.aborted) {
+          setFeaturedSections(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (error) {
+        if (axios.isCancel(error) || error.name === "CanceledError") return;
+        setFeaturedSections([]);
+        setFeaturedSectionsError("Could not load featured products");
+      } finally {
+        if (!controller.signal.aborted) {
+          setFeaturedProductsLoading(false);
+        }
+      }
+    };
+    loadFeaturedSections();
     return () => {
       controller.abort();
     };
@@ -1929,97 +1951,109 @@ setServiceLocationLoading(false);
           )}
           {!isSearching && (
             <div className="featured-sections">
-              <section className="featured-block">
-                <div className="featured-head">
-                  <h3>
-                    <span aria-hidden="true">{FEATURED_SECTION_ICONS.recommended}</span>
-                    Featured Products
-                  </h3>
-                </div>
-                {featuredProductsLoading && (
-                  <p className="shop-hero-empty">Loading featured products...</p>
-                )}
-                {!featuredProductsLoading && activeFeaturedProducts.length > 0 && (
-                  <div className="featured-grid">
-                    {activeFeaturedProducts.map((product) => {
-                      const imageSrc = getProductImage(product);
-                      const displayPrice = getProductOriginalPrice(product);
+              {featuredProductsLoading && (
+                <p className="shop-hero-empty">Loading featured products...</p>
+              )}
+              {!featuredProductsLoading && featuredSectionsError && (
+                <p className="empty">Could not load featured products.</p>
+              )}
+              {!featuredProductsLoading &&
+                !featuredSectionsError &&
+                activeFeaturedSections.map((section) => (
+                  <section
+                    className="featured-block"
+                    key={section._id || section.key}
+                  >
+                    <div className="featured-head">
+                      <h3>
+                        <span aria-hidden="true">
+                          {FEATURED_SECTION_ICONS[section.key] || "✦"}
+                        </span>
+                        {section.title}
+                      </h3>
+                    </div>
+                    <div className="featured-grid">
+                      {section.products.map((product) => {
+                        const imageSrc = getProductImage(product);
+                        const displayPrice = getProductOriginalPrice(product);
 
-                      return (
-                        <article
-                          className="featured-card"
-                          key={`featured-${product._id}`}
-                          onClick={() => navigate(`/products/${product._id}`)}
-                        >
-                          <div className="featured-image-wrap">
-                            {imageSrc ? (
-                              <img
-                                src={imageSrc}
-                                alt={product.name}
-                                className="featured-image"
-                                onError={applyImageFallback}
-                              />
-                            ) : (
-                              <div className="product-card-image-placeholder">
-                                No image
-                              </div>
-                            )}
-                            <div className="product-card-actions">
-                              <button
-                                type="button"
-                                className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
-                                aria-label={
-                                  isWishlisted(product._id)
-                                    ? "Remove from wishlist"
-                                    : "Add to wishlist"
-                                }
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  handleWishlistToggle(product);
-                                }}
-                              >
-                                {isWishlisted(product._id) ? "♥" : "♡"}
-                              </button>
-                              <button
-                                type="button"
-                                className="product-icon-btn"
-                                aria-label="Share product"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  handleShareProduct(product);
-                                }}
-                              >
-                                ↗
-                              </button>
-                            </div>
-                          </div>
-                          <p className="featured-name">{product.name}</p>
-                          <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
-                            {renderRatingStars(product.ratingAverage)}
-                            <small>({product.ratingCount || 0})</small>
-                          </div>
-                          <p className="featured-price">
-                            {formatCurrency(displayPrice)}
-                          </p>
-                          <button
-                            type="button"
-                            className="featured-add-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(getCartProductPayload(product, offerNow));
-                            }}
+                        return (
+                          <article
+                            className="featured-card"
+                            key={`featured-${product._id}`}
+                            onClick={() => navigate(`/products/${product._id}`)}
                           >
-                            Add to cart
-                          </button>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-                {!featuredProductsLoading && activeFeaturedProducts.length === 0 && (
+                            <div className="featured-image-wrap">
+                              {imageSrc ? (
+                                <img
+                                  src={imageSrc}
+                                  alt={product.name}
+                                  className="featured-image"
+                                  onError={applyImageFallback}
+                                />
+                              ) : (
+                                <div className="product-card-image-placeholder">
+                                  No image
+                                </div>
+                              )}
+                              <div className="product-card-actions">
+                                <button
+                                  type="button"
+                                  className={`product-icon-btn${isWishlisted(product._id) ? " active" : ""}`}
+                                  aria-label={
+                                    isWishlisted(product._id)
+                                      ? "Remove from wishlist"
+                                      : "Add to wishlist"
+                                  }
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleWishlistToggle(product);
+                                  }}
+                                >
+                                  {isWishlisted(product._id) ? "♥" : "♡"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="product-icon-btn"
+                                  aria-label="Share product"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleShareProduct(product);
+                                  }}
+                                >
+                                  ↗
+                                </button>
+                              </div>
+                            </div>
+                            <p className="featured-name">{product.name}</p>
+                            <div className="display-star-row" aria-label={`Rating ${(product.ratingAverage || 0).toFixed(1)} out of 5`}>
+                              {renderRatingStars(product.ratingAverage)}
+                              <small>({product.ratingCount || 0})</small>
+                            </div>
+                            <p className="featured-price">
+                              {formatCurrency(displayPrice)}
+                            </p>
+                            <button
+                              type="button"
+                              className="featured-add-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(getCartProductPayload(product, offerNow));
+                              }}
+                            >
+                              Add to cart
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              {!featuredProductsLoading &&
+                !featuredSectionsError &&
+                activeFeaturedSections.length === 0 && (
                   <p className="empty">No featured products are active right now.</p>
                 )}
-              </section>
             </div>
           )}
 

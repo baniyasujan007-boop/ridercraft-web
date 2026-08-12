@@ -7,6 +7,7 @@ const orderItemSchema = new mongoose.Schema(
     variantSku: { type: String, default: "" },
     color: { type: String, default: "" },
     colorHex: { type: String, default: "" },
+    size: { type: String, default: "" },
     name: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
     qty: { type: Number, required: true, min: 1 },
@@ -25,6 +26,9 @@ const orderSchema = new mongoose.Schema(
     discount: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
     promoCode: { type: String, default: "" },
+    // Snapshot fulfilment details so later profile edits do not alter an order.
+    deliveryAddress: { type: String, default: "" },
+    contactNumber: { type: String, default: "" },
     paymentMethod: {
       type: String,
       enum: ["card", "cod", "ewallet"],

@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import FeaturedSection from "../models/FeaturedSection.js";
 import axios from "axios";
 import * as cheerio from "cheerio";
 
@@ -501,6 +502,10 @@ export const deleteProduct = async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Product not found" });
     }
+    await FeaturedSection.updateMany(
+      { products: id },
+      { $pull: { products: id } },
+    );
     res.json({ message: "Product deleted" });
   } catch {
     res.status(500).json({ error: "Failed to delete product" });

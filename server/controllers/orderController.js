@@ -1,5 +1,25 @@
 import Order from "../models/Order.js";
 import Notification from "../models/Notification.js";
+import Product from "../models/Product.js";
+import Promo from "../models/Promo.js";
+import User from "../models/User.js";
+import { isFlashSaleCurrentlyActive } from "./productController.js";
+
+const money = (value) => Number(Number(value).toFixed(2));
+const shippingFor = (subtotal) => (subtotal >= 75 || subtotal === 0 ? 0 : 7.99);
+const taxFor = (subtotal) => money(subtotal * 0.08);
+const promoIsValid = (promo, now = new Date()) =>
+  Boolean(
+    promo?.isActive &&
+      promo.usedCount < promo.maxUses &&
+      new Date(promo.startsAt) <= now &&
+      new Date(promo.endsAt) >= now,
+  );
+const promoDiscountFor = (promo, subtotal, shipping) => {
+  if (promo.discountType === "shipping") return money(Math.min(shipping, subtotal + shipping));
+  if (promo.discountType === "flat") return money(Math.min(promo.discountValue, subtotal));
+  return money(Math.min((subtotal * promo.discountValue) / 100, subtotal));
+};
 
 const RETURN_STATUSES = [
   "none",
@@ -37,11 +57,6 @@ export const createOrder = async (req, res) => {
   try {
     const {
       items,
-      subtotal,
-      tax,
-      shipping,
-      discount,
-      total,
       promoCode,
       paymentMethod,
       paymentDetails
@@ -50,30 +65,66 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ error: "Order items are required" });
     }
 
-    const normalizedItems = items.map((item) => ({
+    const requestedItems = items.map((item) => ({
       productId: item.productId || item._id,
       variantId: String(item.variantId || ""),
       variantSku: String(item.variantSku || item.sku || ""),
       color: String(item.color || ""),
       colorHex: String(item.colorHex || ""),
-      name: String(item.name || ""),
-      price: Number(item.price || 0),
+      size: String(item.size || ""),
       qty: Number(item.qty || 0),
-      image: String(item.image || "")
     }));
 
     if (
-      normalizedItems.some(
+      requestedItems.some(
         (item) =>
           !item.productId ||
-          !item.name ||
-          !Number.isFinite(item.price) ||
-          item.price < 0 ||
           !Number.isInteger(item.qty) ||
           item.qty < 1
       )
     ) {
       return res.status(400).json({ error: "Invalid order items" });
+    }
+
+    const products = await Product.find({
+      _id: { $in: requestedItems.map((item) => item.productId) }
+    });
+    const productById = new Map(products.map((product) => [String(product._id), product]));
+    if (productById.size !== new Set(requestedItems.map((item) => String(item.productId))).size) {
+      return res.status(404).json({ error: "One or more products are no longer available" });
+    }
+
+    const normalizedItems = [];
+    const stockRequests = new Map();
+    for (const item of requestedItems) {
+      const product = productById.get(String(item.productId));
+      let variant = null;
+      if (item.variantId) {
+        variant = product.variants.id(item.variantId);
+        if (!variant) return res.status(422).json({ error: "Selected product variant is no longer available" });
+      }
+      if (item.size && product.sizes.length > 0 && !product.sizes.includes(item.size)) {
+        return res.status(422).json({ error: "Selected product size is no longer available" });
+      }
+      const available = variant ? variant.stock : product.stock;
+      const key = `${product._id}:${variant?._id || ""}`;
+      stockRequests.set(key, (stockRequests.get(key) || 0) + item.qty);
+      if (stockRequests.get(key) > available) {
+        return res.status(409).json({ error: `Insufficient stock for ${product.name}` });
+      }
+      const price = isFlashSaleCurrentlyActive(product) ? product.flashSalePrice : product.price;
+      normalizedItems.push({
+        productId: product._id,
+        variantId: variant ? String(variant._id) : "",
+        variantSku: variant?.sku || "",
+        color: variant?.color || "",
+        colorHex: variant?.colorHex || "",
+        size: item.size,
+        name: product.name,
+        price: money(price),
+        qty: item.qty,
+        image: variant?.images?.[0] || product.image || ""
+      });
     }
 
     const method = String(paymentMethod || "").toLowerCase();
@@ -132,20 +183,81 @@ export const createOrder = async (req, res) => {
       paymentReference = "COD";
     }
 
-  const order = await Order.create({
-  user: req.user.id,
-  items: normalizedItems,
-  subtotal: Number(subtotal || 0),
-  tax: Number(tax || 0),
-  shipping: Number(shipping || 0),
-  discount: Number(discount || 0),
-  total: Number(total || 0),
-  promoCode: String(promoCode || ""),
-  paymentMethod: method,
-  paymentStatus,
-  paymentReference,
-  paymentMeta
-});
+    const subtotal = money(normalizedItems.reduce((sum, item) => sum + item.price * item.qty, 0));
+    const shipping = shippingFor(subtotal);
+    const tax = taxFor(subtotal);
+    const code = String(promoCode || "").toUpperCase().trim();
+    let promo = null;
+    let discount = 0;
+    if (code) {
+      promo = await Promo.findOne({ code });
+      if (!promo || !promoIsValid(promo)) {
+        return res.status(400).json({ error: "Promo code is no longer valid" });
+      }
+      discount = promoDiscountFor(promo, subtotal, shipping);
+    }
+    const total = money(Math.max(0, subtotal + tax + shipping - discount));
+
+    // Reserve stock with conditional updates so concurrent checkouts cannot
+    // oversell. Nothing is decremented until validation/payment are complete.
+    const reserved = [];
+    for (const [key, qty] of stockRequests) {
+      const [productId, variantId] = key.split(":");
+      const update = variantId
+        ? await Product.findOneAndUpdate(
+            { _id: productId, variants: { $elemMatch: { _id: variantId, stock: { $gte: qty } } } },
+            { $inc: { "variants.$.stock": -qty } },
+            { new: false },
+          )
+        : await Product.findOneAndUpdate(
+            { _id: productId, stock: { $gte: qty } },
+            { $inc: { stock: -qty } },
+            { new: false },
+          );
+      if (!update) {
+        for (const entry of reserved) {
+          const path = entry.variantId ? "variants.$.stock" : "stock";
+          const filter = entry.variantId
+            ? { _id: entry.productId, "variants._id": entry.variantId }
+            : { _id: entry.productId };
+          await Product.updateOne(filter, { $inc: { [path]: entry.qty } });
+        }
+        return res.status(409).json({ error: "Insufficient stock for one or more items" });
+      }
+      reserved.push({ productId, variantId, qty });
+    }
+
+    if (promo) {
+      const redeemed = await Promo.updateOne(
+        { _id: promo._id, isActive: true, $expr: { $lt: ["$usedCount", "$maxUses"] } },
+        [
+          { $set: { usedCount: { $add: ["$usedCount", 1] } } },
+          { $set: { isActive: { $lt: ["$usedCount", "$maxUses"] } } },
+        ],
+      );
+      if (redeemed.modifiedCount !== 1) {
+        for (const entry of reserved) {
+          const path = entry.variantId ? "variants.$.stock" : "stock";
+          const filter = entry.variantId ? { _id: entry.productId, "variants._id": entry.variantId } : { _id: entry.productId };
+          await Product.updateOne(filter, { $inc: { [path]: entry.qty } });
+        }
+        return res.status(400).json({ error: "Promo code is no longer valid" });
+      }
+    }
+
+    let order;
+    try {
+      const user = await User.findById(req.user.id).select("deliveryAddress contactNumber");
+      order = await Order.create({ user: req.user.id, items: normalizedItems, subtotal, tax, shipping, discount, total, promoCode: code, deliveryAddress: user?.deliveryAddress || "", contactNumber: user?.contactNumber || "", paymentMethod: method, paymentStatus, paymentReference, paymentMeta });
+    } catch (error) {
+      for (const entry of reserved) {
+        const path = entry.variantId ? "variants.$.stock" : "stock";
+        const filter = entry.variantId ? { _id: entry.productId, "variants._id": entry.variantId } : { _id: entry.productId };
+        await Product.updateOne(filter, { $inc: { [path]: entry.qty } });
+      }
+      if (promo) await Promo.updateOne({ _id: promo._id }, { $inc: { usedCount: -1 } });
+      throw error;
+    }
 
 await Notification.create({
   userId: req.user.id,

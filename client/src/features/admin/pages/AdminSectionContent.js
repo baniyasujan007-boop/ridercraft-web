@@ -1828,6 +1828,7 @@ export default function AdminSectionContent({ vm }) {
               <option value="new-arrivals">🆕 New Arrivals</option>
               <option value="best-sellers">🏆 Best Sellers</option>
               <option value="recommended">⭐ Recommended Products</option>
+              <option value="flash-sale">⚡ Flash Sale</option>
             </select>
             <input
               placeholder="Section title"

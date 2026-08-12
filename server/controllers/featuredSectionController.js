@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import FeaturedSection, { SECTION_KEYS } from "../models/FeaturedSection.js";
+import Product from "../models/Product.js";
 import { productToClient } from "./productController.js";
 
 const parseOptionalDate = (value) => {
@@ -9,6 +11,26 @@ const parseOptionalDate = (value) => {
 
 const hasInvalidCountdownWindow = (startsAt, endsAt) =>
   startsAt && endsAt && startsAt.getTime() > endsAt.getTime();
+
+const resolveValidProductIds = async (products) => {
+  const ids = Array.isArray(products)
+    ? [
+        ...new Set(
+          products
+            .map((id) => String(id || "").trim())
+            .filter((id) => mongoose.isValidObjectId(id)),
+        ),
+      ]
+    : [];
+  if (!ids.length) return { ids: [], requested: 0, invalid: 0 };
+  const existing = await Product.find({ _id: { $in: ids } }).select("_id");
+  const existingIds = new Set(existing.map((entry) => String(entry._id)));
+  return {
+    ids: ids.filter((id) => existingIds.has(id)),
+    requested: ids.length,
+    invalid: ids.length - ids.filter((id) => existingIds.has(id)).length,
+  };
+};
 
 const featuredSectionToClient = (section, now = new Date()) => {
   const plain =
@@ -29,7 +51,14 @@ export const listPublicFeaturedSections = async (_req, res) => {
     const sections = await FeaturedSection.find({ isActive: true })
       .populate("products")
       .sort({ sortOrder: 1, createdAt: 1 });
-    res.json(sections.map((section) => featuredSectionToClient(section, now)));
+    res.json(
+      sections
+        .filter(
+          (section) =>
+            Array.isArray(section.products) && section.products.length > 0,
+        )
+        .map((section) => featuredSectionToClient(section, now)),
+    );
   } catch {
     res.status(500).json({ error: "Failed to load featured sections" });
   }
@@ -71,10 +100,20 @@ export const createFeaturedSection = async (req, res) => {
       return res.status(400).json({ error: "Countdown end must be after start" });
     }
 
+    const resolvedProducts = await resolveValidProductIds(products);
+    if (resolvedProducts.requested > 0 && resolvedProducts.ids.length === 0) {
+      return res.status(400).json({ error: "Selected products do not exist" });
+    }
+    if (resolvedProducts.invalid > 0) {
+      return res
+        .status(400)
+        .json({ error: "One or more selected products do not exist" });
+    }
+
     const section = await FeaturedSection.create({
       key: nextKey,
       title: nextTitle,
-      products: Array.isArray(products) ? products : [],
+      products: resolvedProducts.ids,
       sortOrder: Number.isFinite(Number(sortOrder)) ? Number(sortOrder) : 0,
       countdownStartsAt: nextCountdownStartsAt,
       countdownEndsAt: nextCountdownEndsAt,
@@ -117,7 +156,16 @@ export const updateFeaturedSection = async (req, res) => {
     }
 
     if (req.body.products !== undefined) {
-      section.products = Array.isArray(req.body.products) ? req.body.products : [];
+      const resolvedProducts = await resolveValidProductIds(req.body.products);
+      if (resolvedProducts.requested > 0 && resolvedProducts.ids.length === 0) {
+        return res.status(400).json({ error: "Selected products do not exist" });
+      }
+      if (resolvedProducts.invalid > 0) {
+        return res
+          .status(400)
+          .json({ error: "One or more selected products do not exist" });
+      }
+      section.products = resolvedProducts.ids;
     }
 
     if (req.body.sortOrder !== undefined) {
