@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../theme/app_colors.dart';
+import 'widgets/product_card.dart';
 
 const Color _base = AppColors.surface;
 const Color _highlight = AppColors.surfaceElevated;
@@ -44,8 +45,11 @@ class _HeroSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.75);
+    final height = ((width - 32) * 0.62 * textScale).clamp(170.0, 400.0);
     return Container(
-      height: 200,
+      height: height,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: _base,
@@ -105,8 +109,9 @@ class _ProductRowSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rowHeight = ProductCard.slotHeight(context);
     return SizedBox(
-      height: 252,
+      height: rowHeight,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),

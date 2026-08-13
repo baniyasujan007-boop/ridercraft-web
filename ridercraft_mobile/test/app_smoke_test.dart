@@ -22,9 +22,10 @@ import 'package:ridercraft_mobile/services/notification_service.dart';
 import 'package:ridercraft_mobile/services/order_service.dart';
 import 'package:ridercraft_mobile/services/product_service.dart';
 import 'package:ridercraft_mobile/services/promo_service.dart';
-import 'package:ridercraft_mobile/services/storage_service.dart';
 import 'package:ridercraft_mobile/services/token_store.dart';
 import 'package:ridercraft_mobile/theme/app_theme.dart';
+
+import 'support/test_storage.dart';
 
 /// Always returns an empty JSON array — exercises empty/fallback states
 /// without any network.
@@ -51,7 +52,7 @@ class _EmptyAdapter implements HttpClientAdapter {
 Future<Widget> _buildApp() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  final storage = StorageService(prefs);
+  final storage = TestStorageService(prefs);
   final tokenStore = TokenStore();
 
   final dio = Dio()..httpClientAdapter = _EmptyAdapter();
@@ -64,10 +65,14 @@ Future<Widget> _buildApp() async {
   final notificationService = NotificationService(api);
   final bookingService = BookingService(api);
 
+  final authProvider = AuthProvider(authService, tokenStore);
+  // No token in the mock store, so the session resolves to a guest.
+  await authProvider.restoreSession();
+
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(
-        value: AuthProvider(authService, tokenStore),
+        value: authProvider,
       ),
       ChangeNotifierProvider(
         create: (_) => CartProvider(storage, promoService)..load(),
@@ -117,7 +122,11 @@ void main() {
 
     await tester.tap(find.text('Profile').last);
     await tester.pumpAndSettle();
-    expect(find.text('Logout'), findsOneWidget);
+    // Guests see the sign-in prompt on the Profile tab.
+    expect(
+      find.text('Sign in to manage your rider profile.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Shop').last);
     await tester.pumpAndSettle();

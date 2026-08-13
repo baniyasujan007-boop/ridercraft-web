@@ -21,9 +21,11 @@ import 'services/promo_service.dart';
 import 'services/storage_service.dart';
 import 'services/token_store.dart';
 import 'theme/app_theme.dart';
+import 'utils/formatters.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Formatters.ensureDateSymbols();
 
   final prefs = await SharedPreferences.getInstance();
   final storage = StorageService(prefs);

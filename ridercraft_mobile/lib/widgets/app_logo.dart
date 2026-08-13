@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// RiderCraft brand mark used on the splash and auth screens.
+/// RiderCraft brand logo — the actual website asset
+/// (`client/src/assets/ridercraft-logo.png`, bundled as
+/// `assets/images/ridercraft-logo.png`).
 ///
-/// The existing website logo lives in `client/src/assets/ridercraft-logo.png`;
-/// a Flutter asset version can be dropped into `assets/` and rendered instead
-/// of this vector mark. Until then a bold wordmark + chevron is used.
+/// Renders the exact RiderCraft asset so the app matches the website
+/// (dark navy tile with the brand mark). `size` is the tile side length;
+/// the radius is proportional to the website header mark.
 class AppLogo extends StatelessWidget {
-  final double fontSize;
+  final double size;
   final bool showTagline;
 
   const AppLogo({
     super.key,
-    this.fontSize = 32,
+    this.size = 128,
     this.showTagline = true,
   });
 
@@ -22,36 +24,17 @@ class AppLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: fontSize * 1.5,
-              height: fontSize * 1.5,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(fontSize * 0.4),
-              ),
-              child: Icon(
-                Icons.sports_motorsports_rounded,
-                color: Colors.white,
-                size: fontSize,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'RiderCraft',
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
+        ClipRRect(
+          borderRadius: BorderRadius.circular(size * 0.24),
+          child: Image.asset(
+            'assets/images/ridercraft-logo.png',
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+          ),
         ),
         if (showTagline) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             'RIDE SHARP. RIDE PREPARED.',
             style: TextStyle(

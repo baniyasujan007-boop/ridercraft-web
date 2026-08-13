@@ -122,6 +122,18 @@ class BookingDetailScreen extends StatelessWidget {
                       '(${booking.assignedGarageDistanceKm!.toStringAsFixed(1)} km)'
                   : booking.assignedGarageName,
             ),
+          if (booking.assignedGarageContact.isNotEmpty ||
+              booking.assignedGarageEmail.isNotEmpty)
+            _DetailTile(
+              icon: Icons.phone_outlined,
+              label: 'Garage contact',
+              value: [
+                if (booking.assignedGarageContact.isNotEmpty)
+                  booking.assignedGarageContact,
+                if (booking.assignedGarageEmail.isNotEmpty)
+                  booking.assignedGarageEmail,
+              ].join('\n'),
+            ),
           if (booking.createdAt != null)
             _DetailTile(
               icon: Icons.history_rounded,

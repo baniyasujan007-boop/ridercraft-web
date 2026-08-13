@@ -20,6 +20,8 @@ class ServiceRequest {
   final String garageNote;
   final String assignedGarageId;
   final String assignedGarageName;
+  final String assignedGarageContact;
+  final String assignedGarageEmail;
   final double? assignedGarageDistanceKm;
   final String status;
   final DateTime? createdAt;
@@ -43,6 +45,8 @@ class ServiceRequest {
     this.garageNote = '',
     this.assignedGarageId = '',
     this.assignedGarageName = '',
+    this.assignedGarageContact = '',
+    this.assignedGarageEmail = '',
     this.assignedGarageDistanceKm,
     this.status = 'requested',
     this.createdAt,
@@ -54,6 +58,9 @@ class ServiceRequest {
     final garage = assignedGarage is Map<String, dynamic>
         ? assignedGarage
         : <String, dynamic>{};
+    final garageName = (garage['name'] ?? '').toString().trim();
+    final garageProfileName =
+        (garage['garageProfile']?['garageName'] ?? '').toString().trim();
 
     return ServiceRequest(
       id: (json['_id'] ?? json['id'] ?? '') as String,
@@ -75,9 +82,9 @@ class ServiceRequest {
       adminNote: (json['adminNote'] ?? '') as String,
       garageNote: (json['garageNote'] ?? '') as String,
       assignedGarageId: (garage['_id'] ?? '') as String,
-      assignedGarageName: (garage['name'] ??
-              garage['garageProfile']?['garageName'] ??
-              '') as String,
+      assignedGarageName: garageName.isNotEmpty ? garageName : garageProfileName,
+      assignedGarageContact: (garage['contactNumber'] ?? '') as String,
+      assignedGarageEmail: (garage['email'] ?? '') as String,
       assignedGarageDistanceKm:
           (json['assignedGarageDistanceKm'] as num?)?.toDouble(),
       status: (json['status'] ?? 'requested') as String,
@@ -104,4 +111,6 @@ class ServiceRequest {
       };
 
   String get priorityLabel => priority == 'emergency' ? 'Emergency' : 'Normal';
+
+  bool get isEmergency => priority == 'emergency';
 }

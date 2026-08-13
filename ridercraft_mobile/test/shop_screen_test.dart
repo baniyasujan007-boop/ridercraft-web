@@ -103,6 +103,44 @@ Future<Widget> _buildApp(List<Map<String, dynamic>> products) async {
   );
 }
 
+// Renders the Shop grid at an exact viewport size and text scalar, then
+// confirms neither the initial viewport nor a scroll to the bottom reports a
+// layout overflow.
+Future<void> _pumpShopAt(
+  WidgetTester tester,
+  List<Map<String, dynamic>> products, {
+  required double width,
+  required double height,
+  required double textScale,
+}) async {
+  tester.view.devicePixelRatio = 1.0;
+  tester.view.physicalSize = Size(width, height);
+  tester.platformDispatcher.textScaleFactorTestValue = textScale;
+  addTearDown(tester.view.reset);
+  addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+  await tester.pumpWidget(await _buildApp(products));
+  await tester.pumpAndSettle();
+
+  expect(tester.takeException(), isNull,
+      reason: 'overflow in the initial Shop viewport');
+
+  // Build every grid row below the fold too.
+  await tester.drag(find.byType(GridView), const Offset(0, -1200));
+  await tester.pumpAndSettle();
+  expect(tester.takeException(), isNull,
+      reason: 'overflow after scrolling the Shop grid');
+}
+
+List<Map<String, dynamic>> _manyProducts(int count) => [
+      for (var i = 0; i < count; i++)
+        _product(
+          id: 'p$i',
+          name: 'Ridercraft Premium Full-Face Helmet with Bluetooth $i',
+          tag: i.isEven ? 'Helmets' : 'Gloves',
+        ),
+    ];
+
 void main() {
   testWidgets('renders the real product catalogue from the API', (
     tester,
@@ -176,5 +214,61 @@ void main() {
     expect(find.text('SHOEI'), findsOneWidget);
     expect(find.text('Add to Cart'), findsOneWidget);
     expect(find.text('IN STOCK'), findsOneWidget);
+  });
+
+  group('responsive Shop grid never overflows', () {
+    final products = _manyProducts(12);
+
+    for (final width in [320.0, 360.0, 390.0, 430.0, 768.0, 1024.0]) {
+      for (final textScale in [1.0, 1.3, 2.0]) {
+        testWidgets(
+            'renders at ${width}px width, ${textScale}x text without overflow',
+            (tester) async {
+          await _pumpShopAt(
+            tester,
+            products,
+            width: width,
+            height: 844,
+            textScale: textScale,
+          );
+        });
+      }
+    }
+
+    testWidgets('renders on a Pixel 7 Pro (412x915) at 1.0x text', (
+      tester,
+    ) async {
+      await _pumpShopAt(
+        tester,
+        products,
+        width: 412,
+        height: 915,
+        textScale: 1.0,
+      );
+    });
+
+    testWidgets('renders on a Pixel 7 Pro (412x915) at 1.3x text', (
+      tester,
+    ) async {
+      await _pumpShopAt(
+        tester,
+        products,
+        width: 412,
+        height: 915,
+        textScale: 1.3,
+      );
+    });
+
+    testWidgets('renders on a Pixel 7 Pro (412x915) at 2.0x text', (
+      tester,
+    ) async {
+      await _pumpShopAt(
+        tester,
+        products,
+        width: 412,
+        height: 915,
+        textScale: 2.0,
+      );
+    });
   });
 }

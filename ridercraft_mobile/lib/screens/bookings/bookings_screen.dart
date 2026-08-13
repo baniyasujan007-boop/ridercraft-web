@@ -99,7 +99,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
   Widget _buildBody(AuthProvider auth, BookingProvider provider) {
     if (!auth.isAuthenticated) {
       return Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -131,14 +131,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
       return const LoadingView(label: 'Loading bookings…');
     }
 
-    if (provider.error != null) {
+    // Only replace the list with the error view when there is nothing to
+    // show; a failed refresh while data exists keeps the stale list visible.
+    if (provider.error != null && provider.bookings.isEmpty) {
       return ErrorView(message: provider.error!, onRetry: _refresh);
     }
 
     final bookings = provider.bookings;
     if (bookings.isEmpty) {
       return Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

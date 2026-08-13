@@ -18,6 +18,18 @@ class ProductCard extends StatelessWidget {
 
   const ProductCard({super.key, required this.product, required this.onTap});
 
+  /// Height a [ProductCard] needs inside a fixed-slot host (a grid cell or a
+  /// horizontal row) for the current text scaler.
+  ///
+  /// The card is made of fixed chrome — the 168px image tile, paddings, gaps
+  /// and the rating/action rows — plus text lines (brand, two-line title,
+  /// price) that grow with the accessibility font size. Hosts size their
+  /// slots from this so scaled text never overflows the card.
+  static double slotHeight(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 3.0);
+    return 250 + 86 * scale;
+  }
+
   @override
   Widget build(BuildContext context) {
     final inWishlist = context.select<ProductProvider, bool>(
@@ -178,12 +190,16 @@ class ProductCard extends StatelessWidget {
                       ),
                       if (product.displayPrice < product.originalPrice) ...[
                         const SizedBox(width: 5),
-                        Text(
-                          Formatters.inr(product.originalPrice),
-                          style: const TextStyle(
-                            color: Color(0xFF8B95A5),
-                            fontSize: 10.5,
-                            decoration: TextDecoration.lineThrough,
+                        Flexible(
+                          child: Text(
+                            Formatters.inr(product.originalPrice),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF8B95A5),
+                              fontSize: 10.5,
+                              decoration: TextDecoration.lineThrough,
+                            ),
                           ),
                         ),
                       ],

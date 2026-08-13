@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/custom_button.dart';
 
@@ -72,6 +73,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 8),
+                const AppLogo(size: 84, showTagline: false),
+                const SizedBox(height: 16),
                 const Text(
                   'Join RiderCraft',
                   style: TextStyle(

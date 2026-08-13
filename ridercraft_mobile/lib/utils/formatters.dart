@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 /// Formatting helpers shared across the app. Prices use Indian grouping
 /// (e.g. ₹1,25,000) which matches the marketplace audience.
 abstract final class Formatters {
+  static bool _dateSymbolsInitialized = false;
+
+  /// Loads the `en_IN` date/number symbols used by the formatters below.
+  /// Idempotent; call once from `main()` before rendering so that
+  /// [DateFormat] with a non-default locale does not throw
+  /// `LocaleDataException`.
+  static Future<void> ensureDateSymbols() async {
+    if (_dateSymbolsInitialized) return;
+    _dateSymbolsInitialized = true;
+    await initializeDateFormatting('en_IN');
+  }
+
   static final NumberFormat _inr = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',

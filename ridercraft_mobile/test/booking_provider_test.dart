@@ -94,6 +94,76 @@ void main() {
       expect(provider.error, isNotNull);
       expect(provider.bookings, isEmpty);
     });
+
+    test('parses pickup location and the auto-assigned garage', () async {
+      final provider = buildProvider(
+        (options) async => _json(
+          jsonEncode([
+            {
+              ..._createdBooking,
+              'pickupLocation': {
+                'latitude': 18.5204,
+                'longitude': 73.8567,
+                'accuracyMeters': 12.5,
+                'capturedAt': '2026-08-11T09:00:00.000Z',
+              },
+              'priority': 'emergency',
+              'breakdownIssue': 'Bike won\'t start',
+              'assignedGarage': {
+                '_id': 'g_1',
+                'name': 'Rider Garage',
+                'email': 'garage@ridercraft.app',
+                'contactNumber': '9876500112',
+                'garageProfile': {'garageName': 'Rider Garage'},
+              },
+              'assignedGarageDistanceKm': 2.4,
+            },
+          ]),
+          200,
+        ),
+      );
+
+      await provider.loadBookings();
+
+      final booking = provider.bookings.single;
+      expect(booking.pickupLatitude, 18.5204);
+      expect(booking.pickupLongitude, 73.8567);
+      expect(booking.pickupAccuracyMeters, 12.5);
+      expect(booking.pickupCapturedAt, isNotNull);
+      expect(booking.isEmergency, isTrue);
+      expect(booking.priorityLabel, 'Emergency');
+      expect(booking.assignedGarageId, 'g_1');
+      expect(booking.assignedGarageName, 'Rider Garage');
+      expect(booking.assignedGarageContact, '9876500112');
+      expect(booking.assignedGarageEmail, 'garage@ridercraft.app');
+      expect(booking.assignedGarageDistanceKm, 2.4);
+      expect(booking.statusLabel, 'Requested');
+    });
+
+    test('parses nested garageProfile.garageName and a cancelled status', () async {
+      final provider = buildProvider(
+        (options) async => _json(
+          jsonEncode([
+            {
+              ..._createdBooking,
+              'status': 'cancelled',
+              'assignedGarage': {
+                'name': '',
+                'garageProfile': {'garageName': 'Speedy Bikes'},
+              },
+              'assignedGarageDistanceKm': 7.25,
+            },
+          ]),
+          200,
+        ),
+      );
+
+      await provider.loadBookings();
+
+      final booking = provider.bookings.single;
+      expect(booking.assignedGarageName, 'Speedy Bikes');
+      expect(booking.statusLabel, 'Cancelled');
+    });
   });
 
   group('createBooking', () {

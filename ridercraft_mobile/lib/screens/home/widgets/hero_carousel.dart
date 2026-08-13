@@ -10,6 +10,9 @@ import '../../../widgets/press_scale.dart';
 /// Styled like the website's `.ridercraft-hero`: dark navy base with an
 /// orange radial glow, italic uppercase headline and a gradient CTA.
 /// When the API returns no offers a branded fallback hero is shown.
+///
+/// The hero height scales with the screen width and the device text scaler,
+/// and the copy is scale-fitted so longer titles never overflow the card.
 class HeroCarousel extends StatefulWidget {
   final List<HeroOffer> offers;
   final ValueChanged<HeroOffer> onOfferCta;
@@ -27,7 +30,6 @@ class HeroCarousel extends StatefulWidget {
 }
 
 class _HeroCarouselState extends State<HeroCarousel> {
-  static const double _height = 218;
   final PageController _controller = PageController(viewportFraction: 0.92);
   int _currentPage = 0;
 
@@ -37,14 +39,24 @@ class _HeroCarouselState extends State<HeroCarousel> {
     super.dispose();
   }
 
+  /// Hero height grows with viewport width (roughly the website's aspect)
+  /// and the text scaler, clamped to a sane range.
+  double _heroHeight(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final textScale =
+        MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.75);
+    return ((width - 32) * 0.62 * textScale).clamp(170.0, 400.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final offers = widget.offers;
+    final height = _heroHeight(context);
 
     if (offers.isEmpty) {
       return _BrandedHero(
         onCta: widget.onDefaultCta,
-        height: _height,
+        height: height,
         margin: const EdgeInsets.symmetric(horizontal: 16),
       );
     }
@@ -52,7 +64,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: _height,
+          height: height,
           child: PageView.builder(
             controller: _controller,
             itemCount: offers.length,
@@ -113,40 +125,62 @@ class _OfferHeroCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _HeroBadge(label: badge),
-          const Spacer(),
-          Text(
-            offer.title.toUpperCase(),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-              height: 1.1,
-              letterSpacing: 0.3,
+          const SizedBox(height: 10),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          offer.title.toUpperCase(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            fontStyle: FontStyle.italic,
+                            height: 1.1,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        if (offer.ctaQuery.isNotEmpty ||
+                            offer.remainingSeconds > 0) ...[
+                          const SizedBox(height: 6),
+                          if (offer.ctaQuery.isNotEmpty)
+                            Text(
+                              offer.ctaQuery,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 13,
+                              ),
+                            )
+                          else
+                            Text(
+                              'Ends in ${Formatters.remainingDuration(offer.remainingSeconds)}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: 13,
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-          const SizedBox(height: 6),
-          if (offer.ctaQuery.isNotEmpty)
-            Text(
-              offer.ctaQuery,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 13,
-              ),
-            )
-          else if (offer.remainingSeconds > 0)
-            Text(
-              'Ends in ${Formatters.remainingDuration(offer.remainingSeconds)}',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
-                fontSize: 13,
-              ),
-            ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           _HeroCta(label: ctaLabel, onTap: onCta),
         ],
       ),
@@ -178,31 +212,61 @@ class _BrandedHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _HeroBadge(label: 'RIDERCRAFT'),
-              const Spacer(),
-              const Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Premium motorcycle gear\n',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    TextSpan(
-                      text: 'for every rider.',
-                      style: TextStyle(color: Color(0xFFFF7A1A)),
-                    ),
-                  ],
-                ),
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic,
-                  height: 1.12,
-                  letterSpacing: 0.3,
+              const SizedBox(height: 10),
+              Expanded(
+                flex: 3,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxWidth: constraints.maxWidth),
+                        child: const Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Premium motorcycle gear\n',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              TextSpan(
+                                text: 'for every rider.',
+                                style: TextStyle(color: Color(0xFFFF7A1A)),
+                              ),
+                            ],
+                          ),
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w900,
+                            fontStyle: FontStyle.italic,
+                            height: 1.12,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 10),
-              const _TrustRow(),
-              const Spacer(),
+              const SizedBox(height: 8),
+              Expanded(
+                flex: 2,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxWidth: constraints.maxWidth),
+                        child: const _TrustRow(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
               _HeroCta(label: 'Book Service', onTap: onCta),
             ],
           ),
@@ -380,13 +444,17 @@ class _HeroCta extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
           ),
         ),
       ),

@@ -26,26 +26,25 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Row(
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: const Icon(
-              Icons.sports_motorsports_rounded,
-              color: Colors.white,
-              size: 22,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: Image.asset(
+              'assets/images/ridercraft-logo.png',
+              width: 34,
+              height: 34,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'RiderCraft',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-              letterSpacing: -0.3,
+          const Flexible(
+            child: Text(
+              'RiderCraft',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                letterSpacing: -0.3,
+              ),
             ),
           ),
         ],

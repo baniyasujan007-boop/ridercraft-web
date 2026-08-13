@@ -109,6 +109,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Refreshes the profile from `GET /auth/profile` without touching the
+  /// session. Errors propagate so callers can surface a retry message.
+  Future<User> reloadProfile() async {
+    _user = await _authService.fetchProfile();
+    notifyListeners();
+    return _user!;
+  }
+
   Future<void> logout() async {
     await _authService.logout();
     _tokenStore.current = null;

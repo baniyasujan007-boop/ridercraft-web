@@ -44,16 +44,20 @@ class QuickActions extends StatelessWidget {
       ),
     ];
 
+final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final tileHeight = (56 * textScale).clamp(56.0, 96.0);
+    final tileWidth = (MediaQuery.sizeOf(context).width - 32 - 12) / 2;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
+          childAspectRatio: tileWidth / tileHeight,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 2.6,
         ),
         itemCount: actions.length,
         itemBuilder: (context, index) => actions[index],

@@ -49,8 +49,11 @@ class BookingCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
+                    flex: 2,
                     child: Text(
                       booking.packageLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 16,
@@ -58,13 +61,20 @@ class BookingCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _StatusChip(
-                    label: booking.statusLabel,
-                    color: _statusColor(booking.status),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: _StatusChip(
+                      label: booking.statusLabel,
+                      color: _statusColor(booking.status),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
+              if (booking.isEmergency) ...[
+                _priorityLine(),
+                const SizedBox(height: 6),
+              ],
               if (booking.bikeModel.isNotEmpty) ...[
                 _line(
                   icon: Icons.two_wheeler_rounded,
@@ -85,6 +95,16 @@ class BookingCard extends StatelessWidget {
                   text: booking.pickupAddress,
                 ),
               ],
+              if (booking.assignedGarageName.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                _line(
+                  icon: Icons.garage_rounded,
+                  text: booking.assignedGarageDistanceKm != null
+                      ? '${booking.assignedGarageName} · '
+                          '${booking.assignedGarageDistanceKm!.toStringAsFixed(1)} km'
+                      : booking.assignedGarageName,
+                ),
+              ],
               if (booking.createdAt != null) ...[
                 const SizedBox(height: 10),
                 Text(
@@ -99,6 +119,25 @@ class BookingCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _priorityLine() {
+    return Row(
+      children: [
+        const Icon(Icons.emergency_rounded, size: 15, color: AppColors.error),
+        const SizedBox(width: 8),
+        const Expanded(
+          child: Text(
+            'Emergency service',
+            style: TextStyle(
+              color: AppColors.error,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -147,12 +186,17 @@ class _StatusChip extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

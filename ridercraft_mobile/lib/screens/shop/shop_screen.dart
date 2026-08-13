@@ -222,7 +222,7 @@ class _ShopScreenState extends State<ShopScreen> {
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 14,
               crossAxisSpacing: 12,
-              mainAxisExtent: 340,
+              mainAxisExtent: ProductCard.slotHeight(context),
             ),
             itemCount: visible.length,
             itemBuilder: (context, index) {
@@ -336,7 +336,7 @@ class _ShopSkeleton extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: 14,
             crossAxisSpacing: 12,
-            mainAxisExtent: 340,
+            mainAxisExtent: ProductCard.slotHeight(context),
           ),
           itemCount: 6,
           itemBuilder: (context, index) => Container(

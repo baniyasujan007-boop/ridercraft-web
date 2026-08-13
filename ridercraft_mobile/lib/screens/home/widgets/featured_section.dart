@@ -22,6 +22,7 @@ class FeaturedSectionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rowHeight = ProductCard.slotHeight(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,7 +58,7 @@ class FeaturedSectionView extends StatelessWidget {
           )
         else
           SizedBox(
-            height: 322,
+            height: rowHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),

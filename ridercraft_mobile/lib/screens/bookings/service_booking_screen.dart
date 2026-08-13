@@ -267,6 +267,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                     validator: (value) => _validCoordinate(value, -90, 90)
                         ? null
                         : 'Invalid latitude',
+                    onChanged: _clearGpsMetadata,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -281,6 +282,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
                     validator: (value) => _validCoordinate(value, -180, 180)
                         ? null
                         : 'Invalid longitude',
+                    onChanged: _clearGpsMetadata,
                   ),
                 ),
               ],
@@ -323,22 +325,23 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
             const SizedBox(height: 10),
             Text('Priority', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(
-                  value: 'normal',
-                  label: Text('Normal'),
-                  icon: Icon(Icons.event_available_rounded),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _PriorityPill(
+                  label: 'Normal',
+                  icon: Icons.event_available_rounded,
+                  selected: _priority == 'normal',
+                  onTap: () => setState(() => _priority = 'normal'),
                 ),
-                ButtonSegment(
-                  value: 'emergency',
-                  label: Text('Emergency'),
-                  icon: Icon(Icons.emergency_rounded),
+                _PriorityPill(
+                  label: 'Emergency',
+                  icon: Icons.emergency_rounded,
+                  selected: _priority == 'emergency',
+                  onTap: () => setState(() => _priority = 'emergency'),
                 ),
               ],
-              selected: {_priority},
-              onSelectionChanged: (selection) =>
-                  setState(() => _priority = selection.first),
             ),
             if (_priority == 'emergency') ...[
               const SizedBox(height: 14),
@@ -374,6 +377,74 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
     final parsed = double.tryParse(value?.trim() ?? '');
     return parsed != null && parsed >= min && parsed <= max;
   }
+
+  /// If the rider types coordinates after using GPS, the captured accuracy /
+  /// timestamp no longer describes those coordinates, so drop them to avoid
+  /// sending mismatched metadata to the backend.
+  void _clearGpsMetadata(String _) {
+    if (_accuracyMeters == null && _capturedAt == null) return;
+    setState(() {
+      _accuracyMeters = null;
+      _capturedAt = null;
+    });
+  }
+}
+
+class _PriorityPill extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PriorityPill({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? AppColors.primary : AppColors.textMuted,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -388,7 +459,9 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        Expanded(
+          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        ),
       ],
     );
   }
@@ -426,12 +499,14 @@ class _PickerTile extends StatelessWidget {
               children: [
                 Icon(icon, size: 16, color: AppColors.textMuted),
                 const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

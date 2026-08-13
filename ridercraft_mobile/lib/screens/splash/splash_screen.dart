@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AppLogo(fontSize: 36),
+                  AppLogo(size: 150),
                   SizedBox(height: 32),
                   SizedBox(
                     width: 26,
