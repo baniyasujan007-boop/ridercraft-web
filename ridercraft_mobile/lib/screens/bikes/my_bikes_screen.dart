@@ -6,6 +6,7 @@ import '../../providers/bike_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/loading_view.dart';
 
 /// My Bike — manage the rider's motorcycles locally (the backend has no Bike
 /// endpoints). The selected bike's model string is used in service bookings.
@@ -17,6 +18,25 @@ class MyBikesScreen extends StatefulWidget {
 }
 
 class _MyBikesScreenState extends State<MyBikesScreen> {
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureLoaded();
+  }
+
+  Future<void> _ensureLoaded() async {
+    try {
+      final provider = context.read<BikeProvider>();
+      if (!provider.loaded) await provider.load();
+    } catch (_) {
+      // Load failures degrade to an empty garage; the list still renders.
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bikesProvider = context.watch<BikeProvider>();
@@ -24,29 +44,33 @@ class _MyBikesScreenState extends State<MyBikesScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Bikes')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showBikeForm(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Bike'),
-      ),
-      body: bikes.isEmpty
-          ? _EmptyBikes(onAdd: () => _showBikeForm(context))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: bikes.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final bike = bikes[index];
-                final selected = bike.id == bikesProvider.selectedBike?.id;
-                return _BikeTile(
-                  bike: bike,
-                  selected: selected,
-                  onTap: () => bikesProvider.selectBike(bike.id),
-                  onEdit: () => _showBikeForm(context, bike: bike),
-                  onDelete: () => _confirmDelete(context, bike),
-                );
-              },
+      floatingActionButton: _loading
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _showBikeForm(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add Bike'),
             ),
+      body: _loading
+          ? const LoadingView(label: 'Loading bikes…')
+          : bikes.isEmpty
+              ? _EmptyBikes(onAdd: () => _showBikeForm(context))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: bikes.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final bike = bikes[index];
+                    final selected = bike.id == bikesProvider.selectedBike?.id;
+                    return _BikeTile(
+                      bike: bike,
+                      selected: selected,
+                      onTap: () => bikesProvider.selectBike(bike.id),
+                      onEdit: () => _showBikeForm(context, bike: bike),
+                      onDelete: () => _confirmDelete(context, bike),
+                    );
+                  },
+                ),
     );
   }
 
@@ -71,19 +95,20 @@ class _MyBikesScreenState extends State<MyBikesScreen> {
         ],
       ),
     );
-    if (confirmed == true && context.mounted) {
+    if (confirmed != true || !context.mounted) return;
+    try {
       await context.read<BikeProvider>().deleteBike(bike.id);
+    } on Exception {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not remove the bike. Please try again.'),
+        ),
+      );
     }
   }
 
   Future<void> _showBikeForm(BuildContext context, {Bike? bike}) async {
-    final brandController = TextEditingController(text: bike?.brand ?? '');
-    final modelController = TextEditingController(text: bike?.model ?? '');
-    final regController =
-        TextEditingController(text: bike?.registrationNumber ?? '');
-    final yearController = TextEditingController(text: bike?.year ?? '');
-    final ccController = TextEditingController(text: bike?.engineCapacity ?? '');
-
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -91,116 +116,163 @@ class _MyBikesScreenState extends State<MyBikesScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  bike == null ? 'Add your bike' : 'Edit bike',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                AppTextField(
-                  controller: brandController,
-                  label: 'Brand',
-                  hint: 'e.g. Honda',
-                  prefixIcon: Icons.directions_bike_rounded,
-                  validator: (value) => (value == null || value.trim().isEmpty)
-                      ? 'Brand is required'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: modelController,
-                  label: 'Model',
-                  hint: 'e.g. SP 125',
-                  prefixIcon: Icons.settings_outlined,
-                  validator: (value) => (value == null || value.trim().isEmpty)
-                      ? 'Model is required'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        controller: regController,
-                        label: 'Registration No.',
-                        hint: 'e.g. MH-12-AB-1234',
-                        keyboardType: TextInputType.text,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: AppTextField(
-                        controller: yearController,
-                        label: 'Year',
-                        hint: 'e.g. 2022',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: ccController,
-                  label: 'Engine capacity (cc)',
-                  hint: 'e.g. 125',
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 20),
-                CustomButton(
-                  label: bike == null ? 'Save Bike' : 'Update Bike',
-                  onPressed: () async {
-                    final providers = context.read<BikeProvider>();
-                    final now = DateTime.now().millisecondsSinceEpoch.toString();
-                    final newBike = Bike(
-                      id: bike?.id ?? now,
-                      brand: brandController.text.trim(),
-                      model: modelController.text.trim(),
-                      registrationNumber: regController.text.trim(),
-                      year: yearController.text.trim(),
-                      engineCapacity: ccController.text.trim(),
-                    );
-                    if (bike == null) {
-                      await providers.addBike(newBike);
-                    } else {
-                      await providers.updateBike(newBike);
-                    }
-                    if (sheetContext.mounted) {
-                      Navigator.of(sheetContext).pop(true);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (sheetContext) => _BikeFormSheet(bike: bike),
     );
-
-    brandController.dispose();
-    modelController.dispose();
-    regController.dispose();
-    yearController.dispose();
-    ccController.dispose();
 
     if (saved == true && mounted) {
       // Bike list updated via provider.
     }
+  }
+}
+
+class _BikeFormSheet extends StatefulWidget {
+  final Bike? bike;
+
+  const _BikeFormSheet({this.bike});
+
+  @override
+  State<_BikeFormSheet> createState() => _BikeFormSheetState();
+}
+
+class _BikeFormSheetState extends State<_BikeFormSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _brandController =
+      TextEditingController(text: widget.bike?.brand ?? '');
+  late final TextEditingController _modelController =
+      TextEditingController(text: widget.bike?.model ?? '');
+  late final TextEditingController _regController =
+      TextEditingController(text: widget.bike?.registrationNumber ?? '');
+  late final TextEditingController _yearController =
+      TextEditingController(text: widget.bike?.year ?? '');
+  late final TextEditingController _ccController =
+      TextEditingController(text: widget.bike?.engineCapacity ?? '');
+
+  @override
+  void dispose() {
+    _brandController.dispose();
+    _modelController.dispose();
+    _regController.dispose();
+    _yearController.dispose();
+    _ccController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final providers = context.read<BikeProvider>();
+    final bike = widget.bike;
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch.toString();
+      final newBike = Bike(
+        id: bike?.id ?? now,
+        brand: _brandController.text.trim(),
+        model: _modelController.text.trim(),
+        registrationNumber: _regController.text.trim(),
+        year: _yearController.text.trim(),
+        engineCapacity: _ccController.text.trim(),
+      );
+      if (bike == null) {
+        await providers.addBike(newBike);
+      } else {
+        await providers.updateBike(newBike);
+      }
+      if (mounted) Navigator.of(context).pop(true);
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save your bike. Please try again.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bike = widget.bike;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                bike == null ? 'Add your bike' : 'Edit bike',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                controller: _brandController,
+                label: 'Brand',
+                hint: 'e.g. Honda',
+                prefixIcon: Icons.directions_bike_rounded,
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty)
+                        ? 'Brand is required'
+                        : null,
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                controller: _modelController,
+                label: 'Model',
+                hint: 'e.g. SP 125',
+                prefixIcon: Icons.settings_outlined,
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty)
+                        ? 'Model is required'
+                        : null,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      controller: _regController,
+                      label: 'Registration No.',
+                      hint: 'e.g. MH-12-AB-1234',
+                      keyboardType: TextInputType.text,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppTextField(
+                      controller: _yearController,
+                      label: 'Year',
+                      hint: 'e.g. 2022',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                controller: _ccController,
+                label: 'Engine capacity (cc)',
+                hint: 'e.g. 125',
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 20),
+              CustomButton(
+                label: bike == null ? 'Save Bike' : 'Update Bike',
+                onPressed: _submit,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -318,7 +390,7 @@ class _EmptyBikes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,

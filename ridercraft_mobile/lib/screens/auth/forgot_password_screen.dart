@@ -5,8 +5,8 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/custom_button.dart';
 
-/// Forgot password flow. The existing backend resets the password directly
-/// with the supplied `newPassword` for the given email (no OTP).
+/// Forgot password flow. Requests a password-reset link for the given email;
+/// the reset token is delivered by email, never returned to the app.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -17,14 +17,11 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  bool _obscure = true;
   bool _submitting = false;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _newPasswordController.dispose();
     super.dispose();
   }
 
@@ -34,14 +31,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     final auth = context.read<AuthProvider>();
     try {
-      await auth.forgotPassword(
-        email: _emailController.text,
-        newPassword: _newPasswordController.text,
-      );
+      await auth.forgotPassword(email: _emailController.text);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Password reset successful. Please sign in.'),
+          content: Text('If that email is registered, a reset link has been '
+              'sent. Please check your inbox.'),
         ),
       );
       Navigator.of(context).pop();
@@ -69,8 +64,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               children: [
                 const SizedBox(height: 8),
                 const Text(
-                  'Enter your account email and a new password to regain '
-                  'access to RiderCraft.',
+                  'Enter your account email and we will send you a link to '
+                  'reset your password.',
                   style: TextStyle(fontSize: 15, height: 1.5),
                 ),
                 const SizedBox(height: 24),
@@ -79,7 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   label: 'Email',
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
+                  textInputAction: TextInputAction.done,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Email is required';
@@ -91,34 +86,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _newPasswordController,
-                  label: 'New password',
-                  prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: _obscure,
-                  textInputAction: TextInputAction.done,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password is required';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
                 const SizedBox(height: 28),
                 CustomButton(
-                  label: 'Reset Password',
+                  label: 'Send Reset Link',
                   loading: _submitting,
                   onPressed: _submit,
                 ),

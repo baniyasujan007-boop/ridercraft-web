@@ -28,17 +28,20 @@ class BikeProvider extends ChangeNotifier {
 
   Future<void> load() async {
     if (_loaded) return;
-    final raw = await _storage.readBikes();
-    if (raw != null && raw.isNotEmpty) {
-      try {
+    try {
+      final raw = await _storage.readBikes();
+      if (raw != null && raw.isNotEmpty) {
         final decoded = jsonDecode(raw) as Map<String, dynamic>;
         _bikes = (decoded['bikes'] as List? ?? [])
             .map((e) => Bike.fromJson(e as Map<String, dynamic>))
             .toList();
         _selectedBikeId = decoded['selectedId'] as String?;
-      } catch (_) {
-        _bikes = [];
       }
+    } catch (_) {
+      // Corrupt/unreadable local data degrades to an empty garage rather
+      // than crashing the app.
+      _bikes = [];
+      _selectedBikeId = null;
     }
     _loaded = true;
     notifyListeners();

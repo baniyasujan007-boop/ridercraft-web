@@ -87,10 +87,19 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> forgotPassword({
     required String email,
-    required String newPassword,
   }) =>
       _authService.forgotPassword(
         email: email,
+      );
+
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) =>
+      _authService.resetPassword(
+        email: email,
+        token: token,
         newPassword: newPassword,
       );
 

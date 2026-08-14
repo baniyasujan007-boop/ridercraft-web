@@ -1,9 +1,19 @@
+import crypto from "node:crypto";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import { sendPasswordResetEmail } from "../utils/emailService.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+const GENERIC_RESET_MESSAGE =
+  "If that email is registered, a password reset link has been sent.";
+
+function hashResetToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 export const register = async (req, res) => {
   try {
@@ -229,21 +239,70 @@ export const googleLogin = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
-    if (!email || !newPassword) {
-      return res.status(400).json({ error: "Email and new password are required" });
+    const { email } = req.body;
+    const normalizedEmail = String(email || "").toLowerCase().trim();
+    if (!normalizedEmail) {
+      return res.status(400).json({ error: "Email is required" });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
-
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      // Do not reveal whether the account exists.
+      return res.json({ message: GENERIC_RESET_MESSAGE });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    user.passwordResetTokenHash = hashResetToken(token);
+    user.passwordResetTokenExpiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await user.save();
+
+    const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+    const resetUrl = `${clientUrl}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(normalizedEmail)}`;
+
+    // No email provider exists yet; see utils/emailService.js. The token is
+    // never returned to the client.
+    await sendPasswordResetEmail({ to: normalizedEmail, resetUrl });
+
+    res.json({ message: GENERIC_RESET_MESSAGE });
+  } catch {
+    res.status(500).json({ error: "Password reset failed" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, token, newPassword } = req.body;
+    const normalizedEmail = String(email || "").toLowerCase().trim();
+
+    if (!normalizedEmail || !token) {
+      return res
+        .status(400)
+        .json({ error: "Email and reset token are required" });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findOne({
+      email: normalizedEmail,
+      passwordResetTokenHash: hashResetToken(String(token)),
+    });
+
+    const expired =
+      !user ||
+      !user.passwordResetTokenExpiresAt ||
+      user.passwordResetTokenExpiresAt.getTime() < Date.now();
+
+    if (expired) {
+      return res.status(400).json({ error: "Invalid or expired reset token" });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
+    user.passwordResetTokenHash = "";
+    user.passwordResetTokenExpiresAt = null;
     await user.save();
 
     res.json({ message: "Password reset successful" });

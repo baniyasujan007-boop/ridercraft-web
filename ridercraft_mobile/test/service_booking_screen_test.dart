@@ -130,6 +130,20 @@ Future<StorageService> _storageWithBike() async {
   return StorageService(prefs);
 }
 
+Future<StorageService> _storageWithBikes({
+  required List<Map<String, dynamic>> bikes,
+  String? selectedId,
+}) async {
+  SharedPreferences.setMockInitialValues({
+    'ridercraft_my_bikes_v1': jsonEncode({
+      'bikes': bikes,
+      'selectedId': selectedId,
+    }),
+  });
+  final prefs = await SharedPreferences.getInstance();
+  return StorageService(prefs);
+}
+
 Future<void> _selectDate(WidgetTester tester) async {
   await tester.tap(find.text('Select date'));
   await tester.pumpAndSettle();
@@ -150,8 +164,9 @@ Future<void> _selectTime(WidgetTester tester) async {
 void main() {
   setUpAll(Formatters.ensureDateSymbols);
 
-  testWidgets('booking form validates required fields, then demands a bike',
-      (tester) async {
+  testWidgets('pre-selects the saved bike and validates required fields', (
+    tester,
+  ) async {
     _setViewport(tester, width: 600, height: 2600);
     final storage = await _storageWithBike();
 
@@ -159,10 +174,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Yamaha R15 V4'), findsOneWidget);
+    // The single saved bike is auto-selected as the booking default.
+    expect(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Yamaha R15 V4'),
+        matching: find.byIcon(Icons.radio_button_checked_rounded),
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('Continue to Review'));
     await tester.pump();
     expect(find.text('Pickup address is required'), findsOneWidget);
+
+    // Let the first snack bar fully show, expire and dismiss so the next one
+    // can appear immediately instead of queuing behind it.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(_field('Pickup address'), 'MG Road, Pune');
+    await tester.enterText(_field('Latitude'), '18.5204');
+    await tester.enterText(_field('Longitude'), '73.8567');
+    await tester.enterText(_field('Contact number'), '9876543210');
+    await tester.tap(find.text('Continue to Review'));
+    await tester.pump();
+
+    // A bike is already selected, so the next required step is the schedule.
+    expect(find.text('Select a preferred date to continue.'), findsOneWidget);
+  });
+
+  testWidgets('demands a bike when none is saved', (tester) async {
+    _setViewport(tester, width: 600, height: 2600);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final storage = StorageService(prefs);
+
+    await tester.pumpWidget(await _buildFormScreen(storage));
+    await tester.pumpAndSettle();
+
+    expect(find.text("You don't have a bike saved yet."), findsOneWidget);
 
     await tester.enterText(_field('Pickup address'), 'MG Road, Pune');
     await tester.enterText(_field('Latitude'), '18.5204');
@@ -172,6 +222,87 @@ void main() {
     await tester.pump();
 
     expect(find.text('Select a bike to continue.'), findsOneWidget);
+  });
+
+  testWidgets('default bike auto-populates from My Bike and can be changed', (
+    tester,
+  ) async {
+    _setViewport(tester, width: 600, height: 2600);
+    final storage = await _storageWithBikes(
+      bikes: [
+        {'id': 'a', 'brand': 'Honda', 'model': 'SP 125'},
+        {'id': 'b', 'brand': 'Yamaha', 'model': 'R15 V4'},
+      ],
+      selectedId: 'b',
+    );
+    final tokenStore = TokenStore()..current = 'test-token';
+    Map<String, dynamic>? posted;
+
+    final adapter = _FlowAdapter((options) async {
+      if (options.method == 'GET') return _json('[]', 200);
+      if (options.method == 'POST') {
+        posted = Map<String, dynamic>.from(options.data as Map);
+        return _json(
+          jsonEncode({'message': 'ok', 'request': _createdBooking()}),
+          201,
+        );
+      }
+      return _json('[]', 200);
+    });
+
+    await tester.pumpWidget(await _buildFlowScreen(
+      storage: storage,
+      tokenStore: tokenStore,
+      adapter: adapter,
+    ));
+    await tester.pumpAndSettle();
+
+    // The bike selected in My Bike (Yamaha) is the auto-selected default.
+    expect(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Yamaha R15 V4'),
+        matching: find.byIcon(Icons.radio_button_checked_rounded),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Honda SP 125'),
+        matching: find.byIcon(Icons.radio_button_checked_rounded),
+      ),
+      findsNothing,
+    );
+
+    // The rider can still switch to another saved bike.
+    await tester.tap(find.text('Honda SP 125'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.widgetWithText(InkWell, 'Honda SP 125'),
+        matching: find.byIcon(Icons.radio_button_checked_rounded),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.enterText(_field('Pickup address'), 'MG Road, Pune');
+    await tester.enterText(_field('Latitude'), '18.5204');
+    await tester.enterText(_field('Longitude'), '73.8567');
+    await tester.enterText(_field('Contact number'), '9876543210');
+    await _selectDate(tester);
+    await _selectTime(tester);
+
+    await tester.tap(find.text('Continue to Review'));
+    await tester.pumpAndSettle();
+    // Review reflects the changed bike.
+    expect(find.text('Honda SP 125'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Confirm Booking'));
+    await tester.tap(find.text('Confirm Booking'));
+    await tester.pumpAndSettle();
+
+    // The payload sends the rider's chosen bike as `bikeModel`.
+    expect(posted, isNotNull);
+    expect(posted!['bikeModel'], 'Honda SP 125');
   });
 
   testWidgets('rejects invalid latitude and longitude', (tester) async {

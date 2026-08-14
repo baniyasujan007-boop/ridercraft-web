@@ -41,6 +41,22 @@ abstract final class Formatters {
     return date == null ? value : DateFormat('d MMM yyyy', 'en_IN').format(date);
   }
 
+  /// Compact relative time for the notifications inbox, e.g. "Just now",
+  /// "12m ago", "3h ago", "Yesterday", "12 Aug".
+  static String timeAgoLabel(DateTime time, {DateTime? now}) {
+    final reference = now ?? DateTime.now();
+    final difference = reference.difference(time);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    if (difference.inDays < 2) return 'Yesterday';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+    if (time.year == reference.year) {
+      return DateFormat('d MMM', 'en_IN').format(time);
+    }
+    return DateFormat('d MMM yyyy', 'en_IN').format(time);
+  }
+
   /// Formats a 24h `HH:MM` backend `preferredTime` string as `10:30 AM`.
   static String timeLabelFromString(String value) {
     final parts = value.split(':');

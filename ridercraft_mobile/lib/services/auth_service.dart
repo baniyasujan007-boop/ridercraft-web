@@ -8,7 +8,8 @@ import 'storage_service.dart';
 /// Endpoints (all under `/auth`):
 /// - POST /auth/register   {name, email, password}
 /// - POST /auth/login      {email, password} -> {token, role}
-/// - POST /auth/forgot-password {email, newPassword}
+/// - POST /auth/forgot-password {email}
+/// - POST /auth/reset-password  {email, token, newPassword}
 /// - GET  /auth/profile    (Bearer token)
 /// - PUT  /auth/profile    (Bearer token)
 class AuthService {
@@ -49,16 +50,28 @@ class AuthService {
     );
   }
 
-  /// The backend resets the password directly using `newPassword` for the
-  /// given email. No OTP is involved.
+  /// Requests a password-reset link for the given email. The backend sends a
+  /// reset token by email; it is never returned to the client.
   Future<void> forgotPassword({
     required String email,
-    required String newPassword,
   }) async {
     await _api.post(
       '/auth/forgot-password',
+      data: {'email': email.trim().toLowerCase()},
+    );
+  }
+
+  /// Completes a password reset using the token delivered by email.
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    await _api.post(
+      '/auth/reset-password',
       data: {
         'email': email.trim().toLowerCase(),
+        'token': token,
         'newPassword': newPassword,
       },
     );

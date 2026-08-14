@@ -27,4 +27,15 @@ class AppNotification {
             ? DateTime.tryParse(json['createdAt'] as String)
             : null,
       );
+
+  /// Returns a copy with [isRead] updated (used for the optimistic read-state
+  /// updates after `PUT /notifications/:id/read` and `/read-all`).
+  AppNotification copyWith({bool? isRead}) => AppNotification(
+        id: id,
+        title: title,
+        body: body,
+        type: type,
+        isRead: isRead ?? this.isRead,
+        createdAt: createdAt,
+      );
 }

@@ -56,10 +56,15 @@ router.put("/read-all", authMiddleware, async (req, res) => {
 
 router.put("/:id/read", authMiddleware, async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(
-      req.params.id,
+    await Notification.updateOne(
       {
-        isRead: true
+        _id: req.params.id,
+        userId: new mongoose.Types.ObjectId(req.user.id)
+      },
+      {
+        $set: {
+          isRead: true
+        }
       }
     );
 

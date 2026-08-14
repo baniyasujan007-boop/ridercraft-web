@@ -125,7 +125,9 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
 
   Future<void> _continue() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedBike == null) {
+    final providers = context.read<BikeProvider>();
+    final selectedBike = _effectiveBike(providers.bikes, providers.selectedBike);
+    if (selectedBike == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Select a bike to continue.')),
       );
@@ -156,7 +158,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
     final draft = BookingDraft(
       packageType: widget.package.type,
       packageLabel: widget.package.label,
-      bikeModel: _selectedBike!.displayName,
+      bikeModel: selectedBike.displayName,
       preferredDate: _selectedDate,
       preferredTime: _selectedTime,
       pickupAddress: _addressController.text.trim(),
@@ -179,7 +181,9 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bikes = context.watch<BikeProvider>().bikes;
+    final bikesProvider = context.watch<BikeProvider>();
+    final bikes = bikesProvider.bikes;
+    final selectedBike = _effectiveBike(bikes, bikesProvider.selectedBike);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.package.label)),
@@ -200,7 +204,7 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
               for (final bike in bikes) ...[
                 _BikeOption(
                   bike: bike,
-                  selected: bike.id == _selectedBike?.id,
+                  selected: bike.id == selectedBike?.id,
                   onTap: () => setState(() => _selectedBike = bike),
                 ),
                 const SizedBox(height: 10),
@@ -376,6 +380,18 @@ class _ServiceBookingScreenState extends State<ServiceBookingScreen> {
   bool _validCoordinate(String? value, double min, double max) {
     final parsed = double.tryParse(value?.trim() ?? '');
     return parsed != null && parsed >= min && parsed <= max;
+  }
+
+  /// The bike to book: the rider's manual choice when it is still available,
+  /// otherwise the saved default bike (the first bike when none is explicitly
+  /// selected in My Bike). The saved default is what makes the bike model
+  /// auto-populate when a booking is started.
+  Bike? _effectiveBike(List<Bike> bikes, Bike? defaultBike) {
+    final manual = _selectedBike;
+    if (manual != null && bikes.any((bike) => bike.id == manual.id)) {
+      return manual;
+    }
+    return defaultBike;
   }
 
   /// If the rider types coordinates after using GPS, the captured accuracy /

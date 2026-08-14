@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String, default: "" },
   contactNumber: { type: String, default: "" },
   deliveryAddress: { type: String, default: "" },
+  passwordResetTokenHash: { type: String, default: "" },
+  passwordResetTokenExpiresAt: { type: Date, default: null },
   garageProfile: {
     garageName: { type: String, default: "", trim: true },
     garageAddress: { type: String, default: "", trim: true },

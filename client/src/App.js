@@ -7,6 +7,7 @@ import AdminOrdersDashboard from "./features/admin/pages/AdminOrdersDashboard";
 import GarageDashboard from "./features/admin/pages/GarageDashboard";
 import About from "./features/about/pages/About";
 import ForgotPassword from "./features/auth/pages/ForgotPassword";
+import ResetPassword from "./features/auth/pages/ResetPassword";
 import Landing from "./features/shop/pages/Landing";
 import Login from "./features/auth/pages/Login";
 import ProductDetails from "./features/product-details/pages/ProductDetails";
@@ -26,6 +27,7 @@ function AppShell() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/about" element={<About />} />
         <Route
           path="/landing"
