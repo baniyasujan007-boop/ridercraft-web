@@ -44,7 +44,8 @@ const orderSchema = new mongoose.Schema(
       type: {
         cardLast4: { type: String, default: "" },
         walletProvider: { type: String, default: "" },
-        walletId: { type: String, default: "" }
+        walletId: { type: String, default: "" },
+        isDemo: { type: Boolean, default: false }
       },
       default: () => ({})
     },

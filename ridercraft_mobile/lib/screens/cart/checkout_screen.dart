@@ -20,10 +20,6 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _address = TextEditingController(),
       _phone = TextEditingController(),
-      _card = TextEditingController(),
-      _holder = TextEditingController(),
-      _expiry = TextEditingController(),
-      _cvv = TextEditingController(),
       _wallet = TextEditingController();
   String _method = 'cod';
   bool _saving = false;
@@ -41,15 +37,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   void dispose() {
-    for (final c in [
-      _address,
-      _phone,
-      _card,
-      _holder,
-      _expiry,
-      _cvv,
-      _wallet,
-    ]) {
+    for (final c in [_address, _phone, _wallet]) {
       c.dispose();
     }
     super.dispose();
@@ -59,14 +47,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cart = context.read<CartProvider>();
     if (_address.text.trim().isEmpty || _phone.text.trim().isEmpty) {
       _message('Enter a delivery address and contact number.');
-      return;
-    }
-    if (_method == 'card' &&
-        (_card.text.replaceAll(' ', '').length != 16 ||
-            _holder.text.trim().isEmpty ||
-            !RegExp(r'^\d{2}/\d{2}$').hasMatch(_expiry.text) ||
-            !RegExp(r'^\d{3,4}$').hasMatch(_cvv.text))) {
-      _message('Complete valid card details.');
       return;
     }
     if (_method == 'ewallet' && _wallet.text.trim().isEmpty) {
@@ -90,15 +70,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         total: cart.total,
         promoCode: cart.appliedPromo?.code ?? '',
         paymentMethod: _method,
-        paymentDetails: _method == 'card'
-            ? {
-                'cardNumber': _card.text,
-                'cardHolder': _holder.text,
-                'expiry': _expiry.text,
-                'cvv': _cvv.text,
-                'isDummy': true,
-              }
-            : _method == 'ewallet'
+        paymentDetails: _method == 'ewallet'
             ? {
                 'walletProvider': 'eWallet',
                 'walletId': _wallet.text,
@@ -155,9 +127,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 24),
           const _Heading('Payment method'),
           for (final option in const [
-            ('card', 'Card'),
             ('cod', 'Cash on Delivery'),
-            ('ewallet', 'eWallet'),
+            ('ewallet', 'E-Wallet (Demo)'),
           ])
           RadioListTile<String>(
               contentPadding: EdgeInsets.zero,
@@ -166,13 +137,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onChanged: (v) => setState(() => _method = v!),
               title: Text(option.$2),
             ),
-          if (_method == 'card') ...[
-            _field(_card, 'Card Number', keyboard: TextInputType.number),
-            _field(_holder, 'Card Holder'),
-            _field(_expiry, 'Expiry (MM/YY)'),
-            _field(_cvv, 'CVV', keyboard: TextInputType.number),
-          ],
-          if (_method == 'ewallet') _field(_wallet, 'Wallet number or email'),
+          const Text(
+            'Card payments are not available yet. E-wallet is demo/test only '
+            'and no real payment is processed.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
+          if (_method == 'ewallet') _field(_wallet, 'Wallet number or email (demo)'),
           const SizedBox(height: 20),
           const _Heading('Order review'),
           ...cart.items.map(

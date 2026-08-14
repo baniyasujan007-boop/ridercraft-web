@@ -138,44 +138,57 @@ export const createOrder = async (req, res) => {
     let paymentStatus = "pending";
     const paymentMeta = {};
 
+    // Card and e-wallet payments are NOT backed by a payment provider. They
+    // are accepted only as explicit DEMO/TEST payments (paymentDetails.isDummy
+    // === true) so they can never be mistaken for a real charge. Real card
+    // details are rejected outright. The order is always created "pending";
+    // it becomes "paid" only through the admin-only reconciliation endpoint.
     if (method === "card") {
+      const isDummy = paymentDetails?.isDummy === true;
+      if (!isDummy) {
+        return res.status(400).json({
+          error: "Card payments are not available yet. Please use Cash on Delivery."
+        });
+      }
+
       const cardNumberRaw = String(paymentDetails?.cardNumber || "").replace(/\s+/g, "");
       const cardHolder = String(paymentDetails?.cardHolder || "").trim();
       const expiry = String(paymentDetails?.expiry || "").trim();
       const cvv = String(paymentDetails?.cvv || "").trim();
-      const isDummy = Boolean(paymentDetails?.isDummy);
       if (!/^\d{16}$/.test(cardNumberRaw)) {
-        return res.status(400).json({ error: "Card number must be 16 digits" });
+        return res.status(400).json({ error: "Demo card number must be 16 digits" });
       }
       if (!cardHolder) {
-        return res.status(400).json({ error: "Card holder name is required" });
+        return res.status(400).json({ error: "Demo card holder name is required" });
       }
       if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-        return res.status(400).json({ error: "Expiry must be in MM/YY format" });
+        return res.status(400).json({ error: "Demo expiry must be in MM/YY format" });
       }
       if (!/^\d{3,4}$/.test(cvv)) {
-        return res.status(400).json({ error: "CVV must be 3 or 4 digits" });
+        return res.status(400).json({ error: "Demo CVV must be 3 or 4 digits" });
       }
-      paymentStatus = "paid";
-      paymentReference = `${isDummy ? "DUMMY-CARD" : "CARD"}-${Date.now()}`;
+      paymentReference = `DEMO-CARD-${Date.now()}`;
       paymentMeta.cardLast4 = cardNumberRaw.slice(-4);
-      paymentMeta.isDummy = isDummy;
+      paymentMeta.isDemo = true;
     }
 
     if (method === "ewallet") {
+      const isDummy = paymentDetails?.isDummy === true;
+      if (!isDummy) {
+        return res.status(400).json({
+          error: "E-wallet payments are not available yet. Please use Cash on Delivery."
+        });
+      }
+
       const walletProvider = String(paymentDetails?.walletProvider || "").trim();
       const walletId = String(paymentDetails?.walletId || "").trim();
-      const isDummy = Boolean(paymentDetails?.isDummy);
       if (!walletProvider || !walletId) {
-        return res
-          .status(400)
-          .json({ error: "Wallet provider and wallet ID are required" });
+        return res.status(400).json({ error: "Wallet provider and wallet ID are required" });
       }
-      paymentStatus = "paid";
-      paymentReference = `${isDummy ? "DUMMY-WALLET" : "WALLET"}-${Date.now()}`;
+      paymentReference = `DEMO-WALLET-${Date.now()}`;
       paymentMeta.walletProvider = walletProvider;
       paymentMeta.walletId = walletId;
-      paymentMeta.isDummy = isDummy;
+      paymentMeta.isDemo = true;
     }
 
     if (method === "cod") {

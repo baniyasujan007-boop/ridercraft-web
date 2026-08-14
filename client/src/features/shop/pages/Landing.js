@@ -32,13 +32,6 @@ const getTodayDateValue = () => {
   return local.toISOString().slice(0, 10);
 };
 
-const DUMMY_CARD = {
-  cardNumber: "4242424242424242",
-  cardHolder: "TEST CUSTOMER",
-  expiry: "12/30",
-  cvv: "123",
-};
-
 const DUMMY_EWALLET = {
   walletProvider: "Google Pay",
   walletId: "dummy.wallet@quickgpt.test",
@@ -653,7 +646,7 @@ export default function Landing() {
 
       const baseMessage =
         paymentMethod === "card" || paymentMethod === "ewallet"
-          ? "Dummy payment approved. Checkout complete."
+          ? "Demo/test order placed. No real payment was processed."
           : "Checkout complete.";
       setPromoMessage(
         appliedPromoCode
@@ -661,7 +654,9 @@ export default function Landing() {
           : baseMessage,
       );
       setPaymentSuccessMessage(
-        "Payment successful. Your order has been placed.",
+        paymentMethod === "card" || paymentMethod === "ewallet"
+          ? "Demo/test order placed. Payment remains pending confirmation."
+          : "Your order has been placed. Pay on delivery.",
       );
 
       clearCart();
@@ -683,17 +678,6 @@ export default function Landing() {
     } finally {
       setPaymentProcessing(false);
     }
-  };
-  const useDummyCardDetails = () => {
-    setPaymentMethod("card");
-    setPaymentDetails((prev) => ({
-      ...prev,
-      cardNumber: DUMMY_CARD.cardNumber,
-      cardHolder: DUMMY_CARD.cardHolder,
-      expiry: DUMMY_CARD.expiry,
-      cvv: DUMMY_CARD.cvv,
-    }));
-    setPromoMessage("Dummy card details filled.");
   };
   const useDummyEwalletDetails = () => {
     setPaymentMethod("ewallet");
@@ -2529,10 +2513,11 @@ setServiceLocationLoading(false);
                       type="radio"
                       name="paymentMethod"
                       value="card"
-                      checked={paymentMethod === "card"}
+                      disabled
+                      checked={false}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <span>Card</span>
+                    <span>Card (Unavailable)</span>
                   </label>
                   <label>
                     <input
@@ -2552,76 +2537,19 @@ setServiceLocationLoading(false);
                       checked={paymentMethod === "ewallet"}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     />
-                    <span>E-Wallet</span>
+                    <span>E-Wallet (Demo)</span>
                   </label>
                 </div>
 
-                {paymentMethod === "card" && (
-                  <div className="payment-fields">
-                    <p className="payment-dummy-note">
-                      Dummy mode: use test card only, no real charge.
-                    </p>
-                    <input
-                      placeholder="Card Number (16 digits)"
-                      value={paymentDetails.cardNumber}
-                      maxLength={19}
-                      onChange={(e) =>
-                        setPaymentDetails((prev) => ({
-                          ...prev,
-                          cardNumber: e.target.value,
-                        }))
-                      }
-                    />
-                    <input
-                      placeholder="Card Holder Name"
-                      value={paymentDetails.cardHolder}
-                      onChange={(e) =>
-                        setPaymentDetails((prev) => ({
-                          ...prev,
-                          cardHolder: e.target.value,
-                        }))
-                      }
-                    />
-                    <div className="payment-row-two">
-                      <input
-                        placeholder="MM/YY"
-                        value={paymentDetails.expiry}
-                        maxLength={5}
-                        onChange={(e) =>
-                          setPaymentDetails((prev) => ({
-                            ...prev,
-                            expiry: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        placeholder="CVV"
-                        value={paymentDetails.cvv}
-                        maxLength={4}
-                        onChange={(e) =>
-                          setPaymentDetails((prev) => ({
-                            ...prev,
-                            cvv: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="payment-dummy-actions">
-                      <button
-                        type="button"
-                        className="payment-dummy-btn"
-                        onClick={useDummyCardDetails}
-                      >
-                        Use Dummy Card
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <p className="payment-dummy-note">
+                  Card payments are unavailable. E-Wallet is demo/test only — no
+                  real payment is processed.
+                </p>
 
                 {paymentMethod === "ewallet" && (
                   <div className="payment-fields">
                     <p className="payment-dummy-note">
-                      Dummy mode: use test wallet, no real charge.
+                      Demo/test mode: use a test wallet, no real charge.
                     </p>
                     <select
                       value={paymentDetails.walletProvider}

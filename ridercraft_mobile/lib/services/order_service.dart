@@ -23,9 +23,9 @@ class OrderService {
         .toList();
   }
 
-  /// Creates an order. [paymentDetails] is a map matching the backend
-  /// contract (card: cardNumber/cardHolder/expiry/cvv; wallet:
-  /// walletProvider/walletId; both accept `isDummy`).
+  /// Creates an order. The backend only accepts card/ewallet as explicit
+  /// DEMO payments (`isDummy: true`) and never marks them paid — only an
+  /// admin can reconcile a payment. COD is the production path.
   Future<Order> createOrder({
     required List<CartItem> items,
     required double subtotal,
