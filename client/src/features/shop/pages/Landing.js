@@ -14,6 +14,12 @@ import "../styles/landing-cart.css";
 import "../styles/landing-profile.css";
 import "../styles/landing-service.css";
 import { applyImageFallback } from "../../../utils/fallbackImage";
+import {
+  buildCartAvailability,
+  getCartItemLookupKey,
+  getUnavailableCount,
+} from "../../../utils/cartAvailability";
+import CartItemRow from "../components/CartItemRow";
 
 const SERVICE_BIKE_MODELS = [
   "Hero Xpulse 200",
@@ -240,7 +246,8 @@ export default function Landing() {
   const {
     cart,
     addToCart,
-    changeQty,
+    setQty,
+    removeFromCart,
     clearCart,
     totalItems,
     totalPrice,
@@ -479,6 +486,14 @@ export default function Landing() {
     () => Math.max(0, Number((75 - totalPrice).toFixed(2))),
     [totalPrice],
   );
+  const cartAvailability = useMemo(
+    () => buildCartAvailability(products, cart),
+    [products, cart],
+  );
+  const unavailableCartItems = useMemo(
+    () => getUnavailableCount(cartAvailability, cart),
+    [cartAvailability, cart],
+  );
 
   const submitRating = async (productId, value, comment = "") => {
     setRatingMessage("");
@@ -580,6 +595,18 @@ export default function Landing() {
     if (cart.length === 0) {
       setPromoMessage("Your cart is empty.");
       return;
+    }
+    if (!productsLoading) {
+      const blockers = cart.filter(
+        (item) =>
+          cartAvailability[getCartItemLookupKey(item)]?.isUnavailable,
+      );
+      if (blockers.length > 0) {
+        setPromoMessage(
+          "Some cart items are unavailable. Remove or fix them before checkout.",
+        );
+        return;
+      }
     }
     const paymentError = validatePayment();
     if (paymentError) {
@@ -2422,63 +2449,25 @@ setServiceLocationLoading(false);
                 <p className="empty">Your cart is empty.</p>
               )}
 
-              {cart.map((item) => (
-                <article className="cart-item" key={item._id}>
-                  <div className="cart-product-cell">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="cart-item-image"
-                        onError={applyImageFallback}
-                      />
-                    ) : (
-                      <div className="cart-item-image cart-item-placeholder">
-                        No image
-                      </div>
-                    )}
-                    <div>
-                      <h3>{item.name}</h3>
-                      <p>Color: {item.color || item.tag || "General"}</p>
-                      {item.variantSku && <p>SKU: {item.variantSku}</p>}
-                      <p>In stock</p>
-                      <div className="cart-item-actions">
-                        <button
-                          type="button"
-                          onClick={() => changeQty(item._id, -item.qty)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="cart-cell-price">
-                    {formatCurrency(item.price)}
-                  </p>
-
-                  <div className="cart-cell-qty">
-                    <select
-                      value={item.qty}
-                      onChange={(e) =>
-                        changeQty(item._id, Number(e.target.value) - item.qty)
-                      }
-                    >
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map(
-                        (qty) => (
-                          <option key={qty} value={qty}>
-                            {qty}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                  </div>
-
-                  <p className="cart-cell-total">
-                    {formatCurrency(item.price * item.qty)}
-                  </p>
-                </article>
-              ))}
+              {cart.map((item) => {
+                const fallbackInStock = {
+                  status: "in-stock",
+                  isUnavailable: false,
+                  availableStock: Infinity,
+                };
+                const availability = productsLoading
+                  ? fallbackInStock
+                  : cartAvailability[getCartItemLookupKey(item)] || fallbackInStock;
+                return (
+                  <CartItemRow
+                    key={item._id}
+                    item={item}
+                    availability={availability}
+                    onRemove={() => removeFromCart(item._id)}
+                    onChangeQty={(qty) => setQty(item._id, qty)}
+                  />
+                );
+              })}
 
               <div className="cart-footer-row">
                 <p>{totalItems} Items</p>
@@ -2620,10 +2609,20 @@ setServiceLocationLoading(false);
                 className="checkout-btn"
                 type="button"
                 onClick={checkoutCart}
-                disabled={paymentProcessing}
+                disabled={
+                  paymentProcessing ||
+                  (!productsLoading && unavailableCartItems > 0)
+                }
               >
                 {paymentProcessing ? "Processing dummy payment..." : "Checkout"}
               </button>
+              {!productsLoading && unavailableCartItems > 0 && (
+                <p className="cart-blocker-note">
+                  {unavailableCartItems} item
+                  {unavailableCartItems > 1 ? "s" : ""} unavailable — remove or
+                  fix quantity to check out.
+                </p>
+              )}
             </aside>
           </div>
         </section>

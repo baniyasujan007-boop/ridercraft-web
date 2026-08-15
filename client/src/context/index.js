@@ -106,6 +106,18 @@ export function AppProviders({ children }) {
         .filter((item) => item.qty > 0)
     );
   };
+  const setQty = (id, qty) => {
+    const key = String(id);
+    setCart((prev) =>
+      prev.map((item) =>
+        item._id === key ? { ...item, qty: Math.max(1, qty) } : item
+      )
+    );
+  };
+  const removeFromCart = (id) => {
+    const key = String(id);
+    setCart((prev) => prev.filter((item) => item._id !== key));
+  };
   const clearCart = () => setCart([]);
 
   const loadWishlist = useCallback(async () => {
@@ -237,6 +249,8 @@ export function AppProviders({ children }) {
       cart,
       addToCart,
       changeQty,
+      setQty,
+      removeFromCart,
       clearCart,
       totalItems,
       totalPrice,
