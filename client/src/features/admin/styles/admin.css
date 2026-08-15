@@ -629,6 +629,12 @@
   width: 100%;
 }
 
+.admin-garage-coords {
+  font-size: 12px;
+  color: #64748b;
+  align-self: center;
+}
+
 .admin-multi-select {
   min-height: 150px;
 }

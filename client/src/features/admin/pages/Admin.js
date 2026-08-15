@@ -176,6 +176,10 @@ export default function Admin() {
       subtitle:
         "Track bike servicing requests, exact location, and fulfillment status.",
     },
+    garages: {
+      title: "Garage Management",
+      subtitle: "Create garage accounts that can sign in and fulfill service requests.",
+    },
   };
 
   const token = localStorage.getItem("token");
@@ -1285,6 +1289,18 @@ export default function Admin() {
               8. Product Performance
             </button>
           </li>
+          <li>
+            <button
+              className={
+                section === "garages"
+                  ? "admin-side-btn active"
+                  : "admin-side-btn"
+              }
+              onClick={() => setSection("garages")}
+            >
+              9. Garages
+            </button>
+          </li>
         </ul>
       </aside>
 
@@ -1377,6 +1393,7 @@ export default function Admin() {
             productUrl,
             setProductUrl,
             fetchProductFromUrl,
+            token,
           }}
         />
       </main>

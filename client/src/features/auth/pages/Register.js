@@ -10,52 +10,20 @@ import api from "../../../services/api";
 
 export default function Register() {
   const [form, setForm] = useState({
-    role: "user",
     name: "",
     email: "",
     phone: "",
     password: "",
     confirmPassword: "",
-    garageName: "",
-    garageAddress: "",
-    latitude: "",
-    longitude: "",
-    serviceRadiusKm: "15",
     terms: false,
   });
   const [error, setError] = useState("");
-  const [locationLoading, setLocationLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
-  };
-
-  const captureCurrentLocation = () => {
-    setError("");
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported in this browser");
-      return;
-    }
-
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setForm((prev) => ({
-          ...prev,
-          latitude: String(Number(position.coords.latitude.toFixed(6))),
-          longitude: String(Number(position.coords.longitude.toFixed(6))),
-        }));
-        setLocationLoading(false);
-      },
-      () => {
-        setLocationLoading(false);
-        setError("Could not capture current location");
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
   };
 
   const submit = async (event) => {
@@ -74,22 +42,11 @@ export default function Register() {
         return;
       }
 
-      if (form.role === "garage" && (!form.latitude || !form.longitude)) {
-        setError("Please capture exact map location for garage signup");
-        return;
-      }
-
       await api.post("auth/register", {
-        role: form.role,
         name: form.name,
         email: form.email,
         phone: form.phone,
         password: form.password,
-        garageName: form.garageName,
-        garageAddress: form.garageAddress,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
-        serviceRadiusKm: Number(form.serviceRadiusKm || 15),
       });
       navigate("/");
     } catch (err) {
@@ -106,26 +63,9 @@ export default function Register() {
       </div>
 
       <form className="premium-login__form" onSubmit={submit}>
-        <div className="premium-login__role-toggle" aria-label="Account type">
-          <button
-            type="button"
-            className={form.role === "user" ? "is-active" : ""}
-            onClick={() => updateForm("role", "user")}
-          >
-            Customer
-          </button>
-          <button
-            type="button"
-            className={form.role === "garage" ? "is-active" : ""}
-            onClick={() => updateForm("role", "garage")}
-          >
-            Garage Partner
-          </button>
-        </div>
-
         <PremiumAuthInput
           icon="user"
-          label={form.role === "garage" ? "Owner Name" : "Full Name"}
+          label="Full Name"
           placeholder="Enter your full name"
           value={form.name}
           onChange={(event) => updateForm("name", event.target.value)}
@@ -187,56 +127,6 @@ export default function Register() {
           }
         />
 
-        {form.role === "garage" && (
-          <>
-            <PremiumAuthInput
-              icon="garage"
-              label="Garage Name"
-              placeholder="Enter your garage name"
-              value={form.garageName}
-              onChange={(event) => updateForm("garageName", event.target.value)}
-              autoComplete="organization"
-            />
-            <PremiumAuthInput
-              icon="mapPin"
-              label="Garage Address"
-              placeholder="Enter your garage address"
-              value={form.garageAddress}
-              onChange={(event) => updateForm("garageAddress", event.target.value)}
-              autoComplete="street-address"
-            />
-            <button
-              type="button"
-              className="premium-login__secondary-button"
-              onClick={captureCurrentLocation}
-              disabled={locationLoading}
-            >
-              {locationLoading ? "Capturing location..." : "Use Exact Maps Location"}
-            </button>
-            {form.latitude && form.longitude && (
-              <p className="premium-login__helper">
-                Location: {form.latitude}, {form.longitude}{" "}
-                <a
-                  href={`https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View map
-                </a>
-              </p>
-            )}
-            <PremiumAuthInput
-              icon="mapPin"
-              label="Service Radius (km)"
-              placeholder="Enter service radius"
-              type="number"
-              value={form.serviceRadiusKm}
-              onChange={(event) => updateForm("serviceRadiusKm", event.target.value)}
-              required={false}
-            />
-          </>
-        )}
-
         <label className="premium-login__check premium-login__terms">
           <input
             type="checkbox"
@@ -254,23 +144,19 @@ export default function Register() {
           <span>Create Account</span>
         </button>
 
-        {form.role === "user" && (
-          <>
-            <div className="premium-login__divider"><span>or continue with</span></div>
-            <div className="premium-login__social-grid">
-              <div className="premium-login__google-auth">
-                <GoogleAuthButton
-                  label="signup_with"
-                  onSuccess={(data) => {
-                    localStorage.setItem("token", data.token);
-                    navigate("/landing");
-                  }}
-                  onError={(msg) => setError(msg)}
-                />
-              </div>
-            </div>
-          </>
-        )}
+        <div className="premium-login__divider"><span>or continue with</span></div>
+        <div className="premium-login__social-grid">
+          <div className="premium-login__google-auth">
+            <GoogleAuthButton
+              label="signup_with"
+              onSuccess={(data) => {
+                localStorage.setItem("token", data.token);
+                navigate("/landing");
+              }}
+              onError={(msg) => setError(msg)}
+            />
+          </div>
+        </div>
 
         <div className="premium-login__signup premium-login__signup--center">
           <span>Already have an account?</span>

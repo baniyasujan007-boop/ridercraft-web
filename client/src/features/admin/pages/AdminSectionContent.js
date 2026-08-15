@@ -1,4 +1,5 @@
 import { applyImageFallback } from "../../../utils/fallbackImage";
+import GarageManagement from "../components/GarageManagement";
 
 const toDatetimeLocalValue = (value) => {
   if (!value) return "";
@@ -89,6 +90,7 @@ export default function AdminSectionContent({ vm }) {
     productUrl,
     setProductUrl,
     fetchProductFromUrl,
+    token,
   } = vm;
 
   return (
@@ -1920,6 +1922,7 @@ export default function AdminSectionContent({ vm }) {
           </table>
         </section>
       )}
+      {section === "garages" && <GarageManagement token={token} />}
     </>
   );
 }
