@@ -11,19 +11,21 @@ export default function authMiddleware(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ["HS256"]
+    });
     req.user = decoded;
     next();
-  }catch (err) {
-  console.log("JWT Error:", err.message);
-
-  return res.status(401).json({
-    error: "Invalid token"
-  });
-}
-  // } catch {
-  //   return res.status(401).json({ error: "Invalid token" });
-  // }
+  } catch (err) {
+    if (err?.name === "TokenExpiredError") {
+      console.log("JWT Error: token expired");
+      return res.status(401).json({ error: "Session expired" });
+    }
+    console.log("JWT Error:", err.message);
+    return res.status(401).json({
+      error: "Invalid token"
+    });
+  }
 }
 
 export function requireAdmin(req, res, next) {

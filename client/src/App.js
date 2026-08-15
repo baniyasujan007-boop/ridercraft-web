@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import "./services/api";
 import AdminRoute from "./routes/AdminRoute";
 import GarageRoute from "./routes/GarageRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";

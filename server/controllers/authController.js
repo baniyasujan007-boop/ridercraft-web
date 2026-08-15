@@ -15,6 +15,14 @@ function hashResetToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function signToken(user) {
+  return jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "60m" }
+  );
+}
+
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -59,10 +67,7 @@ export const login = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ error: "Wrong password" });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET
-    );
+    const token = signToken(user);
 
     res.json({ token, role: user.role });
   } catch {
@@ -84,7 +89,7 @@ export const garageLogin = async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ error: "Wrong password" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+    const token = signToken(user);
     return res.json({ token, role: user.role });
   } catch {
     return res.status(500).json({ error: "Garage login failed" });
@@ -191,10 +196,7 @@ export const googleLogin = async (req, res) => {
       await user.save();
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET
-    );
+    const token = signToken(user);
 
     res.json({ token, role: user.role });
   } catch {
