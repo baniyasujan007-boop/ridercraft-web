@@ -38,5 +38,17 @@ abstract final class AppConfig {
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 20);
 
+  /// The Web OAuth client ID used as the Google ID-token audience for the
+  /// backend (`GOOGLE_CLIENT_ID` on the server / `REACT_APP_GOOGLE_CLIENT_ID`
+  /// on the website). Required for Google Sign-In; on Android the plugin mints
+  /// the ID token with this value as its audience so the backend can verify it.
+  ///
+  /// Provide at build time with:
+  ///   flutter run --dart-define=GOOGLE_WEB_CLIENT_ID=your-web-oauth-client-id
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '',
+  );
+
   static const String appName = 'RiderCraft';
 }

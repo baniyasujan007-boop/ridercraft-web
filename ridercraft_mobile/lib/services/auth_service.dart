@@ -61,6 +61,28 @@ class AuthService {
     );
   }
 
+  /// Exchanges a Google ID token (the `credential` from Google Sign-In) for a
+  /// RiderCraft JWT. The backend verifies the token's audience before issuing
+  /// a session token, exactly like the website.
+  Future<void> googleLogin({required String idToken}) async {
+    if (idToken.trim().isEmpty) {
+      throw const ApiException(
+        message: 'Google sign-in returned no ID token. Please try again.',
+      );
+    }
+    final data = await _api.post(
+      '/auth/google',
+      data: {'credential': idToken},
+    );
+    final token = (data['token'] as String?) ?? '';
+    if (token.isEmpty) {
+      throw const ApiException(
+        message: 'Google sign-in failed. Please try again.',
+      );
+    }
+    await _storage.writeToken(token);
+  }
+
   /// Completes a password reset using the token delivered by email.
   Future<void> resetPassword({
     required String email,

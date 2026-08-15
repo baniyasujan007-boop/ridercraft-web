@@ -14,6 +14,7 @@ import 'routes/route_names.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/booking_service.dart';
+import 'services/google_sign_in.dart';
 import 'services/notification_service.dart';
 import 'services/order_service.dart';
 import 'services/product_service.dart';
@@ -49,7 +50,11 @@ Future<void> main() async {
   final notificationService = NotificationService(apiClient);
   final bookingService = BookingService(apiClient);
 
-  authProvider = AuthProvider(authService, tokenStore);
+  authProvider = AuthProvider(
+    authService,
+    tokenStore,
+    googleSignIn: GoogleSignInService(),
+  );
 
   runApp(
     MultiProvider(

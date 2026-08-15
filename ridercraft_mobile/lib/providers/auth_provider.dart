@@ -3,21 +3,25 @@ import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/api_exception.dart';
 import '../services/auth_service.dart';
+import '../services/google_sign_in.dart';
 import '../services/token_store.dart';
 
 enum AuthStatus { unknown, unauthenticated, authenticated }
 
 /// Session state: restores the token on launch, keeps the profile current and
-/// exposes login / register / logout.
+/// exposes login (email/password and Google), register / logout.
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService;
   final TokenStore _tokenStore;
+  final GoogleSignInService? _googleSignIn;
 
   AuthStatus _status = AuthStatus.unknown;
   User? _user;
   bool _restoring = false;
 
-  AuthProvider(this._authService, this._tokenStore);
+  AuthProvider(this._authService, this._tokenStore,
+      {GoogleSignInService? googleSignIn})
+      : _googleSignIn = googleSignIn;
 
   AuthStatus get status => _status;
   User? get user => _user;
@@ -72,6 +76,34 @@ class AuthProvider extends ChangeNotifier {
     _status = AuthStatus.authenticated;
     notifyListeners();
     return stored;
+  }
+
+  /// Completes Google Sign-In: exchanges the Google ID token for a RiderCraft
+  /// JWT through the backend (which verifies the token), then restores the
+  /// profile like a normal login.
+  ///
+  /// Returns `true` when the session is established and `false` when the user
+  /// dismissed the Google account picker (no session change). Configuration
+  /// and backend failures throw an [ApiException].
+  Future<bool> loginWithGoogle() async {
+    final service = _googleSignIn;
+    if (service == null || !service.isConfigured) {
+      throw const ApiException(
+        message: 'Google sign-in is not configured for this build.',
+      );
+    }
+    final idToken = await service.getIdToken();
+    if (idToken == null) {
+      // The user cancelled the account-selection flow: do not log in.
+      return false;
+    }
+    await _authService.googleLogin(idToken: idToken);
+    final stored = await _authService.storage.readToken();
+    _tokenStore.current = stored;
+    _user = await _authService.fetchProfile();
+    _status = AuthStatus.authenticated;
+    notifyListeners();
+    return true;
   }
 
   Future<void> register({
