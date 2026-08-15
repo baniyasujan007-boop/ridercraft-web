@@ -17,65 +17,30 @@ function hashResetToken(token) {
 
 export const register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      role,
-      garageName,
-      garageAddress,
-      latitude,
-      longitude,
-      serviceRadiusKm
-    } = req.body;
+    const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Name, email, and password are required" });
     }
-
-    const normalizedRole = String(role || "user").toLowerCase();
-    if (!["user", "garage"].includes(normalizedRole)) {
-      return res.status(400).json({ error: "Invalid role selected" });
+    if (typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
-    const createPayload = {
-      name: String(name).trim(),
-      email: String(email).toLowerCase().trim()
-    };
-
-    if (normalizedRole === "garage") {
-      if (!garageName || !garageAddress) {
-        return res
-          .status(400)
-          .json({ error: "Garage name and garage address are required for garage signup" });
-      }
-      const lat = Number(latitude);
-      const lng = Number(longitude);
-      const radius = Number(serviceRadiusKm || 15);
-      if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
-        return res.status(400).json({ error: "Valid garage latitude is required" });
-      }
-      if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
-        return res.status(400).json({ error: "Valid garage longitude is required" });
-      }
-      if (!Number.isFinite(radius) || radius < 1 || radius > 200) {
-        return res.status(400).json({ error: "Service radius must be between 1 and 200 km" });
-      }
-
-      createPayload.role = "garage";
-      createPayload.garageProfile = {
-        garageName: String(garageName).trim(),
-        garageAddress: String(garageAddress).trim(),
-        location: {
-          latitude: lat,
-          longitude: lng
-        },
-        serviceRadiusKm: radius,
-        isAvailable: true
-      };
+    // Public registration always creates a normal user. Garage/admin roles
+    // must go through the authenticated admin workflow (registerGarage).
+    const payloadRole = String(req.body.role || "").toLowerCase();
+    if (payloadRole && payloadRole !== "user") {
+      return res.status(400).json({
+        error: "This role cannot be created through public registration"
+      });
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    await User.create({ ...createPayload, password: hashed });
+    await User.create({
+      name: String(name).trim(),
+      email: String(email).toLowerCase().trim(),
+      role: "user",
+      password: hashed
+    });
     res.json({ message: "Registered" });
   } catch (err) {
     if (err.code === 11000) {

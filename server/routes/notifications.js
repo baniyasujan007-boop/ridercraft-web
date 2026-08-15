@@ -1,6 +1,7 @@
 import express from "express";
 import Notification from "../models/Notification.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import { requireValidObjectId } from "../middleware/validators.js";
 import mongoose from "mongoose"; 
 
 const router = express.Router();
@@ -54,7 +55,7 @@ router.put("/read-all", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/:id/read", authMiddleware, async (req, res) => {
+router.put("/:id/read", authMiddleware, requireValidObjectId, async (req, res) => {
   try {
     await Notification.updateOne(
       {
