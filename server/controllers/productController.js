@@ -6,6 +6,61 @@ import * as cheerio from "cheerio";
 
 const COLOR_HEX_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
+const SECURE_PROBE_TIMEOUT_MS = 6000;
+
+const toHttps = (url) =>
+  url.replace(/^http:\/\//i, "https://").replace(/^\/\//, "https://");
+
+/**
+ * Verifies a URL actually serves image content over HTTPS. Uses a minimal GET
+ * that reads only the headers/body-availability (arraybuffer) so we can trust
+ * the content-type without wasting memory on the payload.
+ */
+async function secureProbe(url) {
+  const response = await axios.get(url, {
+    timeout: SECURE_PROBE_TIMEOUT_MS,
+    maxRedirects: 5,
+    responseType: "arraybuffer",
+    validateStatus: (status) => status >= 200 && status < 300,
+  });
+  const contentType = String(response.headers?.["content-type"] || "").toLowerCase();
+  return contentType.startsWith("image/");
+}
+
+/**
+ * Resolves an imported product image URL to the safest usable form.
+ *
+ * - https:// URLs are preserved unchanged.
+ * - http:// and protocol-relative (//) URLs are upgraded to https:// ONLY
+ *   when the https URL verifies as reachable image content.
+ * - On any verification failure the original value is retained and reported
+ *   through `note`. Never throws — a bad image must not break product import.
+ */
+export async function resolveProductImage(rawUrl, probe = secureProbe) {
+  const input = String(rawUrl || "").trim();
+  if (!input) return { url: "", note: "" };
+
+  if (input.toLowerCase().startsWith("https://")) {
+    return { url: input, note: "" };
+  }
+
+  const isHttp = input.toLowerCase().startsWith("http://");
+  const isProtocolRelative = input.startsWith("//");
+  if (!isHttp && !isProtocolRelative) {
+    return { url: input, note: "Image URL is not a remote http(s) URL; retained as-is" };
+  }
+
+  const httpsUrl = toHttps(input);
+  try {
+    const verified = await probe(httpsUrl);
+    return verified
+      ? { url: httpsUrl, note: "Image upgraded to HTTPS" }
+      : { url: input, note: "HTTPS version unreachable; retained original URL" };
+  } catch {
+    return { url: input, note: "HTTPS verification failed; retained original URL" };
+  }
+}
+
 export const isFlashSaleCurrentlyActive = (product, now = new Date()) => {
   const startsAt = new Date(
     product?.flashSaleStartsAt ||
@@ -521,7 +576,8 @@ export const fetchProductFromUrl = async (req, res) => {
     const name =
       $('meta[property="og:title"]').attr("content") || $("title").text();
 
-    const image = $('meta[property="og:image"]').attr("content") || "";
+    const imageMeta = $('meta[property="og:image"]').attr("content") || "";
+    const { url: image, note: imageNote } = await resolveProductImage(imageMeta);
 
     const brand = name?.split(" ")[0] || "Generic";
     const description =
@@ -566,6 +622,7 @@ export const fetchProductFromUrl = async (req, res) => {
       name,
       brand,
       image,
+      imageNote,
       description,
       sizes,
       colors,

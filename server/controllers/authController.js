@@ -11,6 +11,15 @@ const RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
 const GENERIC_RESET_MESSAGE =
   "If that email is registered, a password reset link has been sent.";
 
+// Single message + status for every invalid-credential case so responses never
+// reveal whether an account exists (prevents account enumeration).
+const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
+
+// Precomputed bcrypt hash of a fixed dummy string. Used for a bogus bcrypt
+// comparison on the account-missing / passwordless-user paths so those cases
+// take the same time as a real password check (no timing side channel).
+const DUMMY_PASSWORD_HASH = "$2b$10$v51e/Sez/GjL5HwpH.XsGOKIUWmxlBdNE6YE/CXHLOTUXTtGekTGy";
+
 function hashResetToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -62,10 +71,16 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: "User not found" });
+
+    // Missing account, passwordless account, and wrong password all respond
+    // identically (same status and message) to prevent account enumeration.
+    if (!user || !user.password) {
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
+      return res.status(400).json({ error: INVALID_CREDENTIALS_MESSAGE });
+    }
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(400).json({ error: "Wrong password" });
+    if (!ok) return res.status(400).json({ error: INVALID_CREDENTIALS_MESSAGE });
 
     const token = signToken(user);
 
@@ -79,15 +94,19 @@ export const garageLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+
+    // Same generic response for non-garage / missing-garage / wrong-password,
+    // so garage account existence is not disclosed.
     if (!user || user.role !== "garage") {
-      return res.status(400).json({ error: "Garage account not found" });
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
+      return res.status(400).json({ error: INVALID_CREDENTIALS_MESSAGE });
     }
     if (!user.password) {
-      return res.status(400).json({ error: "Garage account has no password set" });
+      return res.status(400).json({ error: INVALID_CREDENTIALS_MESSAGE });
     }
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(400).json({ error: "Wrong password" });
+    if (!ok) return res.status(400).json({ error: INVALID_CREDENTIALS_MESSAGE });
 
     const token = signToken(user);
     return res.json({ token, role: user.role });

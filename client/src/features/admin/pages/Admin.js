@@ -810,6 +810,9 @@ export default function Admin() {
         sizes: (res.data.sizes || []).join(", "),
         colors: (res.data.colors || []).join(", "),
       }));
+      if (res.data.imageNote) {
+        setMessage(`Import note: ${res.data.imageNote}`);
+      }
     } catch (err) {
       setError(err.response?.data?.error || "Failed to fetch product");
     }

@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import net from "node:net";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import express from "express";
 import mongoose from "mongoose";
 import { corsOptions } from "../config/security.js";
@@ -18,6 +19,11 @@ import User from "../models/User.js";
 
 const RIDER_ORIGIN = "https://ridercraft.example.com";
 const EVIL_ORIGIN = "https://attacker.example.com";
+
+// Real-world register flows bcrypt the password; seed test users with a hash so
+// password-compare login paths behave like production.
+const HASHED_LOGIN_PASSWORD = bcrypt.hashSync("secret123", 10);
+const WRONG_PASSWORD = "definitely-wrong";
 
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "p4-test-secret";
@@ -91,10 +97,26 @@ after(async () => {
     await mongoose.disconnect();
   }
   if (mongod) {
+    const exited = new Promise((resolve) => {
+      if (mongod.exitCode !== null) resolve();
+      else mongod.once("exit", resolve);
+    });
     mongod.kill();
+    await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))]);
   }
   if (mongodDir) {
-    await rm(mongodDir, { recursive: true, force: true });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await rm(mongodDir, { recursive: true, force: true });
+        break;
+      } catch (err) {
+        if (attempt === 2) {
+          console.warn(`[test] could not clean tmp dir ${mongodDir}:`, err.message);
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
   }
 });
 
@@ -175,6 +197,76 @@ test("non-browser requests (Flutter API) still work with no Origin header", asyn
     t.diagnostic("origin-less requests are not blocked");
   } finally {
     await shut(s);
+  }
+});
+
+test("multiple comma-separated production origins are all allowed", async (t) => {
+  const secondOrigin = "https://ridercraft-admin.example.com";
+  process.env.FRONTEND_URL = `${RIDER_ORIGIN}, ${secondOrigin}`;
+  try {
+    const { s, url } = await corsServer();
+    try {
+      for (const origin of [RIDER_ORIGIN, secondOrigin]) {
+        const res = await fetch(url, { headers: { Origin: origin } });
+        assert.equal(
+          res.headers.get("access-control-allow-origin"),
+          origin,
+          `${origin} must be echoed`
+        );
+        assert.equal(res.headers.get("access-control-allow-credentials"), "true");
+      }
+
+      const blocked = await fetch(url, { headers: { Origin: EVIL_ORIGIN } });
+      assert.equal(
+        blocked.headers.get("access-control-allow-origin"),
+        null,
+        "unlisted origin stays blocked even when the list has multiple entries"
+      );
+    } finally {
+      await shut(s);
+    }
+  } finally {
+    process.env.FRONTEND_URL = RIDER_ORIGIN;
+  }
+});
+
+// ------------------------------------------------------------- enumeration
+
+test("login with an unknown email returns the generic invalid-credentials response", async () => {
+  const res = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "no-such-account@test.dev", password: WRONG_PASSWORD }),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.equal(body.error, "Invalid email or password");
+});
+
+test("login with a wrong password returns the identical generic response", async () => {
+  const user = await makeUser({ password: HASHED_LOGIN_PASSWORD });
+  const res = await fetch(`${baseUrl}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: user.email, password: WRONG_PASSWORD }),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.equal(body.error, "Invalid email or password");
+});
+
+test("login with correct credentials still succeeds for known roles", async () => {
+  for (const role of ["user", "admin"]) {
+    const user = await makeUser({ role, password: HASHED_LOGIN_PASSWORD });
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email, password: "secret123" }),
+    });
+    assert.equal(res.status, 200, `${role} login must succeed`);
+    const body = await res.json();
+    assert.ok(body.token, `${role} login must return a token`);
+    assert.equal(body.role, role);
   }
 });
 

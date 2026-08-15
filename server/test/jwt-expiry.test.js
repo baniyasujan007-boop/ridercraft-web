@@ -90,10 +90,26 @@ after(async () => {
     await mongoose.disconnect();
   }
   if (mongod) {
+    const exited = new Promise((resolve) => {
+      if (mongod.exitCode !== null) resolve();
+      else mongod.once("exit", resolve);
+    });
     mongod.kill();
+    await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 3000))]);
   }
   if (mongodDir) {
-    await rm(mongodDir, { recursive: true, force: true });
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        await rm(mongodDir, { recursive: true, force: true });
+        break;
+      } catch (err) {
+        if (attempt === 2) {
+          console.warn(`[test] could not clean tmp dir ${mongodDir}:`, err.message);
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
   }
 });
 
