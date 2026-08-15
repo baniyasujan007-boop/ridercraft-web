@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart' show ImageSource;
 import 'package:provider/provider.dart';
 
 import '../../models/user.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/route_names.dart';
 import '../../services/api_exception.dart';
+import '../../services/avatar_image_picker.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/avatar_processor.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_view.dart';
@@ -21,7 +25,10 @@ import '../main_scaffold.dart';
 /// is shown. The layout is responsive (centred constrained column on tablets)
 /// and never overflows at small widths or large system text.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  /// Injectable picker so widget tests can fake the native photo picker.
+  final AvatarImagePicker picker;
+
+  const ProfileScreen({super.key, this.picker = const AvatarImagePicker()});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -35,8 +42,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _initialized = false;
   bool _saving = false;
+  bool _avatarChanging = false;
   String? _formError;
   String? _formSuccess;
+  String? _avatarPreviewUri;
 
   @override
   void didChangeDependencies() {
@@ -139,6 +148,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _showAvatarOptions() async {
+    if (_avatarChanging || _saving) return;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 18, 16, 8),
+                child: Text(
+                  'Change profile picture',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppColors.primary,
+                ),
+                title: const Text(
+                  'Take Photo',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.primary,
+                ),
+                title: const Text(
+                  'Choose from Gallery',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source == null || !mounted) return;
+    await _changeAvatar(source);
+  }
+
+  Future<void> _changeAvatar(ImageSource source) async {
+    setState(() {
+      _avatarChanging = true;
+      _formError = null;
+      _formSuccess = null;
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final bytes = source == ImageSource.camera
+          ? await widget.picker.pickCamera()
+          : await widget.picker.pickGallery();
+      if (bytes == null) {
+        // User dismissed the picker: do nothing.
+        if (!mounted) return;
+        setState(() => _avatarChanging = false);
+        return;
+      }
+
+      final dataUri = AvatarProcessor.processImage(bytes);
+      if (!mounted) return;
+      setState(() => _avatarPreviewUri = dataUri);
+
+      await context.read<AuthProvider>().updateProfile(avatar: dataUri);
+
+      if (!mounted) return;
+      setState(() {
+        _avatarChanging = false;
+        _avatarPreviewUri = null;
+      });
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Profile picture updated')),
+      );
+    } on AvatarProcessException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _avatarChanging = false;
+        _avatarPreviewUri = null;
+      });
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _avatarChanging = false;
+        _avatarPreviewUri = null;
+      });
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } on PlatformException {
+      // e.g. camera unavailable / permission denied on the platform side.
+      if (!mounted) return;
+      setState(() {
+        _avatarChanging = false;
+        _avatarPreviewUri = null;
+      });
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the camera or photo library.'),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _avatarChanging = false;
+        _avatarPreviewUri = null;
+      });
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Failed to update profile picture. Please try again.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _confirmLogout() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -216,7 +364,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ProfileHeaderCard(user: user),
+                    _ProfileHeaderCard(
+                      user: user,
+                      avatarLoading: _avatarChanging,
+                      avatarPreviewUri: _avatarPreviewUri,
+                      onChangePhoto: _showAvatarOptions,
+                    ),
                     const SizedBox(height: 16),
                     _ProfileFormCard(
                       nameController: _nameController,
@@ -297,8 +450,16 @@ class _GuestProfileView extends StatelessWidget {
 
 class _ProfileHeaderCard extends StatelessWidget {
   final User user;
+  final bool avatarLoading;
+  final String? avatarPreviewUri;
+  final VoidCallback onChangePhoto;
 
-  const _ProfileHeaderCard({required this.user});
+  const _ProfileHeaderCard({
+    required this.user,
+    required this.avatarLoading,
+    required this.avatarPreviewUri,
+    required this.onChangePhoto,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +468,12 @@ class _ProfileHeaderCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            _Avatar(user: user),
+            _EditableAvatar(
+              user: user,
+              previewUri: avatarPreviewUri,
+              loading: avatarLoading,
+              onTap: onChangePhoto,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -367,17 +533,97 @@ class _ProfileHeaderCard extends StatelessWidget {
   }
 }
 
+/// The profile picture with an edit badge; tapping opens the change-photo
+/// options. While a new picture is being picked/uploaded a spinner covers the
+/// avatar and the tapped image is previewed immediately.
+class _EditableAvatar extends StatelessWidget {
+  final User user;
+  final String? previewUri;
+  final bool loading;
+  final VoidCallback onTap;
+
+  const _EditableAvatar({
+    required this.user,
+    this.previewUri,
+    required this.loading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatar = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _Avatar(user: user, previewUri: previewUri),
+        if (loading)
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Color(0x80000000),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(
+              Icons.photo_camera_outlined,
+              size: 14,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Tooltip(
+      message: 'Change profile picture',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(40),
+        onTap: loading ? null : onTap,
+        child: avatar,
+      ),
+    );
+  }
+}
+
 class _Avatar extends StatelessWidget {
   final User user;
 
-  const _Avatar({required this.user});
+  /// When set, the picked-but-not-yet-saved image is shown instead of the
+  /// stored avatar so the user sees the new picture immediately.
+  final String? previewUri;
+
+  const _Avatar({required this.user, this.previewUri});
 
   @override
   Widget build(BuildContext context) {
     const size = 64.0;
-    if (user.avatar.trim().isNotEmpty) {
+
+    final display =
+        previewUri ?? (user.avatar.trim().isNotEmpty ? user.avatar : '');
+    if (display.isNotEmpty) {
       return ClipOval(
-        child: RcImage(user.avatar, width: size, height: size),
+        child: RcImage(display, width: size, height: size),
       );
     }
 

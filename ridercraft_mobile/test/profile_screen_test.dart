@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +13,7 @@ import 'package:ridercraft_mobile/routes/app_routes.dart';
 import 'package:ridercraft_mobile/screens/profile/profile_screen.dart';
 import 'package:ridercraft_mobile/services/api_client.dart';
 import 'package:ridercraft_mobile/services/auth_service.dart';
+import 'package:ridercraft_mobile/services/avatar_image_picker.dart';
 import 'package:ridercraft_mobile/services/token_store.dart';
 import 'package:ridercraft_mobile/theme/app_theme.dart';
 
@@ -42,12 +43,34 @@ const tinyPngDataUri =
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
     'AAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
+/// A bigger +Opaque+ PNG (so JPEG re-encoding keeps visible pixels) that the
+/// fake picker hands to the processor exactly like the real photo picker does.
+Uint8List get tinyPngBytes =>
+    base64Decode(tinyPngDataUri.substring(tinyPngDataUri.indexOf(',') + 1));
+
+/// Replaces the platform photo picker so tests control what the user "picks".
+class _FakeAvatarPicker extends AvatarImagePicker {
+  Uint8List? galleryBytes;
+  Object? pickError;
+  bool galleryCalled = false;
+
+  _FakeAvatarPicker();
+
+  @override
+  Future<Uint8List?> pickGallery() async {
+    galleryCalled = true;
+    if (pickError != null) throw pickError!;
+    return galleryBytes;
+  }
+}
+
 /// In-memory backend for the two real profile endpoints:
 /// - GET /auth/profile  -> the user document directly
 /// - PUT /auth/profile  -> {message, user} and merges the request body
 class _ProfileAdapter implements HttpClientAdapter {
   Map<String, dynamic> user;
   int? failPutWith;
+  final List<Map<String, dynamic>> putBodies = [];
 
   _ProfileAdapter(this.user);
 
@@ -69,10 +92,11 @@ class _ProfileAdapter implements HttpClientAdapter {
       return _json(jsonEncode(user), 200);
     }
     if (options.path == '/auth/profile' && options.method == 'PUT') {
+      final body = Map<String, dynamic>.from(options.data as Map);
+      putBodies.add(body);
       if (failPutWith != null) {
         return _json(jsonEncode({'error': 'Failed to update profile'}), failPutWith!);
       }
-      final body = Map<String, dynamic>.from(options.data as Map);
       final merged = Map<String, dynamic>.from(user);
       body.forEach((key, value) {
         if (value is String) merged[key] = value;
@@ -106,6 +130,7 @@ Future<({Widget app, AuthProvider auth})> _buildApp({
   required bool authenticated,
   Map<String, dynamic>? user,
   int? failPutWith,
+  AvatarImagePicker? avatarPicker,
 }) async {
   SharedPreferences.setMockInitialValues(
     authenticated ? {'ridercraft_auth_token': 'test-token'} : {},
@@ -125,11 +150,64 @@ Future<({Widget app, AuthProvider auth})> _buildApp({
     providers: [ChangeNotifierProvider.value(value: authProvider)],
     child: MaterialApp(
       theme: AppTheme.dark,
-      home: const ProfileScreen(),
+      home: ProfileScreen(picker: avatarPicker ?? const AvatarImagePicker()),
       onGenerateRoute: AppRouter.onGenerateRoute,
     ),
   );
   return (app: app, auth: authProvider);
+}
+
+/// Like [_buildApp] but keeps the adapter and picker so avatar tests can assert
+/// on the outgoing payload and the platform-picker interaction.
+Future<({AuthProvider auth, _ProfileAdapter adapter, _FakeAvatarPicker picker})>
+    _buildAvatarApp(
+  WidgetTester tester, {
+  Map<String, dynamic>? user,
+  int? failPutWith,
+  Uint8List? galleryBytes,
+  Object? pickError,
+}) async {
+  SharedPreferences.setMockInitialValues({'ridercraft_auth_token': 'test-token'});
+  final prefs = await SharedPreferences.getInstance();
+  final storage = TestStorageService(prefs);
+  final tokenStore = TokenStore();
+
+  final adapter = _ProfileAdapter(user ?? _user());
+  adapter.failPutWith = failPutWith;
+  final dio = Dio()..httpClientAdapter = adapter;
+  final api = ApiClient(tokenProvider: () => tokenStore.current, dio: dio);
+  final authProvider = AuthProvider(AuthService(api, storage), tokenStore);
+
+  final picker = _FakeAvatarPicker()
+    ..galleryBytes = galleryBytes
+    ..pickError = pickError;
+
+  final app = MultiProvider(
+    providers: [ChangeNotifierProvider.value(value: authProvider)],
+    child: MaterialApp(
+      theme: AppTheme.dark,
+      home: ProfileScreen(picker: picker),
+      onGenerateRoute: AppRouter.onGenerateRoute,
+    ),
+  );
+
+  await _restore(tester, authProvider);
+  await tester.pumpWidget(app);
+  await tester.pumpAndSettle();
+  return (auth: authProvider, adapter: adapter, picker: picker);
+}
+
+/// Opens the change-photo bottom sheet by tapping the avatar.
+Future<void> _openAvatarSheet(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('Change profile picture'));
+  await tester.pumpAndSettle();
+}
+
+/// Picks a photo from the gallery through the bottom sheet.
+Future<void> _pickFromGallery(WidgetTester tester) async {
+  await _openAvatarSheet(tester);
+  await tester.tap(find.text('Choose from Gallery'));
+  await tester.pumpAndSettle();
 }
 
 /// Resolves the session through real async.
@@ -152,11 +230,13 @@ Future<void> _pumpProfile(
   required bool authenticated,
   Map<String, dynamic>? user,
   int? failPutWith,
+  AvatarImagePicker? avatarPicker,
 }) async {
   final bundle = await _buildApp(
     authenticated: authenticated,
     user: user,
     failPutWith: failPutWith,
+    avatarPicker: avatarPicker,
   );
   await _restore(tester, bundle.auth);
   await tester.pumpWidget(bundle.app);
@@ -444,6 +524,137 @@ void main() {
 
       expect(tester.takeException(), isNull,
           reason: 'overflow in the guest Profile viewport');
+    });
+  });
+
+  group('profile picture update', () {
+    testWidgets('the avatar offers a change-photo action', (tester) async {
+      await _buildAvatarApp(tester);
+
+      await _openAvatarSheet(tester);
+
+      expect(find.text('Change profile picture'), findsOneWidget);
+      expect(find.text('Take Photo'), findsOneWidget);
+      expect(find.text('Choose from Gallery'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+    });
+
+    testWidgets('selecting from the gallery uploads the avatar and renders it',
+        (tester) async {
+      final bundle = await _buildAvatarApp(
+        tester,
+        galleryBytes: tinyPngBytes,
+      );
+      expect(find.text('CC'), findsOneWidget);
+      expect(find.byIcon(Icons.sports_motorsports_rounded), findsNothing);
+
+      await _pickFromGallery(tester);
+
+      // The update went through the real updateProfile -> PUT /auth/profile.
+      expect(bundle.picker.galleryCalled, isTrue);
+      expect(bundle.adapter.putBodies, hasLength(1));
+      final avatar = bundle.adapter.putBodies.single['avatar'] as String;
+      expect(avatar, startsWith('data:image/jpeg;base64,'));
+      expect(avatar.length, lessThan(200 * 1024));
+
+      // AuthProvider state reflects the new avatar immediately.
+      expect(bundle.auth.user!.avatar, avatar);
+      expect(find.text('Profile picture updated'), findsOneWidget);
+      expect(find.text('CC'), findsNothing);
+      expect(find.byType(Image), findsWidgets);
+    });
+
+    testWidgets('a cancelled picker makes no request and keeps the avatar',
+        (tester) async {
+      final bundle = await _buildAvatarApp(tester, galleryBytes: null);
+
+      await _pickFromGallery(tester);
+
+      expect(bundle.picker.galleryCalled, isTrue);
+      expect(bundle.adapter.putBodies, isEmpty);
+      expect(bundle.auth.user!.avatar, '');
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('CC'), findsOneWidget);
+    });
+
+    testWidgets('cancelling the sheet (not picking) also does nothing', (
+      tester,
+    ) async {
+      final bundle = await _buildAvatarApp(tester, galleryBytes: tinyPngBytes);
+
+      await _openAvatarSheet(tester);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(bundle.picker.galleryCalled, isFalse);
+      expect(bundle.adapter.putBodies, isEmpty);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('an invalid image shows a friendly error and no request', (
+      tester,
+    ) async {
+      final bundle = await _buildAvatarApp(
+        tester,
+        galleryBytes: Uint8List.fromList([1, 2, 3, 4]),
+      );
+
+      await _pickFromGallery(tester);
+
+      expect(bundle.adapter.putBodies, isEmpty);
+      expect(bundle.auth.user!.avatar, '');
+      expect(
+        find.text("Couldn't read that image. Please try another one."),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
+
+    testWidgets('a picker platform error shows a friendly message', (
+      tester,
+    ) async {
+      final bundle = await _buildAvatarApp(
+        tester,
+        pickError: PlatformException(code: 'camera_access_denied'),
+      );
+
+      await _pickFromGallery(tester);
+
+      expect(bundle.adapter.putBodies, isEmpty);
+      expect(bundle.auth.user!.avatar, '');
+      expect(
+        find.text('Could not open the camera or photo library.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an API failure shows the clean server message and keeps avatar',
+        (tester) async {
+      final bundle = await _buildAvatarApp(
+        tester,
+        galleryBytes: tinyPngBytes,
+        failPutWith: 500,
+      );
+
+      await _pickFromGallery(tester);
+
+      expect(bundle.adapter.putBodies, hasLength(1));
+      expect(bundle.auth.user!.avatar, '');
+      expect(find.text('Failed to update profile'), findsOneWidget);
+      expect(find.text('CC'), findsOneWidget);
+    });
+
+    testWidgets('the change-photo sheet opens at 320px/2.0x without overflow', (
+      tester,
+    ) async {
+      _setViewport(tester, width: 320, height: 568, textScale: 2.0);
+      await _buildAvatarApp(tester, galleryBytes: tinyPngBytes);
+
+      await _openAvatarSheet(tester);
+
+      expect(tester.takeException(), isNull,
+          reason: 'avatar sheet must not overflow at 320px/2.0x');
+      expect(find.text('Choose from Gallery'), findsOneWidget);
     });
   });
 }
