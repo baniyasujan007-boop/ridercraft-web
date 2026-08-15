@@ -23,17 +23,24 @@ Map<String, dynamic> _user({
   String email = 'chandan@ridercraft.app',
   String contact = '+15550000000',
   String address = 'River Rd, Gangtok, Sikkim 737101',
+  String avatar = '',
 }) {
   return {
     '_id': 'abc123',
     'name': name,
     'email': email,
     'role': 'user',
-    'avatar': '',
+    'avatar': avatar,
     'contactNumber': contact,
     'deliveryAddress': address,
   };
 }
+
+/// A real 1x1 transparent PNG so `Image.memory` can decode it in tests.
+const tinyPngDataUri =
+    'data:image/png;base64,'
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
+    'AAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 /// In-memory backend for the two real profile endpoints:
 /// - GET /auth/profile  -> the user document directly
@@ -206,6 +213,85 @@ void main() {
     );
     expect(find.text('Sign in'), findsOneWidget);
     expect(find.text('Logout'), findsNothing);
+  });
+
+  group('profile avatar', () {
+    testWidgets('renders a data URI avatar from memory and hides the fallback',
+        (tester) async {
+      await _pumpProfile(
+        tester,
+        authenticated: true,
+        user: _user(avatar: tinyPngDataUri),
+      );
+
+      expect(find.byType(Image), findsWidgets);
+      expect(find.byIcon(Icons.sports_motorsports_rounded), findsNothing);
+      expect(find.text('CC'), findsNothing);
+    });
+
+    testWidgets('uses the initials fallback when there is no avatar', (
+      tester,
+    ) async {
+      await _pumpProfile(tester, authenticated: true, user: _user(avatar: ''));
+
+      expect(find.text('CC'), findsOneWidget);
+      expect(find.byIcon(Icons.sports_motorsports_rounded), findsNothing);
+    });
+
+    testWidgets('null avatar falls back without crashing', (tester) async {
+      final nullAvatarUser = _user()..['avatar'] = null;
+      await _pumpProfile(
+        tester,
+        authenticated: true,
+        user: nullAvatarUser,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('CC'), findsOneWidget);
+    });
+
+    testWidgets('empty avatar falls back without crashing', (tester) async {
+      await _pumpProfile(
+        tester,
+        authenticated: true,
+        user: _user(avatar: ' '),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('CC'), findsOneWidget);
+    });
+
+    testWidgets('an undecodable data URI reaches the branded fallback', (
+      tester,
+    ) async {
+      await _pumpProfile(
+        tester,
+        authenticated: true,
+        user: _user(avatar: 'data:image/png;base64,!!not-base64!!'),
+      );
+
+      expect(find.byIcon(Icons.sports_motorsports_rounded), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets('saving profile settings keeps the avatar', (tester) async {
+      await _pumpProfile(
+        tester,
+        authenticated: true,
+        user: _user(avatar: tinyPngDataUri),
+      );
+      expect(find.byType(Image), findsWidgets);
+
+      await tester.enterText(_field('Full Name'), 'Aarav Sharma');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Save Changes'));
+      await tester.tap(find.text('Save Changes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profile updated successfully'), findsOneWidget);
+      expect(find.byType(Image), findsWidgets);
+      expect(find.byIcon(Icons.sports_motorsports_rounded), findsNothing);
+    });
   });
 
   testWidgets('authenticated user sees header, settings and account links', (
