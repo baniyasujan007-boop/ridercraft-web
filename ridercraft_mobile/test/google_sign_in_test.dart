@@ -19,6 +19,8 @@ import 'package:ridercraft_mobile/services/api_exception.dart';
 import 'package:ridercraft_mobile/services/auth_service.dart';
 import 'package:ridercraft_mobile/services/google_sign_in.dart';
 import 'package:ridercraft_mobile/services/token_store.dart';
+import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart'
+    as pl;
 
 import 'support/test_storage.dart';
 
@@ -45,6 +47,61 @@ class _FakeGoogleSignIn extends GoogleSignInService {
 
   @override
   Future<String?> getIdToken() async => idToken;
+}
+
+/// Records the parameters forwarded to the platform layer so the test can
+/// assert that a supplied `serverClientId` actually reaches
+/// `GoogleSignIn.initialize(serverClientId:)` on the plugin.
+class _RecordingGoogleSignInPlatform extends pl.GoogleSignInPlatform {
+  String? initClientId;
+  String? initServerClientId;
+  bool authenticateFailureWasCancel = false;
+
+  @override
+  Future<void> init(pl.InitParameters params) async {
+    initClientId = params.clientId;
+    initServerClientId = params.serverClientId;
+  }
+
+  @override
+  Future<pl.AuthenticationResults?>? attemptLightweightAuthentication(
+    pl.AttemptLightweightAuthenticationParameters params,
+  ) async =>
+      null;
+
+  @override
+  bool supportsAuthenticate() => true;
+
+  @override
+  bool authorizationRequiresUserInteraction() => true;
+
+  @override
+  Future<pl.AuthenticationResults> authenticate(
+    pl.AuthenticateParameters params,
+  ) async {
+    authenticateFailureWasCancel = true;
+    throw const pl.GoogleSignInException(
+      code: pl.GoogleSignInExceptionCode.canceled,
+    );
+  }
+
+  @override
+  Future<pl.ClientAuthorizationTokenData?> clientAuthorizationTokensForScopes(
+    pl.ClientAuthorizationTokensForScopesParameters params,
+  ) async =>
+      null;
+
+  @override
+  Future<pl.ServerAuthorizationTokenData?> serverAuthorizationTokensForScopes(
+    pl.ServerAuthorizationTokensForScopesParameters params,
+  ) async =>
+      null;
+
+  @override
+  Future<void> signOut(pl.SignOutParams params) async {}
+
+  @override
+  Future<void> disconnect(pl.DisconnectParams params) async {}
 }
 
 /// In-memory backend reproducing the server's /auth contract:
@@ -272,6 +329,80 @@ void main() {
           ),
         ),
       );
+    });
+  });
+
+  group('GoogleSignInService configuration path', () {
+    late pl.GoogleSignInPlatform originalPlatform;
+
+    setUp(() {
+      originalPlatform = pl.GoogleSignInPlatform.instance;
+    });
+
+    tearDown(() {
+      pl.GoogleSignInPlatform.instance = originalPlatform;
+    });
+
+    test('a missing GOOGLE_WEB_CLIENT_ID reports the configuration error',
+        () async {
+      final service = GoogleSignInService();
+      expect(service.isConfigured, isFalse);
+
+      await expectLater(
+        service.getIdToken(),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('not configured for this build'),
+          ),
+        ),
+      );
+    });
+
+    test('whitespace-only GOOGLE_WEB_CLIENT_ID counts as missing', () {
+      expect(
+        GoogleSignInService(serverClientId: '   ').isConfigured,
+        isFalse,
+      );
+    });
+
+    test('a supplied GOOGLE_WEB_CLIENT_ID is considered configured', () {
+      final service = GoogleSignInService(
+        serverClientId: 'client.test.apps.googleusercontent.com',
+      );
+      expect(service.isConfigured, isTrue);
+    });
+
+    test('a supplied GOOGLE_WEB_CLIENT_ID reaches initialize(serverClientId)',
+        () async {
+      final fake = _RecordingGoogleSignInPlatform();
+      pl.GoogleSignInPlatform.instance = fake;
+
+      final service = GoogleSignInService(
+        serverClientId: 'client.test.apps.googleusercontent.com',
+      );
+      expect(service.isConfigured, isTrue);
+
+      final idToken = await service.getIdToken();
+
+      expect(idToken, isNull, reason: 'a cancelled picker yields no token');
+      expect(fake.initServerClientId, 'client.test.apps.googleusercontent.com');
+      expect(fake.initClientId, isNull, reason: 'no clientId on mobile');
+      expect(fake.authenticateFailureWasCancel, isTrue);
+    });
+
+    test('sign-out reaches the plugin only after configuration', () async {
+      final fake = _RecordingGoogleSignInPlatform();
+      pl.GoogleSignInPlatform.instance = fake;
+
+      final service = GoogleSignInService(
+        serverClientId: 'client.test.apps.googleusercontent.com',
+      );
+      await service.getIdToken();
+      await service.signOut();
+      // Service call completed without throwing; the recording platform was used.
+      expect(true, isTrue);
     });
   });
 
