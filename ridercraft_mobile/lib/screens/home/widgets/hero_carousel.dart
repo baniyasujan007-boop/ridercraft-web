@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../models/hero_offer.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_tokens.dart';
 import '../../../utils/formatters.dart';
 import '../../../widgets/press_scale.dart';
 
 /// Horizontally swipeable hero carousel fed by `GET /hero-offers`.
 ///
-/// Styled like the website's `.ridercraft-hero`: dark navy base with an
-/// orange radial glow, italic uppercase headline and a gradient CTA.
-/// When the API returns no offers a branded fallback hero is shown.
+/// Premium RiderCraft hero: dark neutral gradient with a red radial glow,
+/// uppercase red badge, scale-fitted headline and a RiderCraft Red CTA.
+/// When the API returns no offers a branded fallback is shown.
 ///
 /// The hero height scales with the screen width and the device text scaler,
 /// and the copy is scale-fitted so longer titles never overflow the card.
@@ -57,7 +58,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
       return _BrandedHero(
         onCta: widget.onDefaultCta,
         height: height,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       );
     }
 
@@ -82,13 +83,14 @@ class _HeroCarouselState extends State<HeroCarousel> {
           ),
         ),
         if (offers.length > 1) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(offers.length, (index) {
               final active = index == _currentPage;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 width: active ? 22 : 7,
                 height: 7,
@@ -124,7 +126,7 @@ class _OfferHeroCard extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _HeroBadge(label: badge),
+          _HeroBadge(label: badge, flash: isFlash),
           const SizedBox(height: 10),
           Expanded(
             child: LayoutBuilder(
@@ -144,11 +146,10 @@ class _OfferHeroCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w800,
                             height: 1.1,
-                            letterSpacing: 0.3,
+                            letterSpacing: 0.2,
                           ),
                         ),
                         if (offer.ctaQuery.isNotEmpty ||
@@ -160,15 +161,15 @@ class _OfferHeroCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.75),
+                                color: AppColors.textSecondary,
                                 fontSize: 13,
                               ),
                             )
                           else
                             Text(
                               'Ends in ${Formatters.remainingDuration(offer.remainingSeconds)}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.75),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
                                 fontSize: 13,
                               ),
                             ),
@@ -188,7 +189,9 @@ class _OfferHeroCard extends StatelessWidget {
   }
 }
 
-/// Branded fallback shown when the API returns no hero offers.
+/// Branded fallback shown when the API returns no hero offers. The headline
+/// stays exactly "Premium motorcycle gear for every rider." as the branded
+/// promise.
 class _BrandedHero extends StatelessWidget {
   final VoidCallback onCta;
   final double height;
@@ -211,7 +214,7 @@ class _BrandedHero extends StatelessWidget {
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _HeroBadge(label: 'RIDERCRAFT'),
+              const _HeroBadge(label: 'RIDERCRAFT', flash: false),
               const SizedBox(height: 10),
               Expanded(
                 flex: 3,
@@ -232,16 +235,15 @@ class _BrandedHero extends StatelessWidget {
                               ),
                               TextSpan(
                                 text: 'for every rider.',
-                                style: TextStyle(color: Color(0xFFFF7A1A)),
+                                style: TextStyle(color: AppColors.primaryLight),
                               ),
                             ],
                           ),
                           style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            fontStyle: FontStyle.italic,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
                             height: 1.12,
-                            letterSpacing: 0.3,
+                            letterSpacing: -0.3,
                           ),
                         ),
                       ),
@@ -291,12 +293,16 @@ class _TrustRow extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFFFF7A1A)),
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Text(
                 item,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.72),
+                  color: AppColors.textSecondary.withValues(alpha: 0.9),
                   fontSize: 11,
                 ),
               ),
@@ -307,8 +313,8 @@ class _TrustRow extends StatelessWidget {
   }
 }
 
-/// Shared hero card shell: dark navy gradient with an orange radial glow and
-/// a motorcycle watermark, like the website hero section.
+/// Shared hero card shell: dark neutral gradient with a RiderCraft Red radial
+/// glow and a motorcycle watermark.
 class _HeroShell extends StatelessWidget {
   final bool isFlash;
   final Widget content;
@@ -317,79 +323,65 @@ class _HeroShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PressScale(
-      onTap: null,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0A1119), Color(0xFF0E1A2B)],
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.985, end: 1),
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      builder: (context, scale, child) {
+        return Transform.scale(scale: scale, child: child);
+      },
+      child: PressScale(
+        onTap: null,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF14171C), Color(0xFF0D0F12)],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              // Orange radial glow (top center, like the website hero).
-              Positioned(
-                top: -60,
-                left: -40,
-                child: Container(
-                  width: 240,
-                  height: 240,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: isFlash
-                          ? const [Color(0x4DFF4D00), Color(0x00FF4D00)]
-                          : AppColors.heroGlowColors,
-                    ),
-                  ),
-                ),
-              ),
-              if (isFlash)
+            borderRadius: BorderRadius.circular(AppRadius.hero),
+            border: Border.all(color: AppColors.borderSubtle),
+            boxShadow: AppShadow.card,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.hero),
+            child: Stack(
+              children: [
                 Positioned(
-                  right: -30,
-                  top: -40,
+                  top: -70,
+                  left: -50,
                   child: Container(
-                    width: 180,
-                    height: 180,
-                    decoration: const BoxDecoration(
+                    width: 260,
+                    height: 260,
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
-                        colors: [Color(0x33FFFFFF), Color(0x00FFFFFF)],
+                        colors: isFlash
+                            ? const [Color(0x40FF2B32), Color(0x00FF2B32)]
+                            : AppColors.heroGlowColors,
                       ),
                     ),
                   ),
                 ),
-              Positioned(
-                right: -24,
-                bottom: -28,
-                child: Icon(
-                  Icons.sports_motorsports_rounded,
-                  size: 130,
-                  color: isFlash
-                      ? Colors.white.withValues(alpha: 0.10)
-                      : AppColors.primary.withValues(alpha: 0.10),
+                Positioned(
+                  right: -28,
+                  bottom: -34,
+                  child: Icon(
+                    Icons.sports_motorsports_rounded,
+                    size: 150,
+                    color: isFlash
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : AppColors.primary.withValues(alpha: 0.10),
+                  ),
                 ),
-              ),
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: content,
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: content,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -399,19 +391,27 @@ class _HeroShell extends StatelessWidget {
 
 class _HeroBadge extends StatelessWidget {
   final String label;
+  final bool flash;
 
-  const _HeroBadge({required this.label});
+  const _HeroBadge({required this.label, required this.flash});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        color: Color(0xFFFF8A22),
-        fontSize: 13,
-        fontWeight: FontWeight.w900,
-        fontStyle: FontStyle.italic,
-        letterSpacing: 1.2,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: flash ? 0.20 : 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primaryLight,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.3,
+        ),
       ),
     );
   }
@@ -425,24 +425,17 @@ class _HeroCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressScale(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFF6A00), Color(0xFFF0440B)],
-          ),
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x47FF5B00),
-              blurRadius: 14,
-              offset: Offset(0, 6),
-            ),
-          ],
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          boxShadow: AppShadow.redGlow,
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -452,8 +445,8 @@ class _HeroCta extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
             ),
           ),
         ),

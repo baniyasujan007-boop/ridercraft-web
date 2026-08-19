@@ -49,8 +49,16 @@ class GoogleSignInService {
     }
     try {
       final account = await signIn.authenticate();
+      debugPrint('google-auth: authenticate returned account=true '
+          'idToken=${account.authentication.idToken != null}');
       return account.authentication.idToken;
     } on GoogleSignInException catch (error) {
+      // SAFE diagnostic only: code + provider message, never the client ID,
+      // JWT or any token. Allows on-device triage of the Google layer.
+      debugPrint(
+        'google-auth: GoogleSignInException code=${error.code} '
+        'description=${error.description} silent=${_isSilent(error.code)}',
+      );
       if (_isSilent(error.code)) return null;
       return _asApiException(error);
     }

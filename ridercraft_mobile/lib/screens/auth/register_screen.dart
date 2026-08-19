@@ -3,10 +3,16 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/app_logo.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/custom_button.dart';
+import 'widgets/auth_field.dart';
+import 'widgets/auth_feedback.dart';
+import 'widgets/auth_header.dart';
+import 'widgets/auth_reveal.dart';
+import 'widgets/auth_scaffold.dart';
+import 'widgets/auth_submit_button.dart';
 
+/// Premium RiderCraft account creation. Uses only the fields the backend
+/// supports (name, email, password) with the same validation rules and the
+/// existing registration flow.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -20,8 +26,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
   bool _submitting = false;
 
   @override
@@ -45,16 +49,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created. Please sign in.'),
-        ),
+      showAuthSnack(
+        context,
+        isError: false,
+        message: 'Account created. Please sign in.',
       );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+      showAuthSnack(
+        context,
+        message: authErrorMessage(
+          error,
+          fallback: 'Unable to create your account. Please try again.',
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -63,32 +71,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Form(
+    return AuthScaffold(
+      showBack: true,
+      child: AuthReveal(
+        children: [
+          const AuthHeader(
+            kicker: 'CREATE ACCOUNT',
+            title: 'Create your RiderCraft account',
+            subtitle: 'Join the club and get your garage ready.',
+          ),
+          const SizedBox(height: 28),
+          Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
-                const AppLogo(size: 84, showTagline: false),
-                const SizedBox(height: 16),
-                const Text(
-                  'Join RiderCraft',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                AppTextField(
+                AuthField(
                   controller: _nameController,
                   label: 'Full name',
                   prefixIcon: Icons.person_outline_rounded,
                   textInputAction: TextInputAction.next,
+                  autocorrect: true,
+                  autofillHints: const [AutofillHints.name],
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Name is required';
@@ -96,13 +100,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                AppTextField(
+                const SizedBox(height: 14),
+                AuthField(
                   controller: _emailController,
                   label: 'Email',
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Email is required';
@@ -114,24 +119,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                AppTextField(
+                const SizedBox(height: 14),
+                AuthField(
                   controller: _passwordController,
                   label: 'Password',
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: _obscurePassword,
+                  isPassword: true,
                   textInputAction: TextInputAction.next,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textMuted,
-                    ),
-                    onPressed: () => setState(
-                      () => _obscurePassword = !_obscurePassword,
-                    ),
-                  ),
+                  autofillHints: const [AutofillHints.newPassword],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password is required';
@@ -142,24 +137,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                AppTextField(
+                const SizedBox(height: 14),
+                AuthField(
                   controller: _confirmController,
                   label: 'Confirm password',
                   prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: _obscureConfirm,
+                  isPassword: true,
                   textInputAction: TextInputAction.done,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirm
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textMuted,
-                    ),
-                    onPressed: () => setState(
-                      () => _obscureConfirm = !_obscureConfirm,
-                    ),
-                  ),
+                  autofillHints: const [AutofillHints.newPassword],
+                  onSubmitted: _submitting ? null : _submit,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Confirm your password';
@@ -170,16 +156,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 28),
-                CustomButton(
+                const SizedBox(height: 24),
+                AuthSubmitButton(
                   label: 'Create Account',
+                  loadingLabel: 'Creating account...',
+                  icon: Icons.person_add_alt_1_rounded,
                   loading: _submitting,
-                  onPressed: _submit,
+                  onPressed: _submitting ? null : _submit,
                 ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Already have an account? ',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Sign In'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

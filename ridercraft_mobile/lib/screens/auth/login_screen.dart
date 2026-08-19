@@ -5,10 +5,17 @@ import '../../providers/auth_provider.dart';
 import '../../routes/route_names.dart';
 import '../../services/api_exception.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/app_logo.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/custom_button.dart';
+import 'widgets/auth_field.dart';
+import 'widgets/auth_feedback.dart';
+import 'widgets/auth_header.dart';
+import 'widgets/auth_reveal.dart';
+import 'widgets/auth_scaffold.dart';
+import 'widgets/auth_submit_button.dart';
+import 'widgets/google_button.dart';
 
+/// Premium RiderCraft sign-in: brand moment, email + password with the
+/// existing validation rules, the existing Google Sign-In flow and clear
+/// loading / error states. Authentication logic is untouched.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _submitting = false;
   bool _googleLoading = false;
 
@@ -48,8 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+      showAuthSnack(
+        context,
+        message: authErrorMessage(
+          error,
+          fallback: 'Unable to sign in. Please try again.',
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -71,259 +81,129 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            error is ApiException ? error.message : 'Google sign-in failed.',
-          ),
-        ),
+      // SAFE diagnostic only: surfaces non-ApiException failures (e.g. a
+      // platform-layer error) so the Google layer can be triaged on-device.
+      if (error is! ApiException) {
+        debugPrint('google-auth: login_screen non-ApiException $error');
+      }
+      showAuthSnack(
+        context,
+        message: error is ApiException
+            ? error.message
+            : 'Google sign-in failed. Please try again.',
       );
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
   }
 
+  void _openForgotPassword() {
+    Navigator.of(context).pushNamed(RouteNames.forgotPassword);
+  }
+
+  void _openRegister() {
+    Navigator.of(context).pushNamed(RouteNames.register);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-              const AppLogo(size: 84, showTagline: false),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  'WELCOME BACK',
-                  style: TextStyle(
-                    fontSize: 11,
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+    return AuthScaffold(
+      child: AuthReveal(
+        children: [
+          const Center(child: AuthBrand(size: 72)),
+          const SizedBox(height: 24),
+          const AuthHeader(
+            kicker: 'WELCOME BACK',
+            title: 'Ready for your next ride?',
+            subtitle: 'Book services, shop parts and track your rides.',
+          ),
+          const SizedBox(height: 28),
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AuthField(
+                  controller: _emailController,
+                  label: 'Email',
+                  hint: 'you@example.com',
+                  prefixIcon: Icons.mail_outline_rounded,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                        .hasMatch(value.trim())) {
+                      return 'Enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                AuthField(
+                  controller: _passwordController,
+                  label: 'Password',
+                  prefixIcon: Icons.lock_outline_rounded,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.password],
+                  onSubmitted: _submitting ? null : _submit,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Password is required';
+                    }
+                    return null;
+                  },
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: TextButton(
+                      onPressed: _openForgotPassword,
+                      child: const Text('Forgot password?'),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Sign in to your account',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Book services, shop parts and track your rides.',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 32),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    AppTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'you@example.com',
-                      prefixIcon: Icons.mail_outline_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Email is required';
-                        }
-                        if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                            .hasMatch(value.trim())) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      prefixIcon: Icons.lock_outline_rounded,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: AppColors.textMuted,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => Navigator.of(context)
-                            .pushNamed(RouteNames.forgotPassword),
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomButton(
-                      label: 'Sign In',
-                      loading: _submitting,
-                      onPressed: _submit,
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                AuthSubmitButton(
+                  label: 'Sign In',
+                  loadingLabel: 'Signing you in...',
+                  icon: Icons.arrow_forward_rounded,
+                  loading: _submitting,
+                  onPressed: _submitting ? null : _submit,
                 ),
-              ),
-              const SizedBox(height: 24),
-              const _OrDivider(),
-              const SizedBox(height: 16),
-              _GoogleButton(
-                loading: _googleLoading,
-                onPressed: _submitting ? null : _googleSignIn,
-              ),
-              const SizedBox(height: 24),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'New to RiderCraft? ',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context)
-                          .pushNamed(RouteNames.register),
-                      child: const Text('Create account'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// "OR" separator shown above the Google button.
-class _OrDivider extends StatelessWidget {
-  const _OrDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: Divider(color: AppColors.border)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'OR',
-            style: TextStyle(
-              fontSize: 12,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textMuted,
+              ],
             ),
           ),
-        ),
-        const Expanded(child: Divider(color: AppColors.border)),
-      ],
-    );
-  }
-}
-
-/// RiderCraft-branded "Continue with Google" button (outlined, white Google
-/// mark) wired to [AuthProvider.loginWithGoogle].
-class _GoogleButton extends StatelessWidget {
-  final bool loading;
-  final VoidCallback? onPressed;
-
-  const _GoogleButton({required this.loading, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = !loading && onPressed != null;
-    final child = loading
-        ? const SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
-          )
-        : Row(
-            children: [
-              // The Google mark is a brand graphic, so it stays at a fixed
-              // size instead of scaling with the user's text-scale setting.
-              MediaQuery.withNoTextScaling(child: const _GoogleG()),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Continue with Google',
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
+          const SizedBox(height: 24),
+          const AuthOrDivider(),
+          const SizedBox(height: 16),
+          GoogleButton(
+            loading: _googleLoading,
+            onPressed: _submitting ? null : _googleSignIn,
+          ),
+          const SizedBox(height: 24),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'New to RiderCraft? ',
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
-              ),
-            ],
-          );
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: enabled ? onPressed : null,
-        borderRadius: BorderRadius.circular(8),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
+                TextButton(
+                  onPressed: _openRegister,
+                  child: const Text('Create account'),
+                ),
+              ],
+            ),
           ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 28),
-            child: Center(child: child),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The classic four-colour Google "G" mark drawn with coloured text spans.
-class _GoogleG extends StatelessWidget {
-  const _GoogleG();
-
-  @override
-  Widget build(BuildContext context) {
-    const blue = Color(0xFF4285F4);
-    const red = Color(0xFFEA4335);
-    const yellow = Color(0xFFFBBC05);
-    const green = Color(0xFF34A853);
-    return const Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(text: 'G', style: TextStyle(color: blue)),
-          TextSpan(text: 'o', style: TextStyle(color: red)),
-          TextSpan(text: 'o', style: TextStyle(color: yellow)),
-          TextSpan(text: 'g', style: TextStyle(color: blue)),
-          TextSpan(text: 'l', style: TextStyle(color: green)),
-          TextSpan(text: 'e', style: TextStyle(color: red)),
         ],
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
       ),
     );
   }

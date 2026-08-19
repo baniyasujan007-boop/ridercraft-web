@@ -24,12 +24,12 @@ class PromoCard extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFB50E17), Color(0xFFE02612), Color(0xFFF04E10)],
+            colors: [Color(0xFFC4151D), Color(0xFFE31B23), Color(0xFFFF2B32)],
           ),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x33E02612),
+              color: Color(0x33E31B23),
               blurRadius: 14,
               offset: Offset(0, 6),
             ),

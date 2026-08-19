@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/custom_button.dart';
+import 'widgets/auth_field.dart';
+import 'widgets/auth_feedback.dart';
+import 'widgets/auth_header.dart';
+import 'widgets/auth_reveal.dart';
+import 'widgets/auth_scaffold.dart';
+import 'widgets/auth_submit_button.dart';
 
-/// Forgot password flow. Requests a password-reset link for the given email;
-/// the reset token is delivered by email, never returned to the app.
+/// Premium password reset: takes the existing flow and wraps it in the new
+/// brand aesthetic with a safe loading / success / error rhythm.
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -33,17 +37,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       await auth.forgotPassword(email: _emailController.text);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('If that email is registered, a reset link has been '
-              'sent. Please check your inbox.'),
-        ),
+      showAuthSnack(
+        context,
+        isError: false,
+        message: 'Reset link sent to your email',
       );
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
+      showAuthSnack(
+        context,
+        message: authErrorMessage(
+          error,
+          fallback: 'Unable to send reset link. Please try again.',
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -52,29 +59,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Form(
+    return AuthScaffold(
+      showBack: true,
+      child: AuthReveal(
+        children: [
+          const AuthHeader(
+            kicker: 'RESET PASSWORD',
+            title: 'Trouble getting in?',
+            subtitle: 'Enter your email and we\'ll send you a reset link.',
+          ),
+          const SizedBox(height: 28),
+          Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
-                const Text(
-                  'Enter your account email and we will send you a link to '
-                  'reset your password.',
-                  style: TextStyle(fontSize: 15, height: 1.5),
-                ),
-                const SizedBox(height: 24),
-                AppTextField(
+                AuthField(
                   controller: _emailController,
                   label: 'Email',
+                  hint: 'you@example.com',
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.email],
+                  onSubmitted: _submitting ? null : _submit,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Email is required';
@@ -86,16 +94,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 28),
-                CustomButton(
+                const SizedBox(height: 24),
+                AuthSubmitButton(
                   label: 'Send Reset Link',
+                  loadingLabel: 'Sending...',
+                  icon: Icons.send_rounded,
                   loading: _submitting,
-                  onPressed: _submit,
+                  onPressed: _submitting ? null : _submit,
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

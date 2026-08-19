@@ -72,10 +72,53 @@ keytool -list -v -alias androiddebugkey \
 
 ## Running the app
 
+A plain `flutter run` does NOT pass `GOOGLE_WEB_CLIENT_ID`, so Google Sign-In
+shows "Google sign-in is not configured for this build." For development runs
+that include Google Sign-In, always use the safe helper (it reads the ID from
+`server/.env`, never printing it):
+
 ```bash
 flutter pub get
-flutter run
+./scripts/build_android.sh run        # device/emulator with Google Sign-In
 ```
+
+Bare `flutter run` remains available for work that does not need Google
+Sign-In.
+
+### Local development against the local backend (`dev`)
+
+One command runs the app in debug mode on a USB-connected Android phone and
+points it at the local server (via `adb reverse`, so the phone's
+`127.0.0.1:5001` reaches your machine). This is the setup used to test
+password-reset email delivery against Gmail SMTP.
+
+Terminal 1 — start the backend:
+
+```bash
+cd server
+npm start
+```
+
+Terminal 2 — run the app on the phone:
+
+```bash
+./scripts/build_android.sh dev
+```
+
+The `dev` target:
+
+1. Requires exactly one connected Android device (via `adb`).
+2. Sets up `adb reverse tcp:5001 tcp:5001` so the app's
+   `http://127.0.0.1:5001` reaches the host's backend.
+3. Verifies the local backend is reachable on port 5001 — if not, it prints
+   "RiderCraft backend is not running on port 5001..." and exits.
+4. Launches `flutter run` (debug, hot reload) with `ENV=dev`,
+   `API_BASE_URL=http://127.0.0.1:5001`, and the OAuth client ID read from
+   `server/.env` — no other configuration is required.
+
+If you hit a `dev` run and the forgot-password request does not appear in the
+local server terminal, re-check the API base URL: the device must reach the
+host through `adb reverse`, and the host server must be running on port 5001.
 
 ## Tests
 

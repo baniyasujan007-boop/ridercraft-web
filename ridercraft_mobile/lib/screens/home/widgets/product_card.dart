@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 import '../../../models/product.dart';
 import '../../../providers/product_provider.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_tokens.dart';
 import '../../../utils/formatters.dart';
 import '../../../utils/wishlist_actions.dart';
 import '../../../widgets/press_scale.dart';
 import '../../../widgets/rc_image.dart';
+import '../../../widgets/rc_price.dart';
 
-/// Website-style product card: white card on the dark wrapper with a light
-/// image tile, orange discount pill, brand kicker and a gradient "Add" button
-/// (see `.product-card` in the website shop styles).
+/// Premium dark product card: elevated surface, contained product image over
+/// a red-tinted glow, rider red brand kicker, wishlist toggle and a RiderCraft
+/// Red "Add" CTA. Shared by the Home carousels and the Shop grid.
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
@@ -21,13 +23,13 @@ class ProductCard extends StatelessWidget {
   /// Height a [ProductCard] needs inside a fixed-slot host (a grid cell or a
   /// horizontal row) for the current text scaler.
   ///
-  /// The card is made of fixed chrome — the 168px image tile, paddings, gaps
-  /// and the rating/action rows — plus text lines (brand, two-line title,
-  /// price) that grow with the accessibility font size. Hosts size their
-  /// slots from this so scaled text never overflows the card.
+  /// The card is made of fixed chrome — the image tile, paddings, gaps and the
+  /// action rows — plus text lines (brand, two-line title, price) that grow
+  /// with the accessibility font size. Hosts size their slots from this so
+  /// scaled text never overflows the card.
   static double slotHeight(BuildContext context) {
     final scale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 3.0);
-    return 250 + 86 * scale;
+    return 270 + 92 * scale;
   }
 
   @override
@@ -38,19 +40,13 @@ class ProductCard extends StatelessWidget {
 
     return PressScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE0E4E9)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A111827),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.borderSubtle),
+          boxShadow: AppShadow.soft,
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -61,30 +57,46 @@ class ProductCard extends StatelessWidget {
                 Container(
                   height: 168,
                   width: double.infinity,
-                  color: const Color(0xFFF7F8FA),
-                  padding: const EdgeInsets.all(10),
-                  child: RcImage(product.image, fit: BoxFit.contain),
+                  color: AppColors.surfaceAlt,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: RadialGradient(
+                            center: Alignment(0.2, -0.6),
+                            radius: 1.1,
+                            colors: [
+                              Color(0x1FE31B23),
+                              Color(0x00E31B23),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: RcImage(product.image, fit: BoxFit.contain),
+                      ),
+                    ],
+                  ),
                 ),
                 if (product.discountPercent > 0)
                   Positioned(
-                    top: 8,
-                    left: 8,
+                    top: AppSpacing.sm,
+                    left: AppSpacing.sm,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
+                        horizontal: AppSpacing.sm,
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF2E8),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.primaryDark.withValues(alpha: 0.3),
-                        ),
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
                         '-${product.discountPercent}%',
                         style: const TextStyle(
-                          color: Color(0xFFE65400),
+                          color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                         ),
@@ -93,25 +105,27 @@ class ProductCard extends StatelessWidget {
                   ),
                 if (!product.inStock)
                   Positioned.fill(
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      alignment: Alignment.center,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF17202D),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'OUT OF STOCK',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
+                    child: ColoredBox(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(AppRadius.small),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Text(
+                            'OUT OF STOCK',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
                           ),
                         ),
                       ),
@@ -121,22 +135,22 @@ class ProductCard extends StatelessWidget {
                   top: 6,
                   right: 6,
                   child: Material(
-                    color: Colors.white,
+                    color: AppColors.surfaceElevated,
                     shape: const CircleBorder(),
                     elevation: 0,
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: () => toggleWishlistFromContext(context, product),
                       child: Padding(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(7),
                         child: Icon(
                           inWishlist
                               ? Icons.favorite_rounded
                               : Icons.favorite_border_rounded,
-                          size: 17,
+                          size: 16,
                           color: inWishlist
                               ? AppColors.primary
-                              : const Color(0xFF17202D),
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -145,7 +159,7 @@ class ProductCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+              padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -154,83 +168,63 @@ class ProductCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFFE65400),
+                      color: AppColors.primary,
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: 0.9,
+                      letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     product.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF17202D),
-                      fontSize: 12.5,
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      height: 1.25,
+                      height: 1.3,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          Formatters.inr(product.displayPrice),
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF101827),
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      if (product.displayPrice < product.originalPrice) ...[
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            Formatters.inr(product.originalPrice),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF8B95A5),
-                              fontSize: 10.5,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                  const SizedBox(height: 6),
+                  RcPrice(
+                    amount: Formatters.inr(product.displayPrice),
+                    originalAmount: product.displayPrice < product.originalPrice
+                        ? Formatters.inr(product.originalPrice)
+                        : null,
+                    size: 16,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       const Icon(
                         Icons.star_rounded,
                         size: 14,
-                        color: Color(0xFFF4B400),
+                        color: AppColors.accent,
                       ),
                       const SizedBox(width: 2),
-                      Text(
-                        product.ratingCount > 0
-                            ? product.ratingAverage.toStringAsFixed(1)
-                            : 'New',
-                        style: const TextStyle(
-                          color: Color(0xFF5E6B7A),
-                          fontSize: 10.5,
+                      Flexible(
+                        child: Text(
+                          product.ratingCount > 0
+                              ? product.ratingAverage.toStringAsFixed(1)
+                              : 'New',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 10.5,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 10),
                   Container(
-                    height: 34,
+                    height: 38,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -245,8 +239,8 @@ class ProductCard extends StatelessWidget {
                           'ADD',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
                           ),
                         ),

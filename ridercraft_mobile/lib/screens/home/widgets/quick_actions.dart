@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../routes/route_names.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_tokens.dart';
 import '../../../widgets/press_scale.dart';
 
-/// Quick action tiles on the Home screen styled like the website's category
-/// and action cards: white cards with an icon tile on the dark wrapper.
+/// Quick action tiles on the Home screen: compact premium cards that jump to
+/// the existing RiderCraft surfaces (Book Service, My Bike, Shop, My Bookings).
 class QuickActions extends StatelessWidget {
   final void Function(int index) onNavigateTab;
 
@@ -21,43 +22,39 @@ class QuickActions extends StatelessWidget {
       _Action(
         label: 'Book Service',
         icon: Icons.build_rounded,
-        color: AppColors.primaryDark,
         onTap: () => _open(context, 1),
       ),
       _Action(
         label: 'My Bike',
         icon: Icons.sports_motorsports_rounded,
-        color: const Color(0xFF2563EB),
         onTap: () => Navigator.of(context).pushNamed(RouteNames.myBikes),
       ),
       _Action(
         label: 'Shop',
         icon: Icons.shopping_bag_rounded,
-        color: const Color(0xFF16A34A),
         onTap: () => _open(context, 2),
       ),
       _Action(
         label: 'My Bookings',
         icon: Icons.calendar_month_rounded,
-        color: const Color(0xFF7C3AED),
         onTap: () => _open(context, 3),
       ),
     ];
 
-final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-    final tileHeight = (56 * textScale).clamp(56.0, 96.0);
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final tileHeight = (60 * textScale).clamp(60.0, 108.0);
     final tileWidth = (MediaQuery.sizeOf(context).width - 32 - 12) / 2;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: tileWidth / tileHeight,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: AppSpacing.md,
+          crossAxisSpacing: AppSpacing.md,
         ),
         itemCount: actions.length,
         itemBuilder: (context, index) => actions[index],
@@ -69,13 +66,11 @@ final textScale = MediaQuery.textScalerOf(context).scale(1.0);
 class _Action extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color color;
   final VoidCallback onTap;
 
   const _Action({
     required this.label,
     required this.icon,
-    required this.color,
     required this.onTap,
   });
 
@@ -83,41 +78,36 @@ class _Action extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE0E4E9)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A111827),
-              blurRadius: 8,
-              offset: Offset(0, 3),
-            ),
-          ],
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.borderSubtle),
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFF6F7F8),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE4E8EE)),
+                color: AppColors.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.28),
+                ),
               ),
-              child: Icon(icon, color: color, size: 21),
+              child: Icon(icon, color: AppColors.primaryLight, size: 21),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Color(0xFF17202D),
+                  color: AppColors.textPrimary,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -126,7 +116,7 @@ class _Action extends StatelessWidget {
             const Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: Color(0xFF8B95A5),
+              color: AppColors.textMuted,
             ),
           ],
         ),

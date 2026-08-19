@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_tokens.dart';
 
-/// Website-style section heading: orange uppercase kicker, bold uppercase
-/// title and an optional trailing "See All" link with a divider rule below
-/// (see `.shop-section-kicker` / `.featured-head` in the website CSS).
+/// Premium section heading: small RiderCraft Red kicker, semi-bold title and
+/// an optional "See All" link with a hairline rule below. The universal
+/// section header across the redesigned screens.
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? kicker;
@@ -25,7 +26,7 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -38,20 +39,20 @@ class SectionHeader extends StatelessWidget {
                         kicker!.toUpperCase(),
                         style: const TextStyle(
                           color: AppColors.primary,
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 1.4,
+                          letterSpacing: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                     ],
                     Text(
-                      title.toUpperCase(),
+                      title,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
                       ),
                     ),
                   ],
@@ -61,6 +62,7 @@ class SectionHeader extends StatelessWidget {
                 TextButton(
                   onPressed: onSeeAll,
                   style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -76,7 +78,7 @@ class SectionHeader extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 2),
-                      Icon(Icons.chevron_right_rounded, size: 18),
+                      Icon(Icons.chevron_right_rounded, size: 17),
                     ],
                   ),
                 ),
@@ -84,8 +86,14 @@ class SectionHeader extends StatelessWidget {
           ),
         ),
         if (showDivider) ...[
-          const SizedBox(height: 12),
-          const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            indent: AppSpacing.lg,
+            endIndent: AppSpacing.lg,
+            color: AppColors.borderSubtle,
+          ),
         ],
       ],
     );

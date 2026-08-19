@@ -33,7 +33,15 @@ class _SplashScreenState extends State<SplashScreen>
         Tween<double>(begin: 0.06, end: 0).animate(_controller);
     _controller.forward();
 
-    _bootstrap();
+    // Restore the session AFTER the first frame. restoreSession() notifies its
+    // listeners (ChangeNotifierProvider at the app root), and notifying them
+    // synchronously here — during the build phase — throws
+    // "setState() or markNeedsBuild() called during build".
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _bootstrap();
+      }
+    });
   }
 
   Future<void> _bootstrap() async {
