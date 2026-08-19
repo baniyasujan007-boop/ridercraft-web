@@ -3,13 +3,23 @@ import 'package:provider/provider.dart';
 
 import '../../models/bike.dart';
 import '../../providers/bike_provider.dart';
+import '../../routes/route_names.dart';
 import '../../theme/app_colors.dart';
-import '../../widgets/app_text_field.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/loading_view.dart';
+import '../../theme/app_tokens.dart';
+import '../../widgets/error_view.dart';
+import '../../widgets/rc_entrance.dart';
+import 'widgets/bike_dashboard_card.dart';
+import 'widgets/bike_form_sheet.dart';
+import 'widgets/bike_selector.dart';
+import 'widgets/delete_bike_sheet.dart';
+import 'widgets/empty_garage.dart';
+import 'widgets/garage_skeleton.dart';
 
-/// My Bike — manage the rider's motorcycles locally (the backend has no Bike
-/// endpoints). The selected bike's model string is used in service bookings.
+/// My Garage — the rider's personal motorcycle command centre.
+///
+/// Dashboard of stored bikes (local storage only — the backend has no Bike
+/// endpoints), a horizontal selector when there is more than one, a premium
+/// active-bike card and the existing add / edit / remove / select flows.
 class MyBikesScreen extends StatefulWidget {
   const MyBikesScreen({super.key});
 
@@ -19,6 +29,7 @@ class MyBikesScreen extends StatefulWidget {
 
 class _MyBikesScreenState extends State<MyBikesScreen> {
   bool _loading = true;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -30,76 +41,37 @@ class _MyBikesScreenState extends State<MyBikesScreen> {
     try {
       final provider = context.read<BikeProvider>();
       if (!provider.loaded) await provider.load();
+      if (mounted) setState(() => _loadFailed = false);
     } catch (_) {
-      // Load failures degrade to an empty garage; the list still renders.
+      if (mounted) setState(() => _loadFailed = true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final bikesProvider = context.watch<BikeProvider>();
-    final bikes = bikesProvider.bikes;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('My Bikes')),
-      floatingActionButton: _loading
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _showBikeForm(context),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Bike'),
-            ),
-      body: _loading
-          ? const LoadingView(label: 'Loading bikes…')
-          : bikes.isEmpty
-              ? _EmptyBikes(onAdd: () => _showBikeForm(context))
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: bikes.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final bike = bikes[index];
-                    final selected = bike.id == bikesProvider.selectedBike?.id;
-                    return _BikeTile(
-                      bike: bike,
-                      selected: selected,
-                      onTap: () => bikesProvider.selectBike(bike.id),
-                      onEdit: () => _showBikeForm(context, bike: bike),
-                      onDelete: () => _confirmDelete(context, bike),
-                    );
-                  },
-                ),
-    );
+  void _retry() {
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+    });
+    _ensureLoaded();
   }
 
-  Future<void> _confirmDelete(BuildContext context, Bike bike) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove bike?'),
-        content: Text('${bike.displayName} will be removed from your bikes.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+  Future<void> _openAddSheet() async {
+    await showBikeFormSheet(context);
+  }
+
+  Future<void> _openEditSheet(Bike bike) async {
+    await showBikeFormSheet(context, bike: bike);
+  }
+
+  Future<void> _confirmDelete(Bike bike) async {
+    final confirmed = await showDeleteBikeSheet(context, bike);
+    if (confirmed != true || !mounted) return;
     try {
       await context.read<BikeProvider>().deleteBike(bike.id);
     } on Exception {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not remove the bike. Please try again.'),
@@ -108,321 +80,158 @@ class _MyBikesScreenState extends State<MyBikesScreen> {
     }
   }
 
-  Future<void> _showBikeForm(BuildContext context, {Bike? bike}) async {
-    final saved = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => _BikeFormSheet(bike: bike),
-    );
-
-    if (saved == true && mounted) {
-      // Bike list updated via provider.
-    }
-  }
-}
-
-class _BikeFormSheet extends StatefulWidget {
-  final Bike? bike;
-
-  const _BikeFormSheet({this.bike});
-
-  @override
-  State<_BikeFormSheet> createState() => _BikeFormSheetState();
-}
-
-class _BikeFormSheetState extends State<_BikeFormSheet> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _brandController =
-      TextEditingController(text: widget.bike?.brand ?? '');
-  late final TextEditingController _modelController =
-      TextEditingController(text: widget.bike?.model ?? '');
-  late final TextEditingController _regController =
-      TextEditingController(text: widget.bike?.registrationNumber ?? '');
-  late final TextEditingController _yearController =
-      TextEditingController(text: widget.bike?.year ?? '');
-  late final TextEditingController _ccController =
-      TextEditingController(text: widget.bike?.engineCapacity ?? '');
-
-  @override
-  void dispose() {
-    _brandController.dispose();
-    _modelController.dispose();
-    _regController.dispose();
-    _yearController.dispose();
-    _ccController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final providers = context.read<BikeProvider>();
-    final bike = widget.bike;
-    try {
-      final now = DateTime.now().millisecondsSinceEpoch.toString();
-      final newBike = Bike(
-        id: bike?.id ?? now,
-        brand: _brandController.text.trim(),
-        model: _modelController.text.trim(),
-        registrationNumber: _regController.text.trim(),
-        year: _yearController.text.trim(),
-        engineCapacity: _ccController.text.trim(),
-      );
-      if (bike == null) {
-        await providers.addBike(newBike);
-      } else {
-        await providers.updateBike(newBike);
-      }
-      if (mounted) Navigator.of(context).pop(true);
-    } on Exception {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save your bike. Please try again.'),
-        ),
-      );
-    }
+  void _openDetail(Bike bike) {
+    Navigator.of(context).pushNamed(RouteNames.bikeDetail, arguments: bike.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bike = widget.bike;
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                bike == null ? 'Add your bike' : 'Edit bike',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
-                controller: _brandController,
-                label: 'Brand',
-                hint: 'e.g. Honda',
-                prefixIcon: Icons.directions_bike_rounded,
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty)
-                        ? 'Brand is required'
-                        : null,
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                controller: _modelController,
-                label: 'Model',
-                hint: 'e.g. SP 125',
-                prefixIcon: Icons.settings_outlined,
-                validator: (value) =>
-                    (value == null || value.trim().isEmpty)
-                        ? 'Model is required'
-                        : null,
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      controller: _regController,
-                      label: 'Registration No.',
-                      hint: 'e.g. MH-12-AB-1234',
-                      keyboardType: TextInputType.text,
+    final bikesProvider = context.watch<BikeProvider>();
+    final bikes = bikesProvider.bikes;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      floatingActionButton: _loading
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _openAddSheet,
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add Bike'),
+            ),
+      body: _loading
+          ? const GarageSkeleton()
+          : _loadFailed
+              ? ErrorView(
+                  message: 'Could not load your garage.',
+                  onRetry: _retry,
+                )
+              : bikes.isEmpty
+                  ? EmptyGarage(onAdd: _openAddSheet)
+                  : _GarageDashboard(
+                      bikes: bikes,
+                      selectedBike: bikesProvider.selectedBike,
+                      onSelect: (bike) => bikesProvider.selectBike(bike.id),
+                      onAdd: _openAddSheet,
+                      onViewDetails: _openDetail,
+                      onEdit: _openEditSheet,
+                      onDelete: _confirmDelete,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppTextField(
-                      controller: _yearController,
-                      label: 'Year',
-                      hint: 'e.g. 2022',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              AppTextField(
-                controller: _ccController,
-                label: 'Engine capacity (cc)',
-                hint: 'e.g. 125',
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 20),
-              CustomButton(
-                label: bike == null ? 'Save Bike' : 'Update Bike',
-                onPressed: _submit,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
 
-class _BikeTile extends StatelessWidget {
-  final Bike bike;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+class _GarageDashboard extends StatelessWidget {
+  final List<Bike> bikes;
+  final Bike? selectedBike;
+  final ValueChanged<Bike> onSelect;
+  final VoidCallback onAdd;
+  final ValueChanged<Bike> onViewDetails;
+  final ValueChanged<Bike> onEdit;
+  final ValueChanged<Bike> onDelete;
 
-  const _BikeTile({
-    required this.bike,
-    required this.selected,
-    required this.onTap,
+  const _GarageDashboard({
+    required this.bikes,
+    required this.selectedBike,
+    required this.onSelect,
+    required this.onAdd,
+    required this.onViewDetails,
     required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? AppColors.primary : AppColors.border,
-              width: selected ? 1.5 : 1,
+    final selected = selectedBike ?? bikes.first;
+    final showBack = Navigator.of(context).canPop();
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+      children: [
+        _GarageHeader(showBack: showBack),
+        if (bikes.length > 1) ...[
+          const SizedBox(height: AppSpacing.sm),
+          BikeSelector(
+            bikes: bikes,
+            selectedBike: selectedBike,
+            onSelect: onSelect,
+            onAdd: onAdd,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: RcEntrance(
+            child: BikeDashboardCard(
+              bike: selected,
+              selected: true,
+              onViewDetails: () => onViewDetails(selected),
+              onEdit: () => onEdit(selected),
+              onDelete: () => onDelete(selected),
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.sports_motorsports_rounded,
-                  color: AppColors.primary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            bike.displayName,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (selected) ...[
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: AppColors.primary,
-                            size: 16,
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (bike.subtitle.isNotEmpty)
-                      Text(
-                        bike.subtitle,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: 'Edit',
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 20),
-              ),
-              IconButton(
-                tooltip: 'Delete',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded,
-                    size: 20, color: AppColors.error),
-              ),
-            ],
-          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _EmptyBikes extends StatelessWidget {
-  final VoidCallback onAdd;
+class _GarageHeader extends StatelessWidget {
+  final bool showBack;
 
-  const _EmptyBikes({required this.onAdd});
+  const _GarageHeader({required this.showBack});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.sports_motorsports_rounded,
-              size: 56,
-              color: AppColors.textMuted,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No bikes added yet.',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          if (showBack) ...[
+            IconButton(
+              tooltip: 'Back',
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: AppColors.textSecondary,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Add your bike to book services faster.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add Bike'),
-            ),
+            const SizedBox(width: AppSpacing.xs),
           ],
-        ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'MY GARAGE',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Manage your rides',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

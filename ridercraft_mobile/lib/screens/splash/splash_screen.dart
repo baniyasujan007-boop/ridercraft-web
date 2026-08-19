@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../routes/home_router.dart';
 import '../../routes/route_names.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_logo.dart';
@@ -50,8 +51,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    final destination = auth.isAuthenticated
-        ? RouteNames.main
+    final destination = auth.isAuthenticated && auth.user != null
+        ? homeRouteFor(auth.user!)
         : RouteNames.login;
 
     Navigator.of(context).pushNamedAndRemoveUntil(

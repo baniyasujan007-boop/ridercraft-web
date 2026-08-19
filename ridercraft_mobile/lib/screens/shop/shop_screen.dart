@@ -4,17 +4,26 @@ import 'package:provider/provider.dart';
 import '../../models/product.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
-import '../../providers/cart_provider.dart';
 import '../../routes/route_names.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../widgets/error_view.dart';
+import '../../widgets/rc_entrance.dart';
+import '../../widgets/rc_icon_button.dart';
+import '../../widgets/rc_search_bar.dart';
 import '../home/widgets/product_card.dart';
+import 'widgets/category_carousel.dart';
+import 'widgets/filter_sheet.dart';
+import 'widgets/shop_skeleton.dart';
+import 'widgets/shop_toolbar.dart';
+import '../../widgets/cart_icon_button.dart';
 
 /// Shop tab: the real product catalogue from `GET /products`.
 ///
-/// Mobile-friendly responsive grid of website-style product cards with
-/// search (client-side filter over the loaded catalogue) and tag filtering.
-/// Loading, empty, error/retry and pull-to-refresh states are all handled.
+/// Premium marketplace layout — search, data-driven category rail, client-side
+/// filter/sort toolbar (in-stock filter + relevance/price/rating/discount
+/// sorts over the loaded catalogue), and a responsive grid of redesigned
+/// product cards. Loading, empty, error/retry and pull-to-refresh are handled.
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
 
@@ -26,6 +35,8 @@ class _ShopScreenState extends State<ShopScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _tagFilter;
+  bool _inStockOnly = false;
+  String _sort = 'relevance';
   bool _started = false;
   bool _loadedOnce = false;
 
@@ -79,6 +90,28 @@ class _ShopScreenState extends State<ShopScreen> {
     ).pushNamed(RouteNames.productDetail, arguments: product);
   }
 
+  Future<void> _openFilterSheet() async {
+    final result = await showModalBottomSheet<ShopFilters>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FilterSheet(sort: _sort, inStockOnly: _inStockOnly),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _sort = result.sort;
+        _inStockOnly = result.inStockOnly;
+      });
+    }
+  }
+
+  double _effectivePrice(Product product) {
+    if (product.isFlashSaleActive && product.flashSalePrice > 0) {
+      return product.flashSalePrice;
+    }
+    return product.displayPrice;
+  }
+
   List<Product> _visible(ProductProvider provider) {
     var list = provider.products;
     if (_tagFilter != null) {
@@ -90,34 +123,74 @@ class _ShopScreenState extends State<ShopScreen> {
           .where((p) => _tagFilter == null || p.tag == _tagFilter)
           .toList();
     }
-    return list;
+    if (_inStockOnly) {
+      list = list.where((p) => p.inStock).toList();
+    }
+    if (_sort == 'relevance') return List.of(list);
+
+    final sorted = List.of(list);
+    switch (_sort) {
+      case 'price_asc':
+        sorted.sort(
+          (a, b) => _effectivePrice(a).compareTo(_effectivePrice(b)),
+        );
+      case 'price_desc':
+        sorted.sort(
+          (a, b) => _effectivePrice(b).compareTo(_effectivePrice(a)),
+        );
+      case 'rating':
+        sorted.sort((a, b) => b.ratingAverage.compareTo(a.ratingAverage));
+      case 'discount':
+        sorted.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
+    }
+    return sorted;
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProductProvider>();
+    final catalogueVisible = _loadedOnce && provider.products.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shop'),
         actions: [
-          _CartButton(),
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: IconButton(
-              tooltip: 'Retry load',
-              icon: const Icon(Icons.refresh_rounded),
-              onPressed: _load,
-            ),
+          const CartIconButton(),
+          const SizedBox(width: 4),
+          RcIconButton(
+            icon: Icons.refresh_rounded,
+            tooltip: 'Retry load',
+            onTap: _load,
+            showDot: provider.error != null,
           ),
         ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_loadedOnce && provider.products.isNotEmpty) ...[
-            _buildSearchField(),
-            _buildTagFilter(provider),
+          if (catalogueVisible) ...[
+            RcEntrance(
+              offset: 10,
+              child: _buildSearchField(),
+            ),
+            RcEntrance(
+              offset: 10,
+              child: CategoryCarousel(
+                tags: _catalogueTags(provider),
+                selected: _tagFilter,
+                onSelected: (tag) => setState(() => _tagFilter = tag),
+              ),
+            ),
+            RcEntrance(
+              offset: 10,
+              child: ShopToolbar(
+                sortLabel: shopSortLabel(_sort),
+                filterActive: _inStockOnly,
+                countLabel: '${_visible(provider).length} items',
+                onFilter: _openFilterSheet,
+                onSort: _openFilterSheet,
+              ),
+            ),
           ],
           Expanded(child: _buildContent(provider)),
         ],
@@ -125,58 +198,22 @@ class _ShopScreenState extends State<ShopScreen> {
     );
   }
 
-  Widget _buildSearchField() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) => setState(() => _searchQuery = value),
-        textInputAction: TextInputAction.search,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-        decoration: InputDecoration(
-          hintText: 'Search products, brands…',
-          prefixIcon: const Icon(Icons.search_rounded, size: 22),
-          suffixIcon: _searchQuery.isEmpty
-              ? null
-              : IconButton(
-                  tooltip: 'Clear search',
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTagFilter(ProductProvider provider) {
+  List<String> _catalogueTags(ProductProvider provider) {
     final tags = <String>{};
     for (final product in provider.products) {
       if (product.tag.isNotEmpty) tags.add(product.tag);
     }
-    if (tags.isEmpty) return const SizedBox.shrink();
+    return tags.toList();
+  }
 
-    final allSelected = _tagFilter == null;
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _TagChip(
-            label: 'All',
-            selected: allSelected,
-            onTap: () => setState(() => _tagFilter = null),
-          ),
-          for (final tag in tags.toList()..sort())
-            _TagChip(
-              label: tag,
-              selected: _tagFilter == tag,
-              onTap: () => setState(() => _tagFilter = tag),
-            ),
-        ],
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 4, AppSpacing.lg, 4),
+      child: RcSearchBar(
+        controller: _searchController,
+        hint: 'Search products, brands…',
+        onChanged: (value) => setState(() => _searchQuery = value),
+        onClear: () => setState(() => _searchQuery = ''),
       ),
     );
   }
@@ -184,7 +221,7 @@ class _ShopScreenState extends State<ShopScreen> {
   Widget _buildContent(ProductProvider provider) {
     if (!_loadedOnce ||
         (provider.loadingProducts && provider.products.isEmpty)) {
-      return const _ShopSkeleton();
+      return const ShopSkeleton();
     }
     if (provider.error != null && provider.products.isEmpty) {
       return ErrorView(message: provider.error!, onRetry: _load);
@@ -201,6 +238,8 @@ class _ShopScreenState extends State<ShopScreen> {
           setState(() {
             _searchQuery = '';
             _tagFilter = null;
+            _inStockOnly = false;
+            _sort = 'relevance';
           });
         },
       );
@@ -217,7 +256,7 @@ class _ShopScreenState extends State<ShopScreen> {
               .toInt();
           return GridView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 14,
@@ -227,127 +266,17 @@ class _ShopScreenState extends State<ShopScreen> {
             itemCount: visible.length,
             itemBuilder: (context, index) {
               final product = visible[index];
-              return ProductCard(
-                product: product,
-                onTap: () => _openProduct(product),
+              return RcEntrance(
+                offset: 12,
+                child: ProductCard(
+                  product: product,
+                  onTap: () => _openProduct(product),
+                ),
               );
             },
           );
         },
       ),
-    );
-  }
-}
-
-class _CartButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final count = context.watch<CartProvider>().count;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          tooltip: 'Cart',
-          icon: const Icon(Icons.shopping_cart_outlined),
-          onPressed: () => Navigator.pushNamed(context, RouteNames.cart),
-        ),
-        if (count > 0)
-          Positioned(
-            right: 4,
-            top: 5,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _TagChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _TagChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? AppColors.primary : AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected ? AppColors.primary : AppColors.border,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.white : AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShopSkeleton extends StatelessWidget {
-  const _ShopSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = (constraints.maxWidth / 190)
-            .floor()
-            .clamp(2, 6)
-            .toInt();
-        return GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 12,
-            mainAxisExtent: ProductCard.slotHeight(context),
-          ),
-          itemCount: 6,
-          itemBuilder: (context, index) => Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -365,12 +294,19 @@ class _EmptyShop extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.inventory_2_outlined,
-              size: 44,
-              color: AppColors.textMuted,
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceAlt,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.inventory_2_outlined,
+                size: 34,
+                color: AppColors.textMuted,
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const Text(
               'No products yet',
               style: TextStyle(
@@ -407,12 +343,19 @@ class _NoMatches extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.search_off_rounded,
-              size: 44,
-              color: AppColors.textMuted,
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceAlt,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                size: 34,
+                color: AppColors.textMuted,
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             const Text(
               'No products found',
               style: TextStyle(

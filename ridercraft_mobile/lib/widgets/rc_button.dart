@@ -43,7 +43,16 @@ class RcButton extends StatelessWidget {
                   Icon(icon),
                   const SizedBox(width: AppSpacing.sm),
                 ],
-                Flexible(child: Text(label)),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -115,12 +124,17 @@ class RcSecondaryButton extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
               ],
               Flexible(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

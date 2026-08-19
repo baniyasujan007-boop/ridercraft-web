@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,12 +8,21 @@ import '../../providers/cart_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../routes/route_names.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../utils/formatters.dart';
 import '../../utils/wishlist_actions.dart';
-import '../../widgets/rc_image.dart';
+import '../../widgets/cart_icon_button.dart';
+import '../../widgets/rc_entrance.dart';
+import 'widgets/product_gallery.dart';
+import 'widgets/purchase_bar.dart';
+import 'widgets/related_products.dart';
 
-/// Product detail with image gallery, server-computed pricing, quantity
-/// selector and add-to-cart. Opened from the Home featured sections.
+/// Product detail with swipeable hero gallery, thumbnails, server-computed
+/// pricing (flash-sale aware), stock-aware variants and quantity, an animated
+/// add-to-cart purchase bar and a same-category "More Like This" carousel.
+///
+/// Business behaviour is unchanged: the same cart payload built as before, the
+/// same colour/size validation messages and the same Buy Now flow.
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
 
@@ -22,17 +33,45 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  late final PageController _galleryController;
-  int _galleryIndex = 0;
   int _quantity = 1;
   String? _selectedColor;
   String? _selectedSize;
+  bool _adding = false;
+  bool _added = false;
+  Timer? _addedTimer;
 
   Product get _product => widget.product;
+
+  bool get _isFlashActive =>
+      _product.isFlashSaleActive && _product.flashSalePrice > 0;
+
+  double get _displayedPrice => _isFlashActive
+      ? _product.flashSalePrice
+      : _product.displayPrice;
 
   /// The backend defines options per product; only require what it provides.
   bool get _requiresColor => _product.colors.isNotEmpty;
   bool get _requiresSize => _product.sizes.isNotEmpty;
+
+  ProductVariant? get _selectedVariant => _selectedColor == null
+      ? null
+      : _variantFor(_selectedColor!);
+
+  bool get _purchasable =>
+      _product.inStock &&
+      (_selectedVariant == null || _selectedVariant!.stock > 0);
+
+  int get _effectiveStock {
+    final variant = _selectedVariant;
+    if (variant != null) return variant.stock;
+    return _product.stock;
+  }
+
+  int get _maxQuantity {
+    if (!_product.inStock) return 0;
+    final cap = _effectiveStock < 99 ? _effectiveStock : 99;
+    return cap < 0 ? 0 : cap;
+  }
 
   ProductVariant? _variantFor(String color) {
     for (final variant in _product.variants) {
@@ -55,21 +94,35 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  bool _colorAvailable(String color) {
+    final variant = _variantFor(color);
+    return variant == null || variant.stock > 0;
+  }
+
   void _showSnack(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _galleryController = PageController();
+  void _selectColor(String color) {
+    if (!_colorAvailable(color)) {
+      _showSnack('This color is currently unavailable.');
+      return;
+    }
+    setState(() {
+      _selectedColor = color;
+      final variant = _variantFor(color);
+      final cap = variant != null ? variant.stock : _product.stock;
+      if (cap > 0 && _quantity > cap) _quantity = cap;
+    });
   }
+
+  void _selectSize(String size) => setState(() => _selectedSize = size);
 
   @override
   void dispose() {
-    _galleryController.dispose();
+    _addedTimer?.cancel();
     super.dispose();
   }
 
@@ -82,9 +135,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       _showSnack('Please select a size to continue.');
       return;
     }
-    final variant = _selectedColor == null
-        ? null
-        : _variantFor(_selectedColor!);
+    final variant = _selectedVariant;
+    setState(() => _adding = true);
     final cart = context.read<CartProvider>();
     await cart.addProduct(
       _product,
@@ -96,6 +148,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       quantity: _quantity,
     );
     if (!mounted) return;
+    setState(() => _adding = false);
+    if (!buyNow) {
+      setState(() => _added = true);
+      _addedTimer?.cancel();
+      _addedTimer = Timer(const Duration(milliseconds: 600), () {
+        if (mounted) setState(() => _added = false);
+      });
+    }
     _showSnack(buyNow ? 'Added to cart.' : '${_product.name} added to cart');
     if (buyNow) Navigator.pushNamed(context, RouteNames.cart);
   }
@@ -103,100 +163,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = _product;
-    final gallery = product.gallery;
+    final related = _relatedProducts();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product'),
         actions: [
           _WishlistButton(product: product),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () => Navigator.pushNamed(context, RouteNames.cart),
-          ),
+          const SizedBox(width: 2),
+          const CartIconButton(),
           const SizedBox(width: 4),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 120),
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
-          // Gallery (light tile like the website PDP)
-          Container(
-            height: 320,
-            color: const Color(0xFFF7F8FA),
-            child: Stack(
-              children: [
-                if (gallery.isEmpty)
-                  const RcImage('', fit: BoxFit.contain)
-                else
-                  PageView.builder(
-                    controller: _galleryController,
-                    itemCount: gallery.length,
-                    onPageChanged: (index) =>
-                        setState(() => _galleryIndex = index),
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: RcImage(gallery[index], fit: BoxFit.contain),
-                    ),
-                  ),
-                if (product.discountPercent > 0)
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF5A00),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${product.discountPercent}% OFF',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (gallery.length > 1)
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF17202D).withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${_galleryIndex + 1}/${gallery.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          ProductGallery(
+            images: product.gallery,
+            heroTag: 'product-hero-${product.id}',
+            discountPercent: product.discountPercent,
+            flashActive: _isFlashActive,
           ),
-
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   product.brand.toUpperCase(),
                   style: const TextStyle(
-                    color: Color(0xFFFF4D00),
+                    color: AppColors.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.4,
@@ -206,120 +202,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Text(
                   product.name,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      color: AppColors.accent,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      product.ratingCount > 0
-                          ? product.ratingAverage.toStringAsFixed(1)
-                          : 'New',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (product.ratingCount > 0) ...[
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${product.ratingCount} ratings)',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                    const Spacer(),
-                    if (!product.inStock)
-                      const Text(
-                        'OUT OF STOCK',
-                        style: TextStyle(
-                          color: Color(0xFFF87171),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                      )
-                    else ...[
-                      const Text(
-                        'IN STOCK',
-                        style: TextStyle(
-                          color: Color(0xFF3EE24F),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      if (product.stock <= 10) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          'Only ${product.stock} left',
-                          style: const TextStyle(
-                            color: AppColors.warning,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ],
-                ),
+                _StatusRow(product: product),
                 const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      Formatters.inr(product.displayPrice),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (product.displayPrice < product.originalPrice) ...[
-                      const SizedBox(width: 10),
-                      Text(
-                        Formatters.inr(product.originalPrice),
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 16,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF5A00),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '-${product.discountPercent}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                _PriceRow(
+                  displayedPrice: _displayedPrice,
+                  strikethroughPrice: _isFlashActive
+                      ? product.displayPrice
+                      : (product.displayPrice < product.originalPrice
+                          ? product.originalPrice
+                          : null),
+                  isFlashActive: _isFlashActive,
+                  discountPercent: product.discountPercent,
                 ),
-                const SizedBox(height: 20),
                 if (_requiresColor) ...[
+                  const SizedBox(height: 20),
                   _OptionLabel(label: 'Color', required: true),
                   const SizedBox(height: 10),
                   Wrap(
@@ -332,7 +235,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           label: color,
                           swatch: _swatchFor(color),
                           selected: _selectedColor == color,
-                          onTap: () => setState(() => _selectedColor = color),
+                          available: _colorAvailable(color),
+                          onTap: () => _selectColor(color),
+                          onUnavailable: () => _showSnack(
+                            'This color is currently unavailable.',
+                          ),
                         ),
                     ],
                   ),
@@ -349,7 +256,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         _OptionChip(
                           label: size,
                           selected: _selectedSize == size,
-                          onTap: () => setState(() => _selectedSize = size),
+                          available: true,
+                          onTap: () => _selectSize(size),
                         ),
                     ],
                   ),
@@ -358,7 +266,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 const Text(
                   'Description',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
@@ -378,16 +286,51 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ],
             ),
           ),
+          if (related.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            RcEntrance(
+              child: RelatedProductsCarousel(
+                products: related,
+                onProductTap: (product) => Navigator.of(context).pushNamed(
+                  RouteNames.productDetail,
+                  arguments: product,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
-      bottomNavigationBar: _BottomBar(
+      bottomNavigationBar: PurchaseBar(
         quantity: _quantity,
+        maxQuantity: _maxQuantity,
+        outOfStock: !product.inStock || !_purchasable,
+        adding: _adding,
+        added: _added,
         onDecrement: _quantity > 1 ? () => setState(() => _quantity--) : null,
-        onIncrement: () => setState(() => _quantity++),
-        onAddToCart: product.inStock ? () => _addToCart() : null,
-        onBuyNow: product.inStock ? () => _addToCart(buyNow: true) : null,
+        onIncrement:
+            _quantity < _maxQuantity && _maxQuantity > 0
+            ? () => setState(() => _quantity++)
+            : null,
+        onAddToCart: _purchasable && product.inStock
+            ? () => _addToCart()
+            : null,
+        onBuyNow: _purchasable && product.inStock
+            ? () => _addToCart(buyNow: true)
+            : null,
       ),
     );
+  }
+
+  List<Product> _relatedProducts() {
+    final provider = context.watch<ProductProvider>();
+    final tag = _product.tag.trim();
+    if (tag.isEmpty) return const [];
+    return provider.products
+        .where(
+          (product) => product.id != _product.id && product.tag == tag,
+        )
+        .take(8)
+        .toList();
   }
 }
 
@@ -408,6 +351,155 @@ class _WishlistButton extends StatelessWidget {
         inWishlist ? Icons.favorite_rounded : Icons.favorite_border_rounded,
         color: inWishlist ? AppColors.primary : null,
       ),
+    );
+  }
+}
+
+class _StatusRow extends StatelessWidget {
+  final Product product;
+
+  const _StatusRow({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(
+          Icons.star_rounded,
+          color: AppColors.accent,
+          size: 18,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          product.ratingCount > 0
+              ? product.ratingAverage.toStringAsFixed(1)
+              : 'New',
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (product.ratingCount > 0) ...[
+          const SizedBox(width: 4),
+          Text(
+            '(${product.ratingCount} ratings)',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ],
+        const Spacer(),
+        if (!product.inStock)
+          const Text(
+            'OUT OF STOCK',
+            style: TextStyle(
+              color: Color(0xFFF87171),
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+            ),
+          )
+        else ...[
+          const Text(
+            'IN STOCK',
+            style: TextStyle(
+              color: AppColors.success,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+            ),
+          ),
+          if (product.stock <= 10) ...[
+            const SizedBox(width: 8),
+            Text(
+              'Only ${product.stock} left',
+              style: const TextStyle(
+                color: AppColors.warning,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+class _PriceRow extends StatelessWidget {
+  final double displayedPrice;
+  final double? strikethroughPrice;
+  final bool isFlashActive;
+  final int discountPercent;
+
+  const _PriceRow({
+    required this.displayedPrice,
+    required this.strikethroughPrice,
+    required this.isFlashActive,
+    required this.discountPercent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          Formatters.inr(displayedPrice),
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        if (strikethroughPrice != null) ...[
+          const SizedBox(width: 10),
+          Text(
+            Formatters.inr(strikethroughPrice!),
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 16,
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+        ],
+        if (isFlashActive) ...[
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: const Text(
+              'FLASH',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+        if (discountPercent > 0 && strikethroughPrice != null && !isFlashActive) ...[
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              '-$discountPercent%',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -436,7 +528,7 @@ class _OptionLabel extends StatelessWidget {
           const Text(
             '*',
             style: TextStyle(
-              color: Color(0xFFFF4D00),
+              color: AppColors.primary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -450,64 +542,94 @@ class _OptionChip extends StatelessWidget {
   final String label;
   final Color? swatch;
   final bool selected;
+  final bool available;
   final VoidCallback onTap;
+  final VoidCallback? onUnavailable;
 
   const _OptionChip({
     super.key,
     required this.label,
     this.swatch,
     required this.selected,
+    required this.available,
     required this.onTap,
+    this.onUnavailable,
   });
 
   @override
   Widget build(BuildContext context) {
+    final action = available ? onTap : (onUnavailable ?? () {});
+
     if (swatch != null) {
-      // Website-style color swatch: 34px circle, orange selection ring.
-      return InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 42,
-          height: 42,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: selected ? const Color(0xFFFF4D00) : AppColors.border,
-              width: selected ? 2.5 : 1.5,
-            ),
-          ),
-          child: Container(
+      return Semantics(
+        button: true,
+        label: '$label color option',
+        child: InkWell(
+          onTap: action,
+          customBorder: const CircleBorder(),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 42,
+            height: 42,
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: swatch,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white24, width: 1),
+              border: Border.all(
+                color: selected
+                    ? AppColors.primary
+                    : (available ? AppColors.border : AppColors.border),
+                width: selected ? 2.5 : 1.5,
+              ),
             ),
-            child: selected
-                ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
-                : null,
+            child: Opacity(
+              opacity: available ? 1 : 0.45,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: swatch,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white24, width: 1),
+                    ),
+                  ),
+                  if (selected)
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  if (!available)
+                    Transform.rotate(
+                      angle: -0.5,
+                      child: Container(
+                        width: 2,
+                        height: 34,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       );
     }
 
-    // Website-style size button: min 54x38, orange border when active.
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      onTap: action,
+      borderRadius: BorderRadius.circular(AppRadius.small),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         constraints: const BoxConstraints(minWidth: 54, minHeight: 38),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFF4D00) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: selected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: selected
-                ? const Color(0xFFFF4D00)
+                ? AppColors.primary
                 : Colors.white.withValues(alpha: 0.35),
             width: 1,
           ),
@@ -519,115 +641,6 @@ class _OptionChip extends StatelessWidget {
             fontSize: 14,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomBar extends StatelessWidget {
-  final int quantity;
-  final VoidCallback? onDecrement;
-  final VoidCallback onIncrement;
-  final VoidCallback? onAddToCart;
-  final VoidCallback? onBuyNow;
-
-  const _BottomBar({
-    required this.quantity,
-    required this.onDecrement,
-    required this.onIncrement,
-    required this.onAddToCart,
-    required this.onBuyNow,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        decoration: const BoxDecoration(
-          color: Color(0xFF071426),
-          border: Border(top: BorderSide(color: AppColors.borderSubtle)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceAlt,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: onDecrement,
-                    icon: const Icon(Icons.remove_rounded, size: 20),
-                    iconSize: 20,
-                  ),
-                  Text(
-                    '$quantity',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: onIncrement,
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    iconSize: 20,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: onBuyNow,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.72)),
-                ),
-                child: const Text(
-                  'Buy Now',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFF4D00), Color(0xFFFF3D00)],
-                  ),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: FilledButton(
-                  onPressed: onAddToCart,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    disabledBackgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    minimumSize: const Size.fromHeight(52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  child: const Text('Add to Cart'),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

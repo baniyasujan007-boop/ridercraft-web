@@ -11,11 +11,14 @@ import '../screens/orders/order_screens.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
+import '../screens/bikes/bike_detail_screen.dart';
 import '../screens/bikes/my_bikes_screen.dart';
 import '../screens/bookings/booking_detail_screen.dart';
 import '../screens/bookings/booking_review_screen.dart';
 import '../screens/bookings/booking_success_screen.dart';
 import '../screens/bookings/service_booking_screen.dart';
+import '../screens/garage/garage_booking_detail_screen.dart';
+import '../screens/garage/garage_scaffold.dart';
 import '../screens/main_scaffold.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/products/product_detail_screen.dart';
@@ -52,6 +55,11 @@ class AppRouter {
       ),
       RouteNames.myBikes => MaterialPageRoute(
         builder: (_) => const MyBikesScreen(),
+        settings: settings,
+      ),
+      RouteNames.bikeDetail => MaterialPageRoute(
+        builder: (_) =>
+            BikeDetailScreen(bikeId: settings.arguments as String),
         settings: settings,
       ),
       RouteNames.productDetail => MaterialPageRoute(
@@ -97,6 +105,16 @@ class AppRouter {
       ),
       RouteNames.orderDetail => MaterialPageRoute(
         builder: (_) => OrderDetailScreen(order: settings.arguments as Order),
+        settings: settings,
+      ),
+      RouteNames.garageMain => MaterialPageRoute(
+        builder: (_) => const GarageScaffold(),
+        settings: settings,
+      ),
+      RouteNames.garageBookingDetail => MaterialPageRoute(
+        builder: (_) => GarageBookingDetailScreen(
+          bookingId: settings.arguments as String,
+        ),
         settings: settings,
       ),
       _ => MaterialPageRoute(

@@ -7,6 +7,7 @@ abstract final class RouteNames {
   static const String main = '/main';
   static const String notifications = '/notifications';
   static const String myBikes = '/my-bikes';
+  static const String bikeDetail = '/bike-detail';
   static const String productDetail = '/product-detail';
   static const String serviceBooking = '/service-booking';
   static const String bookingReview = '/booking-review';
@@ -17,4 +18,6 @@ abstract final class RouteNames {
   static const String orderSuccess = '/order-success';
   static const String orders = '/orders';
   static const String orderDetail = '/order-detail';
+  static const String garageMain = '/garage-main';
+  static const String garageBookingDetail = '/garage-booking-detail';
 }

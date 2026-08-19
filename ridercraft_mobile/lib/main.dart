@@ -7,6 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/bike_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/garage_provider.dart';
 import 'providers/home_provider.dart';
 import 'providers/product_provider.dart';
 import 'routes/app_routes.dart';
@@ -14,6 +15,7 @@ import 'routes/route_names.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/booking_service.dart';
+import 'services/garage_service.dart';
 import 'services/google_sign_in.dart';
 import 'services/notification_service.dart';
 import 'services/order_service.dart';
@@ -49,6 +51,7 @@ Future<void> main() async {
   final orderService = OrderService(apiClient);
   final notificationService = NotificationService(apiClient);
   final bookingService = BookingService(apiClient);
+  final garageService = GarageService(apiClient);
 
   authProvider = AuthProvider(
     authService,
@@ -71,6 +74,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => BookingProvider(bookingService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => GarageProvider(garageService),
         ),
         ChangeNotifierProvider(
           create: (_) => BikeProvider(storage)..load(),

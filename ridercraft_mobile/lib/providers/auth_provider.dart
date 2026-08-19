@@ -29,6 +29,10 @@ class AuthProvider extends ChangeNotifier {
   bool get isRestoring => _restoring;
   String? get token => _tokenStore.current;
 
+  /// True once a `garage`-role profile is loaded. Purely read-only role
+  /// detection — it never alters authentication behaviour.
+  bool get isGarage => _user?.isGarage ?? false;
+
   /// Called on app launch. If a token exists, tries to load the profile so
   /// the session is restored; otherwise goes to the login/home flow.
   Future<void> restoreSession() async {

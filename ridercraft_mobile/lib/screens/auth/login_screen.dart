@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../routes/home_router.dart';
 import '../../routes/route_names.dart';
 import '../../services/api_exception.dart';
 import '../../theme/app_colors.dart';
@@ -49,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil(
-        RouteNames.main,
+        homeRouteFor(auth.user!),
         (route) => false,
       );
     } catch (error) {
@@ -75,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       if (signedIn) {
         Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteNames.main,
+          homeRouteFor(auth.user!),
           (route) => false,
         );
       }
