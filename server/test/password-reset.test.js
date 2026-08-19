@@ -18,6 +18,12 @@ let server;
 let baseUrl;
 const capturedEmails = [];
 
+const capturingProvider = {
+  async sendPasswordResetEmail({ to, resetUrl }) {
+    capturedEmails.push({ to, resetUrl });
+  },
+};
+
 function waitForPort(port, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
     const deadline = Date.now() + timeoutMs;
@@ -56,11 +62,7 @@ before(async () => {
     serverSelectionTimeoutMS: 15000,
   });
 
-  setEmailProvider({
-    async sendPasswordResetEmail({ to, resetUrl }) {
-      capturedEmails.push({ to, resetUrl });
-    },
-  });
+  setEmailProvider(capturingProvider);
 
   const app = express();
   app.use(express.json());
@@ -315,4 +317,29 @@ test("forgot-password does not reveal whether an email exists", async (t) => {
   const body = await res.json();
   assert.ok(body.message, "existing and unknown emails must share a generic message");
   t.diagnostic("no account enumeration via forgot-password");
+});
+
+test("email-send failure is not hidden behind a success message", async (t) => {
+  const email = "send-failure@example.com";
+  await makeUser(email);
+
+  setEmailProvider({
+    async sendPasswordResetEmail() {
+      throw new Error("SMTP authentication failed");
+    },
+  });
+
+  try {
+    const res = await requestReset(email);
+    assert.equal(res.status, 500, "a failed send must surface as an error");
+    const body = await res.json();
+    assert.ok(body.error, "error body must not claim the link was sent");
+
+    const user = await User.findOne({ email });
+    assert.equal(await bcrypt.compare(ORIGINAL_PASSWORD, user.password), true,
+      "password must be untouched when delivery fails");
+    t.diagnostic("delivery failure returns 500 and never a success message");
+  } finally {
+    setEmailProvider(capturingProvider);
+  }
 });

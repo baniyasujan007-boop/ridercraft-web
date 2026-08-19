@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import { corsOptions } from "./config/security.js";
 import { apiLimiter, authLimiter } from "./middleware/rateLimit.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandlers.js";
+import { initEmailProvider } from "./utils/emailService.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import promoRoutes from "./routes/promoRoutes.js";
@@ -26,6 +27,10 @@ if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
 
 const app = express();
 app.disable("x-powered-by");
+
+// Register the password-reset email transport at boot (no-op + warning when
+// EMAIL_USER / EMAIL_APP_PASSWORD are not configured).
+initEmailProvider();
 app.use(
   helmet({
     contentSecurityPolicy: false,

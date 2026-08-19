@@ -245,8 +245,8 @@ export const forgotPassword = async (req, res) => {
     const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
     const resetUrl = `${clientUrl}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(normalizedEmail)}`;
 
-    // No email provider exists yet; see utils/emailService.js. The token is
-    // never returned to the client.
+    // The token is never returned to the client; delivery is the email
+    // service's job (it logs send attempted / success / failure separately).
     await sendPasswordResetEmail({ to: normalizedEmail, resetUrl });
 
     res.json({ message: GENERIC_RESET_MESSAGE });
