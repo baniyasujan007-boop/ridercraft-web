@@ -6,12 +6,18 @@ import '../../routes/route_names.dart';
 import '../../services/api_exception.dart';
 import '../../services/notification_service.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/error_view.dart';
-import '../../widgets/loading_view.dart';
+import '../../widgets/staggered_entry.dart';
+import '../orders/widgets/order_skeleton.dart';
 
 /// Notification inbox from `GET /notifications`. Requires authentication;
 /// guests see a sign-in prompt.
+///
+/// Reads/writes the existing mark-as-read endpoints only; the model has no
+/// target/route field so tapping a notification always opens its detail sheet
+/// (no invented deep links).
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -19,22 +25,43 @@ class NotificationsScreen extends StatefulWidget {
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _NotificationsScreenState extends State<NotificationsScreen>
+    with SingleTickerProviderStateMixin {
   List<AppNotification> _items = [];
   bool _loading = true;
   String? _error;
   bool _authError = false;
+
+  late final AnimationController _entrance;
 
   NotificationService get _service => context.read<NotificationService>();
 
   @override
   void initState() {
     super.initState();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
     _load();
   }
 
-  /// Loads the inbox. [showLoader] blanks the list with the loading view on
-  /// the first load; a pull-to-refresh keeps the existing rows visible.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      if (!_entrance.isCompleted) _entrance.value = 1;
+    }
+  }
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
+  }
+
+  /// Loads the inbox. [showLoader] blanks the list with the skeleton on the
+  /// first load; a pull-to-refresh keeps the existing rows visible.
   Future<void> _load({bool showLoader = true}) async {
     if (showLoader) {
       setState(() {
@@ -51,6 +78,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _error = null;
         _authError = false;
       });
+      _entrance.forward(from: 0);
     } on ApiException catch (error) {
       if (!mounted) return;
       // Keep stale rows visible on a failed refresh; surface the failure.
@@ -118,13 +146,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: typeColor(item.type).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        typeIcon(item.type),
+                        color: typeColor(item.type),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -168,15 +216,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return const LoadingView(label: 'Loading notifications…');
+    if (_loading) {
+      return Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Text(
+              'Loading notifications…',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.borderSubtle),
+          const Expanded(child: NotificationListSkeleton()),
+        ],
+      );
+    }
 
     if (_authError) {
       return _CenteredState(
         icon: Icons.lock_outline_rounded,
         message: 'Sign in to see your notifications.',
         action: FilledButton(
-          onPressed: () =>
-              Navigator.of(context).pushNamed(RouteNames.login),
+          onPressed: () => Navigator.of(context).pushNamed(RouteNames.login),
           child: const Text('Sign in'),
         ),
       );
@@ -190,31 +251,101 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return const _CenteredState(
         icon: Icons.notifications_none_rounded,
         message: 'No notifications yet.',
+        subtitle: 'When something happens, it will show up here.',
       );
     }
 
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: ListView.separated(
+      child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: _items.length,
-        separatorBuilder: (_, _) => const Divider(
-          height: 1,
-          color: AppColors.borderSubtle,
-        ),
-        itemBuilder: (context, index) => _NotificationTile(
-          item: _items[index],
-          onTap: () => _openNotification(_items[index]),
-        ),
+        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        itemCount: _items.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _InboxHeader(
+              unread: _unreadCount,
+              total: _items.length,
+            );
+          }
+          final item = _items[index - 1];
+          return StaggeredEntry(
+            parent: _entrance,
+            index: index - 1,
+            child: _NotificationTile(
+              item: item,
+              onTap: () => _openNotification(item),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
-/// Row for a single notification: type icon, title + relative time, body, and
-/// an orange unread dot. Uses [Expanded]/[Flexible] throughout so it never
-/// overflows at narrow widths or large text scales.
+/// Slim inbox header showing the live unread/total counts.
+class _InboxHeader extends StatelessWidget {
+  final int unread;
+  final int total;
+
+  const _InboxHeader({required this.unread, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final unreadLabel = unread == 1 ? '1 unread' : '$unread unread';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              total == 1 ? '1 notification' : '$total notifications',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: unread > 0
+                ? Container(
+                    key: ValueKey<int>(unread),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm + 2,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Text(
+                      unreadLabel,
+                      style: const TextStyle(
+                        color: AppColors.primaryLight,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Row for a single notification: type icon, title + relative time, body, an
+/// unread accent bar/dot for unread rows and a muted surface once read.
+/// Uses [Expanded]/[Flexible] throughout so it never overflows at narrow
+/// widths or large text scales.
 class _NotificationTile extends StatelessWidget {
   final AppNotification item;
   final VoidCallback onTap;
@@ -226,89 +357,122 @@ class _NotificationTile extends StatelessWidget {
     final timeLabel = item.createdAt == null
         ? ''
         : Formatters.timeAgoLabel(item.createdAt!);
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: typeColor(item.type).withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                typeIcon(item.type),
-                color: typeColor(item.type),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    final unread = !item.isRead;
+
+    return Semantics(
+      button: true,
+      label:
+          '${unread ? 'Unread. ' : ''}${item.title}. ${item.body}. '
+          '${timeLabel.isEmpty ? '' : '$timeLabel.'} '
+          'Type ${item.type}.',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        color: unread ? AppColors.surfaceAlt : Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg,
+                 vertical: AppSpacing.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 3.5,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: unread
+                        ? AppColors.primary
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: typeColor(item.type).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    typeIcon(item.type),
+                    color: typeColor(item.type),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          item.title,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                                fontWeight:
+                                    unread ? FontWeight.w700 : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                          if (timeLabel.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              timeLabel,
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (item.body.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          item.body,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                            fontWeight:
-                                item.isRead ? FontWeight.w400 : FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      if (timeLabel.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          timeLabel,
                           style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontSize: 13.5,
                           ),
                         ),
                       ],
                     ],
                   ),
-                  if (item.body.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      item.body,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13.5,
-                      ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  scale: unread ? 1 : 0,
+                  child: Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.55),
+                          blurRadius: 6,
+                        ),
+                      ],
                     ),
-                  ],
-                ],
-              ),
-            ),
-            if (!item.isRead) ...[
-              const SizedBox(width: 10),
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Container(
-                  width: 9,
-                  height: 9,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -320,11 +484,13 @@ class _NotificationTile extends StatelessWidget {
 class _CenteredState extends StatelessWidget {
   final IconData icon;
   final String message;
+  final String? subtitle;
   final Widget? action;
 
   const _CenteredState({
     required this.icon,
     required this.message,
+    this.subtitle,
     this.action,
   });
 
@@ -341,8 +507,23 @@ class _CenteredState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 13,
+                ),
+              ),
+            ],
             if (action != null) ...[
               const SizedBox(height: 20),
               action!,
