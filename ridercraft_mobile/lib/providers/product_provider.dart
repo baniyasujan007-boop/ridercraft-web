@@ -64,7 +64,7 @@ class ProductProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _products = await _service.listProducts();
+      _products = _dedupeById(await _service.listProducts());
     } catch (error) {
       _error = error.toString();
     } finally {
@@ -120,5 +120,17 @@ class ProductProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Collapses duplicate product ids so the same product can never render
+  /// twice in one subtree (two [Hero] widgets with an identical tag would
+  /// throw "multiple heroes that share the same tag within a subtree").
+  static List<Product> _dedupeById(List<Product> products) {
+    final seen = <String>{};
+    final result = <Product>[];
+    for (final product in products) {
+      if (seen.add(product.id)) result.add(product);
+    }
+    return result;
   }
 }

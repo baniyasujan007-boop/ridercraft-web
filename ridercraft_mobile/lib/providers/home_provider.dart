@@ -94,7 +94,9 @@ class HomeProvider extends ChangeNotifier {
     _featuredError = null;
     notifyListeners();
     try {
-      _featuredSections = await _productService.listFeaturedSections();
+      _featuredSections = _dedupeAcrossSections(
+        await _productService.listFeaturedSections(),
+      );
     } catch (error) {
       _featuredError = error.toString();
     } finally {
@@ -115,5 +117,30 @@ class HomeProvider extends ChangeNotifier {
       _loadingPromos = false;
       notifyListeners();
     }
+  }
+
+  /// A product may legitimately be placed in several featured sections
+  /// (admin-curated content). Rendering it twice in one Home subtree would
+  /// give two [Hero] widgets the same tag, which Flutter rejects. Keep the
+  /// first occurrence of each product id across all sections.
+  static List<FeaturedSection> _dedupeAcrossSections(
+    List<FeaturedSection> sections,
+  ) {
+    final seen = <String>{};
+    return [
+      for (final section in sections)
+        FeaturedSection(
+          id: section.id,
+          key: section.key,
+          title: section.title,
+          products: [
+            for (final product in section.products)
+              if (seen.add(product.id)) product,
+          ],
+          countdownStartsAt: section.countdownStartsAt,
+          countdownEndsAt: section.countdownEndsAt,
+          isActive: section.isActive,
+        ),
+    ];
   }
 }
