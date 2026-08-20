@@ -3,6 +3,7 @@ import Notification from "../models/Notification.js";
 import Product from "../models/Product.js";
 import Promo from "../models/Promo.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 import { isFlashSaleCurrentlyActive } from "./productController.js";
 
 const money = (value) => Number(Number(value).toFixed(2));
@@ -79,6 +80,7 @@ export const createOrder = async (req, res) => {
       requestedItems.some(
         (item) =>
           !item.productId ||
+          !mongoose.isValidObjectId(item.productId) ||
           !Number.isInteger(item.qty) ||
           item.qty < 1
       )
