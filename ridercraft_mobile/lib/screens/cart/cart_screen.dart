@@ -5,9 +5,13 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../routes/route_names.dart';
 import '../../theme/app_colors.dart';
-import '../../utils/formatters.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/rc_image.dart';
+import '../../theme/app_tokens.dart';
+import '../../widgets/rc_button.dart';
+import '../../widgets/rc_entrance.dart';
+import 'widgets/cart_item_card.dart';
+import 'widgets/checkout_bar.dart';
+import 'widgets/order_summary_card.dart';
+import 'widgets/promo_section.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -17,86 +21,81 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   final _promo = TextEditingController();
+
   @override
   void dispose() {
     _promo.dispose();
     super.dispose();
   }
 
+  void _goToCheckout() {
+    if (!context.read<AuthProvider>().isAuthenticated) {
+      Navigator.pushNamed(context, RouteNames.login);
+      return;
+    }
+    Navigator.pushNamed(context, RouteNames.checkout);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Cart')),
+      appBar: AppBar(title: const Text('Cart')),
       body: cart.isEmpty
-          ? _EmptyCart()
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          ? const _EmptyCart()
+          : Column(
               children: [
-                for (var i = 0; i < cart.items.length; i++) _CartLine(index: i),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _promo,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    hintText: 'Promo code',
-                    suffixIcon: TextButton(
-                      onPressed: cart.isApplyingPromo
-                          ? null
-                          : () async {
-                              final ok = await cart.applyPromo(_promo.text);
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    ok
-                                        ? 'Promo applied.'
-                                        : (cart.promoError ??
-                                              'Invalid promo code.'),
-                                  ),
-                                ),
-                              );
-                            },
-                      child: cart.isApplyingPromo
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('APPLY'),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.only(
+                      top: AppSpacing.sm,
+                      bottom: AppSpacing.xl,
                     ),
-                  ),
-                ),
-                if (cart.appliedPromo != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${cart.appliedPromo!.code} applied',
-                          style: const TextStyle(color: AppColors.success),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: cart.removePromo,
-                          child: const Text('REMOVE'),
+                    children: [
+                      _CartHeader(count: cart.count),
+                      const SizedBox(height: AppSpacing.sm),
+                      for (var i = 0; i < cart.items.length; i++) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.xs,
+                          ),
+                          child: CartItemCard(
+                            key: ValueKey<String>(
+                              CartItemCard.identityOf(cart.items[i]),
+                            ),
+                            item: cart.items[i],
+                            onIncrement: () => cart.increment(i),
+                            onDecrement: () => cart.decrement(i),
+                            onRemove: () => cart.removeItem(i),
+                          ),
                         ),
                       ],
-                    ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: PromoSection(controller: _promo),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: OrderSummaryCard(
+                          subtotal: cart.subtotal,
+                          discount: cart.discount,
+                          total: cart.total,
+                        ),
+                      ),
+                    ],
                   ),
-                const SizedBox(height: 18),
-                _Totals(cart: cart),
-                const SizedBox(height: 20),
-                CustomButton(
-                  label: 'PROCEED TO CHECKOUT',
-                  icon: Icons.lock_outline_rounded,
-                  onPressed: () {
-                    if (!context.read<AuthProvider>().isAuthenticated) {
-                      Navigator.pushNamed(context, RouteNames.login);
-                      return;
-                    }
-                    Navigator.pushNamed(context, RouteNames.checkout);
-                  },
+                ),
+                CheckoutBar(
+                  total: cart.total,
+                  onCheckout: _goToCheckout,
                 ),
               ],
             ),
@@ -104,185 +103,115 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
-class _CartLine extends StatelessWidget {
-  final int index;
-  const _CartLine({required this.index});
+class _CartHeader extends StatelessWidget {
+  final int count;
+  const _CartHeader({required this.count});
+
   @override
   Widget build(BuildContext context) {
-    final cart = context.watch<CartProvider>();
-    final item = cart.items[index];
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 82,
-            height: 82,
-            child: RcImage(item.product.image, fit: BoxFit.contain),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.product.brand.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
+    return RcEntrance(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'CART',
+                    style: TextStyle(
+                      fontSize: 24,
+                      height: 1.1,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
                   ),
-                ),
-                Text(
-                  item.product.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  [
-                    if (item.color.isNotEmpty) item.color,
-                    if (item.size.isNotEmpty) 'Size ${item.size}',
-                    if (item.variantSku.isNotEmpty) item.variantSku,
-                  ].join(' · '),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Review your ride essentials',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      onPressed: item.quantity > 1
-                          ? () => cart.decrement(index)
-                          : null,
-                      icon: const Icon(Icons.remove_circle_outline),
-                    ),
-                    Text(
-                      '${item.quantity}',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      onPressed: item.quantity < 99
-                          ? () => cart.increment(index)
-                          : null,
-                      icon: const Icon(Icons.add_circle_outline),
-                    ),
-                    const Spacer(),
-                    Text(
-                      Formatters.inr(item.lineTotal),
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    IconButton(
-                      tooltip: 'Remove',
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => cart.removeItem(index),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                count == 1 ? '1 item' : '$count items',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-class _Totals extends StatelessWidget {
-  final CartProvider cart;
-  const _Totals({required this.cart});
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceAlt,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Column(
-      children: [
-        _row('Subtotal', cart.subtotal),
-        if (cart.discount > 0)
-          _row('Discount', -cart.discount, color: AppColors.success),
-        const Divider(),
-        _row('Estimated total', cart.total, bold: true),
-        const SizedBox(height: 4),
-        const Text(
-          'Final price is confirmed securely at checkout.',
-          style: TextStyle(color: AppColors.textMuted, fontSize: 11),
-        ),
-      ],
-    ),
-  );
-  Widget _row(String label, double value, {Color? color, bool bold = false}) =>
-      Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: color ?? AppColors.textSecondary,
-              fontWeight: bold ? FontWeight.w800 : null,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            Formatters.inr(value),
-            style: TextStyle(
-              color: color ?? AppColors.textPrimary,
-              fontWeight: bold ? FontWeight.w800 : null,
-            ),
-          ),
-        ],
-      );
 }
 
 class _EmptyCart extends StatelessWidget {
+  const _EmptyCart();
+
   @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.shopping_cart_outlined,
-            size: 58,
-            color: AppColors.textMuted,
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: RcEntrance(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.hero),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.sports_motorsports_rounded,
+                  size: 42,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              const Text(
+                'Your cart is ready for its next ride.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'Explore premium gear and find everything your ride needs.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              RcButton(
+                label: 'Explore Shop',
+                icon: Icons.storefront_rounded,
+                fullWidth: false,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Text(
-            'Your cart is empty',
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Explore our products and find your next ride essential.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 22),
-          CustomButton(
-            label: 'SHOP NOW',
-            fullWidth: false,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

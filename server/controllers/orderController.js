@@ -249,6 +249,7 @@ export const createOrder = async (req, res) => {
           { $set: { usedCount: { $add: ["$usedCount", 1] } } },
           { $set: { isActive: { $lt: ["$usedCount", "$maxUses"] } } },
         ],
+        { updatePipeline: true },
       );
       if (redeemed.modifiedCount !== 1) {
         for (const entry of reserved) {
