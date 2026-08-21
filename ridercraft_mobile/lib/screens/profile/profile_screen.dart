@@ -11,9 +11,12 @@ import '../../services/avatar_image_picker.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/avatar_processor.dart';
 import '../../widgets/app_text_field.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/loading_view.dart';
+import '../../widgets/rc_button.dart';
+import '../../widgets/rc_card.dart';
 import '../../widgets/rc_image.dart';
+import '../../widgets/rc_skeleton.dart';
+import '../../widgets/section_header.dart';
+import '../../widgets/staggered_entry.dart';
 import '../main_scaffold.dart';
 
 /// Profile tab — the rider's account backed by the real `GET/PUT /auth/profile`
@@ -34,7 +37,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
@@ -46,6 +50,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _formError;
   String? _formSuccess;
   String? _avatarPreviewUri;
+
+  late final AnimationController _entranceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+  }
 
   @override
   void didChangeDependencies() {
@@ -65,6 +80,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       });
     }
+    // Start entrance animation once after first build
+    if (!_entranceController.isAnimating && _entranceController.value == 0) {
+      if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+        _entranceController.value = 1;
+      } else {
+        _entranceController.forward();
+      }
+    }
   }
 
   @override
@@ -73,6 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _emailController.dispose();
     _contactController.dispose();
     _addressController.dispose();
+    _entranceController.dispose();
     super.dispose();
   }
 
@@ -153,56 +177,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: AppColors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 18, 16, 8),
-                child: Text(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.6,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
                   'Change profile picture',
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.camera_alt_outlined,
-                  color: AppColors.primary,
+                const SizedBox(height: 16),
+                _AvatarOptionTile(
+                  icon: Icons.camera_alt_outlined,
+                  title: 'Take Photo',
+                  onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
                 ),
-                title: const Text(
-                  'Take Photo',
-                  style: TextStyle(color: AppColors.textPrimary),
+                const SizedBox(height: 8),
+                _AvatarOptionTile(
+                  icon: Icons.photo_library_outlined,
+                  title: 'Choose from Gallery',
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(ImageSource.gallery),
                 ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(
-                  Icons.photo_library_outlined,
-                  color: AppColors.primary,
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('Cancel'),
                 ),
-                title: const Text(
-                  'Choose from Gallery',
-                  style: TextStyle(color: AppColors.textPrimary),
-                ),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(ImageSource.gallery),
-              ),
-              const SizedBox(height: 4),
-              TextButton(
-                onPressed: () => Navigator.of(sheetContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(height: 8),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -259,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _avatarPreviewUri = null;
       });
       messenger.showSnackBar(SnackBar(content: Text(error.message)));
-    } on PlatformException {
+    } on PlatformException catch (_) {
       // e.g. camera unavailable / permission denied on the platform side.
       if (!mounted) return;
       setState(() {
@@ -291,6 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
         title: const Text('Sign out?'),
         content: const Text(
           'You will need to sign back in to see your orders and bookings.',
@@ -320,6 +337,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ).pushNamedAndRemoveUntil(RouteNames.login, (route) => false);
   }
 
+  Future<void> _showForgotPassword() async {
+    final emailController = TextEditingController(
+      text: _emailController.text,
+    );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your email address and we\'ll send you a link to reset your password.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: emailController,
+              label: 'Email',
+              hint: 'your@email.com',
+              prefixIcon: Icons.alternate_email_rounded,
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Send Reset Link'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final email = emailController.text.trim();
+    if (email.isEmpty) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await context.read<AuthProvider>().forgotPassword(email: email);
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Password reset link sent')),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to send reset link. Please try again.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -328,6 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        centerTitle: false,
         actions: [
           if (auth.isAuthenticated)
             IconButton(
@@ -343,7 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildBody(AuthProvider auth, User? user) {
     if (auth.isRestoring || auth.status == AuthStatus.unknown) {
-      return const LoadingView(label: 'Loading profile…');
+      return const ProfileSkeleton();
     }
     if (!auth.isAuthenticated || user == null) {
       return const _GuestProfileView();
@@ -364,27 +447,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ProfileHeaderCard(
-                      user: user,
-                      avatarLoading: _avatarChanging,
-                      avatarPreviewUri: _avatarPreviewUri,
-                      onChangePhoto: _showAvatarOptions,
+                    // Profile Hero
+                    StaggeredEntry(
+                      parent: _entranceController,
+                      index: 0,
+                      child: _ProfileHeroCard(
+                        user: user,
+                        avatarLoading: _avatarChanging,
+                        avatarPreviewUri: _avatarPreviewUri,
+                        onChangePhoto: _showAvatarOptions,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    _ProfileFormCard(
-                      nameController: _nameController,
-                      emailController: _emailController,
-                      contactController: _contactController,
-                      addressController: _addressController,
-                      saving: _saving,
-                      errorText: _formError,
-                      successText: _formSuccess,
-                      onSave: _save,
+                    // Personal Info
+                    StaggeredEntry(
+                      parent: _entranceController,
+                      index: 1,
+                      child: _ProfileInfoCard(
+                        user: user,
+                        saving: _saving,
+                        errorText: _formError,
+                        successText: _formSuccess,
+                        nameController: _nameController,
+                        emailController: _emailController,
+                        contactController: _contactController,
+                        addressController: _addressController,
+                        onSave: _save,
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    const _AccountLinksCard(),
+                    // Account Actions
+                    StaggeredEntry(
+                      parent: _entranceController,
+                      index: 2,
+                      child: _AccountActionsCard(
+                        onMyOrders: () =>
+                            Navigator.of(context).pushNamed(RouteNames.orders),
+                        onMyBookings: () => MainScaffold.switchToTab(3),
+                        onNotifications: () =>
+                            Navigator.of(context).pushNamed(RouteNames.notifications),
+                        onMyBikes: () =>
+                            Navigator.of(context).pushNamed(RouteNames.myBikes),
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _SignOutCard(onLogout: _confirmLogout),
+                    // Security
+                    StaggeredEntry(
+                      parent: _entranceController,
+                      index: 3,
+                      child: _SecurityCard(
+                        onForgotPassword: _showForgotPassword,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Sign Out
+                    StaggeredEntry(
+                      parent: _entranceController,
+                      index: 4,
+                      child: _SignOutCard(onLogout: _confirmLogout),
+                    ),
                   ],
                 ),
               ),
@@ -392,6 +513,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+/// Skeleton loading state for the profile screen.
+class ProfileSkeleton extends StatelessWidget {
+  const ProfileSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Text(
+            'Loading profile…',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+        ),
+        const Divider(height: 1, color: AppColors.borderSubtle),
+        Expanded(
+          child: RcSkeleton(
+            child: ListView(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              children: const [
+                RcSkeletonBox(width: double.infinity, height: 140),
+                SizedBox(height: 16),
+                RcSkeletonBox(width: double.infinity, height: 320),
+                SizedBox(height: 16),
+                RcSkeletonBox(width: double.infinity, height: 240),
+                SizedBox(height: 16),
+                RcSkeletonBox(width: double.infinity, height: 180),
+                SizedBox(height: 16),
+                RcSkeletonBox(width: double.infinity, height: 120),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -407,40 +568,39 @@ class _GuestProfileView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
       children: [
-        const SizedBox(height: 24),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.lock_outline_rounded,
-                  size: 48,
-                  color: AppColors.textMuted,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Sign in to manage your rider profile.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Save your details, track orders and manage service '
-                  'bookings.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                CustomButton(
-                  label: 'Sign in',
-                  icon: Icons.login_rounded,
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(RouteNames.login),
-                ),
-              ],
-            ),
+        const SizedBox(height: 48),
+        RcCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 48,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Sign in to manage your rider profile.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Save your details, track orders and manage service '
+                'bookings.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              RcButton(
+                label: 'Sign in',
+                icon: Icons.login_rounded,
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(RouteNames.login),
+                fullWidth: false,
+              ),
+            ],
           ),
         ),
       ],
@@ -448,13 +608,14 @@ class _GuestProfileView extends StatelessWidget {
   }
 }
 
-class _ProfileHeaderCard extends StatelessWidget {
+/// Premium profile hero card with large avatar and key info.
+class _ProfileHeroCard extends StatelessWidget {
   final User user;
   final bool avatarLoading;
   final String? avatarPreviewUri;
   final VoidCallback onChangePhoto;
 
-  const _ProfileHeaderCard({
+  const _ProfileHeroCard({
     required this.user,
     required this.avatarLoading,
     required this.avatarPreviewUri,
@@ -463,71 +624,64 @@ class _ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            _EditableAvatar(
-              user: user,
-              previewUri: avatarPreviewUri,
-              loading: avatarLoading,
-              onTap: onChangePhoto,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.name.isEmpty ? 'Rider' : user.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    user.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (user.contactNumber.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.phone_outlined,
-                          size: 14,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            user.contactNumber,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
+    return RcCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _EditableAvatar(
+                user: user,
+                previewUri: avatarPreviewUri,
+                loading: avatarLoading,
+                onTap: onChangePhoto,
               ),
+              if (avatarLoading)
+                Positioned.fill(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0x80000000),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            user.name.isEmpty ? 'Rider' : user.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user.email,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -551,43 +705,56 @@ class _EditableAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double size = 96;
+
+    final display =
+        previewUri ?? (user.avatar.trim().isNotEmpty ? user.avatar : '');
+
     final avatar = Stack(
       clipBehavior: Clip.none,
       children: [
-        _Avatar(user: user, previewUri: previewUri),
-        if (loading)
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0x80000000),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
+        if (display.isNotEmpty)
+          ClipOval(
+            child: RcImage(display, width: size, height: size, fit: BoxFit.cover),
+          )
+        else
+          Container(
+            width: size,
+            height: size,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppColors.primaryGradient,
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _initials(user),
+                  style: const TextStyle(
                     color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 30,
                   ),
                 ),
               ),
             ),
           ),
         Positioned(
-          right: -2,
-          bottom: -2,
+          right: 0,
+          bottom: 0,
           child: Container(
-            width: 24,
-            height: 24,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: AppColors.surfaceElevated,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: AppColors.border, width: 1.5),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.photo_camera_outlined,
-              size: 14,
+              size: 16,
               color: AppColors.primary,
             ),
           ),
@@ -598,168 +765,74 @@ class _EditableAvatar extends StatelessWidget {
     return Tooltip(
       message: 'Change profile picture',
       child: InkWell(
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: BorderRadius.circular(size / 2),
         onTap: loading ? null : onTap,
         child: avatar,
       ),
     );
   }
-}
 
-class _Avatar extends StatelessWidget {
-  final User user;
-
-  /// When set, the picked-but-not-yet-saved image is shown instead of the
-  /// stored avatar so the user sees the new picture immediately.
-  final String? previewUri;
-
-  const _Avatar({required this.user, this.previewUri});
-
-  @override
-  Widget build(BuildContext context) {
-    const size = 64.0;
-
-    final display =
-        previewUri ?? (user.avatar.trim().isNotEmpty ? user.avatar : '');
-    if (display.isNotEmpty) {
-      return ClipOval(
-        child: RcImage(display, width: size, height: size),
-      );
-    }
-
-    final initials = (user.name.trim().isEmpty
-            ? 'R'
-            : user.name
-                .trim()
-                .split(RegExp(r'\s+'))
-                .where((part) => part.isNotEmpty)
-                .take(2)
-                .map((part) => part[0].toUpperCase())
-                .join())
-        .toUpperCase();
-
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: AppColors.primaryGradient,
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Text(
-            initials,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ),
-    );
+  String _initials(User user) {
+    final parts = user.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .toList();
+    final init = (parts.isEmpty ? 'R' : parts.join()).toUpperCase();
+    return init;
   }
 }
 
-class _ProfileFormCard extends StatelessWidget {
-  final TextEditingController nameController;
-  final TextEditingController emailController;
-  final TextEditingController contactController;
-  final TextEditingController addressController;
-  final bool saving;
-  final String? errorText;
-  final String? successText;
-  final VoidCallback onSave;
+/// Avatar option tile for the change-photo bottom sheet.
+class _AvatarOptionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
 
-  const _ProfileFormCard({
-    required this.nameController,
-    required this.emailController,
-    required this.contactController,
-    required this.addressController,
-    required this.saving,
-    required this.errorText,
-    required this.successText,
-    required this.onSave,
+  const _AvatarOptionTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
           children: [
-            const Text(
-              'Profile Settings',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primaryLight,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Keep your details up to date for faster delivery.',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: nameController,
-              label: 'Full Name',
-              hint: 'Your full name',
-              prefixIcon: Icons.person_outline_rounded,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: emailController,
-              label: 'Email',
-              prefixIcon: Icons.alternate_email_rounded,
-              enabled: false,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: contactController,
-              label: 'Contact Number',
-              hint: '+1 555 000 0000',
-              prefixIcon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: addressController,
-              label: 'Delivery Address',
-              hint: 'Street, City, State, ZIP',
-              prefixIcon: Icons.location_on_outlined,
-              keyboardType: TextInputType.multiline,
-              textInputAction: TextInputAction.newline,
-              onChanged: null,
-            ),
-            if (successText != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                successText!,
-                style: const TextStyle(color: AppColors.success, fontSize: 13),
+            const SizedBox(width: 12),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ],
-            if (errorText != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                errorText!,
-                style: const TextStyle(color: AppColors.error, fontSize: 13),
-              ),
-            ],
-            const SizedBox(height: 18),
-            CustomButton(
-              label: 'Save Changes',
-              icon: Icons.save_outlined,
-              loading: saving,
-              onPressed: saving ? null : onSave,
             ),
           ],
         ),
@@ -768,63 +841,166 @@ class _ProfileFormCard extends StatelessWidget {
   }
 }
 
-class _AccountLinksCard extends StatelessWidget {
-  const _AccountLinksCard();
+/// Personal information card with editable fields.
+class _ProfileInfoCard extends StatelessWidget {
+  final User user;
+  final bool saving;
+  final String? errorText;
+  final String? successText;
+  final TextEditingController nameController;
+  final TextEditingController emailController;
+  final TextEditingController contactController;
+  final TextEditingController addressController;
+  final VoidCallback onSave;
+
+  const _ProfileInfoCard({
+    required this.user,
+    required this.saving,
+    required this.errorText,
+    required this.successText,
+    required this.nameController,
+    required this.emailController,
+    required this.contactController,
+    required this.addressController,
+    required this.onSave,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return RcCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              'Your Account',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          _MenuTile(
-            icon: Icons.receipt_long_outlined,
-            title: 'My Orders',
-            subtitle: 'Track and review your orders',
-            onTap: () => Navigator.of(context).pushNamed(RouteNames.orders),
-          ),
-          const _MenuDivider(),
-          _MenuTile(
-            icon: Icons.calendar_month_outlined,
-            title: 'My Bookings',
-            subtitle: 'Your service schedule',
-            onTap: () => MainScaffold.switchToTab(3),
-          ),
-          const _MenuDivider(),
-          _MenuTile(
-            icon: Icons.notifications_outlined,
-            title: 'Notifications',
-            subtitle: 'Order and service alerts',
-            onTap: () =>
-                Navigator.of(context).pushNamed(RouteNames.notifications),
-          ),
-          const _MenuDivider(),
-          _MenuTile(
-            icon: Icons.sports_motorsports_outlined,
-            title: 'My Bikes',
-            subtitle: 'Your garage',
-            onTap: () => Navigator.of(context).pushNamed(RouteNames.myBikes),
+          const SectionHeader(
+            kicker: 'Profile',
+            title: 'Profile Settings',
+            showDivider: true,
           ),
           const SizedBox(height: 8),
+          const Text(
+            'Keep your details up to date for faster delivery.',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          ),
+          const SizedBox(height: 20),
+          AppTextField(
+            controller: nameController,
+            label: 'Full Name',
+            hint: 'Your full name',
+            prefixIcon: Icons.person_outline_rounded,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: emailController,
+            label: 'Email',
+            prefixIcon: Icons.alternate_email_rounded,
+            enabled: false,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: contactController,
+            label: 'Contact Number',
+            hint: '+1 555 000 0000',
+            prefixIcon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: addressController,
+            label: 'Delivery Address',
+            hint: 'Street, City, State, ZIP',
+            prefixIcon: Icons.location_on_outlined,
+            keyboardType: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+          ),
+          if (successText != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              successText!,
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
+            ),
+          ],
+          if (errorText != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              errorText!,
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
+            ),
+          ],
+          const SizedBox(height: 20),
+          RcButton(
+            label: 'Save Changes',
+            icon: Icons.save_outlined,
+            loading: saving,
+            onPressed: saving ? null : onSave,
+          ),
         ],
       ),
     );
   }
 }
 
-class _MenuDivider extends StatelessWidget {
-  const _MenuDivider();
+/// Account actions card with grouped sections.
+class _AccountActionsCard extends StatelessWidget {
+  final VoidCallback onMyOrders;
+  final VoidCallback onMyBookings;
+  final VoidCallback onNotifications;
+  final VoidCallback onMyBikes;
+
+  const _AccountActionsCard({
+    required this.onMyOrders,
+    required this.onMyBookings,
+    required this.onNotifications,
+    required this.onMyBikes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RcCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionHeader(
+            kicker: 'Account',
+            title: 'Your Account',
+            showDivider: true,
+          ),
+          _ActionTile(
+            icon: Icons.receipt_long_outlined,
+            title: 'My Orders',
+            subtitle: 'Track and review your orders',
+            onTap: onMyOrders,
+          ),
+          const _ActionDivider(),
+          _ActionTile(
+            icon: Icons.calendar_month_outlined,
+            title: 'My Bookings',
+            subtitle: 'Your service schedule',
+            onTap: onMyBookings,
+          ),
+          const _ActionDivider(),
+          _ActionTile(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            subtitle: 'Order and service alerts',
+            onTap: onNotifications,
+          ),
+          const _ActionDivider(),
+          _ActionTile(
+            icon: Icons.sports_motorsports_outlined,
+            title: 'My Bikes',
+            subtitle: 'Your garage',
+            onTap: onMyBikes,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionDivider extends StatelessWidget {
+  const _ActionDivider();
 
   @override
   Widget build(BuildContext context) {
@@ -833,18 +1009,18 @@ class _MenuDivider extends StatelessWidget {
       thickness: 1,
       indent: 16,
       endIndent: 16,
-      color: AppColors.border,
+      color: AppColors.borderSubtle,
     );
   }
 }
 
-class _MenuTile extends StatelessWidget {
+class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
-  const _MenuTile({
+  const _ActionTile({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -853,39 +1029,87 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    return InkWell(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
-          borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textMuted,
+            ),
+          ],
         ),
-        child: Icon(icon, color: AppColors.primary, size: 20),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        size: 20,
-        color: AppColors.textMuted,
       ),
     );
   }
 }
 
+/// Security card with password reset functionality.
+class _SecurityCard extends StatelessWidget {
+  final VoidCallback onForgotPassword;
+
+  const _SecurityCard({required this.onForgotPassword});
+
+  @override
+  Widget build(BuildContext context) {
+    return RcCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionHeader(
+            kicker: 'Security',
+            title: 'Account Security',
+            showDivider: true,
+          ),
+          _ActionTile(
+            icon: Icons.lock_outline_rounded,
+            title: 'Change Password',
+            subtitle: 'Forgot your password? Reset it here',
+            onTap: onForgotPassword,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sign out card.
 class _SignOutCard extends StatelessWidget {
   final VoidCallback onLogout;
 
@@ -893,7 +1117,7 @@ class _SignOutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return RcCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -913,10 +1137,9 @@ class _SignOutCard extends StatelessWidget {
               style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
             ),
             const SizedBox(height: 14),
-            CustomButton(
+            RcSecondaryButton(
               label: 'Logout',
               icon: Icons.logout_rounded,
-              backgroundColor: AppColors.surfaceElevated,
               onPressed: onLogout,
             ),
           ],
