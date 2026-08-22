@@ -9,6 +9,8 @@ abstract final class RouteNames {
   static const String myBikes = '/my-bikes';
   static const String bikeDetail = '/bike-detail';
   static const String productDetail = '/product-detail';
+  static const String services = '/services';
+  static const String serviceDetail = '/service-detail';
   static const String serviceBooking = '/service-booking';
   static const String bookingReview = '/booking-review';
   static const String bookingSuccess = '/booking-success';

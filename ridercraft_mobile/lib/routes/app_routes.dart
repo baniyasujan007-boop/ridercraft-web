@@ -22,6 +22,8 @@ import '../screens/garage/garage_scaffold.dart';
 import '../screens/main_scaffold.dart';
 import '../screens/notifications/notifications_screen.dart';
 import '../screens/products/product_detail_screen.dart';
+import '../screens/services/service_detail_screen.dart';
+import '../screens/services/services_screen.dart';
 import '../screens/splash/splash_screen.dart';
 import 'route_names.dart';
 
@@ -51,6 +53,15 @@ class AppRouter {
       ),
       RouteNames.notifications => MaterialPageRoute(
         builder: (_) => const NotificationsScreen(),
+        settings: settings,
+      ),
+      RouteNames.services => MaterialPageRoute(
+        builder: (_) => const ServicesScreen(),
+        settings: settings,
+      ),
+      RouteNames.serviceDetail => MaterialPageRoute(
+        builder: (_) =>
+            ServiceDetailScreen(package: settings.arguments as ServicePackage),
         settings: settings,
       ),
       RouteNames.myBikes => MaterialPageRoute(
